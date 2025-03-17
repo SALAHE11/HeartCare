@@ -1,5 +1,8 @@
-package com.example.myjavafxapp;
+package com.example.myjavafxapp.Controllers;
 
+import com.example.myjavafxapp.Models.DatabaseSingleton;
+import com.example.myjavafxapp.Models.Hashing;
+import com.example.myjavafxapp.Models.SwitchScene;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
@@ -54,10 +57,10 @@ public class registerController {
 
     private void updateWelcomeMessage() {
         if (username != null && !username.isEmpty()) {
-            welcomeMessage.setText("Welcome, " + username + "!");
+            welcomeMessage.setText("Bienvenue, " + username + "!");
             welcomeMessage.setStyle("-fx-text-fill: green;");
         } else {
-            welcomeMessage.setText("Welcome!");
+            welcomeMessage.setText("Bienvenue!");
         }
     }
 
@@ -86,67 +89,72 @@ public class registerController {
         });
     }
 
+
+    // Method that validates conditions for username
     private boolean validateUsername(String username) {
         if (username == null || username.isEmpty()) {
-            usernameError.setText("Username cannot be empty.");
+            usernameError.setText("Le username ne peut pas être vide.");
             usernameError.setStyle("-fx-text-fill: red;");
             return false;
         }
         else if(username.length()<5){
-            usernameError.setText("Username length must be bigger than 5.");
+            usernameError.setText("Le username doit être plus long.");
             usernameError.setStyle("-fx-text-fill: red;");
             return false;
         }
         else if (!isUsernameUnique(username)) {
-            usernameError.setText("Username already exists.");
+            usernameError.setText("Ce username existe déjà.");
             usernameError.setStyle("-fx-text-fill: red;");
             return false;
         } else {
-            usernameError.setText("Username is available.");
+            usernameError.setText("Username disponible.");
             usernameError.setStyle("-fx-text-fill: green;");
             return true;
         }
 
     }
-
+    // Method that validates password
     private boolean validatePassword(String password) {
         if (password == null || password.isEmpty()) {
-            passwordError.setText("Password cannot be empty.");
+            passwordError.setText("le password ne peut pas être vide.");
             passwordError.setStyle("-fx-text-fill: red;");
             return false;
         } else if (!isPasswordStrong(password)) {
-            passwordError.setText("Password must be at least 8 characters long, contain a number, a special character, and a capital letter.");
+            passwordError.setText("Le password doit comporter au moins 8 caractères, contenir un chiffre, un caractère spécial et une majuscule.");
             passwordError.setStyle("-fx-text-fill: red;");
             return false;
         } else {
-            passwordError.setText("Password is strong.");
+            passwordError.setText("Le password est fort");
             passwordError.setStyle("-fx-text-fill: green;");
             return true;
         }
 
     }
 
+
+    //Method that validates Confirm password
     private boolean validateConfirmPassword(String confirmPassword) {
         String password = passwordField.getText();
         if (confirmPassword == null || confirmPassword.isEmpty()) {
-            confirmPasswordError.setText("Confirm password cannot be empty.");
+            confirmPasswordError.setText("Le mot de passe de confirmation ne peut pas être vide.");
             confirmPasswordError.setStyle("-fx-text-fill: red;");
             return false;
         } else if (!confirmPassword.equals(password)) {
-            confirmPasswordError.setText("Passwords do not match.");
+            confirmPasswordError.setText("Les mots de passe ne correspondent pas");
             confirmPasswordError.setStyle("-fx-text-fill: red;");
             return false;
         } else {
-            confirmPasswordError.setText("Passwords match.");
+            confirmPasswordError.setText("Les mots de passe correspondent.");
             confirmPasswordError.setStyle("-fx-text-fill: green;");
             return true;
         }
     }
 
+
+    // Method that checks if username already exists in the Database
     private boolean isUsernameUnique(String username) {
 
-        DatabaseConnection dbConnection=new DatabaseConnection();
-        Connection conn=dbConnection.getConnection();
+        Connection conn= DatabaseSingleton.getInstance().getConnection();
         String sql="SELECT COUNT(1) FROM USERS WHERE USERNAME=?";
         boolean bool=false;
         try
@@ -164,6 +172,8 @@ public class registerController {
         return bool;
     }
 
+
+    //Method that checks Conditions for password
     private boolean isPasswordStrong(String password) {
         // Password must be at least 8 characters long
         if (password.length() < 8) {
@@ -188,28 +198,22 @@ public class registerController {
         return true;
     }
 
-    // Hey salaheddine this is the method that hashes the password
-    private String hashPassword(String plainPassword){
-        // Generate a salt and hashes the password
-        return BCrypt.hashpw(plainPassword,BCrypt.gensalt());
-    }
 
 
-    // this is the method that will handle registration
+    // Method that gets triggered when user clicks Register
     @FXML
     private void handleRegistration(ActionEvent event){
 
         if( !validateUsername(userNameField.getText()) || !validatePassword(passwordField.getText()) || !validateConfirmPassword(ConfirmField.getText()) ){
-            welcomeMessage.setText("Certain fields are not valid!");
+            welcomeMessage.setText("Certains champs ne sont pas valides !");
             welcomeMessage.setStyle("-fx-text-fill: red;");
         }
 
         else{
             newUserName=userNameField.getText();
-            hashedPassword=hashPassword(passwordField.getText());
-            String sql="UPDATE USERS SET USERNAME = ?,PASSWORD=? WHERE USER_ID = ?";
-            DatabaseConnection dbconn=new DatabaseConnection();
-            Connection conn=dbconn.getConnection();
+            hashedPassword= Hashing.hashPassword(passwordField.getText());
+            String sql="UPDATE USERS SET USERNAME = ?,PASSWORD=? WHERE ID = ?";
+            Connection conn= DatabaseSingleton.getInstance().getConnection();
             try {
                 PreparedStatement pstm=conn.prepareStatement(sql);
                 pstm.setString(1,newUserName);
@@ -218,11 +222,10 @@ public class registerController {
                 int rs =pstm.executeUpdate();
                 if(rs>0)
                 {
-                    welcomeMessage.setText("You have registered succefully!");
-                    welcomeMessage.setStyle("-fx-text-fill: green;");
+                    SwitchScene.switchScene(event,"/com/example/myjavafxapp/loginForm.fxml");
                 }
                 else{
-                    welcomeMessage.setText("A problem occured");
+                    welcomeMessage.setText("Un problème est survenu!");
                     welcomeMessage.setStyle("-fx-text-fill: red;");
                 }
 

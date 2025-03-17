@@ -1,9 +1,10 @@
-package com.example.myjavafxapp;
+package com.example.myjavafxapp.Controllers;
 
+import com.example.myjavafxapp.Models.DatabaseSingleton;
+import com.example.myjavafxapp.Models.SwitchScene;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
-import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.DatePicker;
@@ -30,6 +31,7 @@ public class forgotController {
     private Label ErrorMessage;
 
     @FXML
+    // gets triggered when user submits
     private void submitAction(ActionEvent event) {
         if (!textField.getText().isEmpty() && dateField.getValue() != null) {
             LocalDate selectedDate = dateField.getValue();
@@ -37,22 +39,24 @@ public class forgotController {
             validateInfos(textField.getText(), dateString);
 
         } else {
-            ErrorMessage.setText("Please fillout the fields.");
+            ErrorMessage.setText("veuillez remplir les champs.");
+            ErrorMessage.setStyle("-fx-text-fill: orange;");
         }
     }
 
     @FXML
+    // gets triggered when user canceles
     private void cancelAction(ActionEvent event) {
         try {
-            switchScene(event, "loginForm.fxml");
+            SwitchScene.switchScene(event,"/com/example/myjavafxapp/loginForm.fxml");
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
+    //checks if user exists
     private void validateInfos(String username, String date) {
-        DatabaseConnection dbConn = new DatabaseConnection();
-        Connection conn = dbConn.getConnection();
+        Connection conn= DatabaseSingleton.getInstance().getConnection();
         boolean isValid = false;
         String sql = "SELECT count(1),USERNAME FROM USERS WHERE USERNAME=? AND BIRTHDATE=?";
         try {
@@ -64,11 +68,11 @@ public class forgotController {
                 String retrievedUsername = rs.getString("USERNAME");
                 try {
                     // Load the registration FXML file
-                    FXMLLoader loader = new FXMLLoader(getClass().getResource("renterPassword.fxml"));
+                    FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/example/myjavafxapp/resetPassword.fxml"));
                     Parent root = loader.load();
 
                     // Get the controller of the registration scene
-                    renterController renterController = loader.getController();
+                    resetPasswordController renterController = loader.getController();
 
                     // Pass the username to the controller
                     renterController.setUsername(retrievedUsername);
@@ -82,7 +86,7 @@ public class forgotController {
                 }
 
             } else {
-                ErrorMessage.setText("Incorrect credentials.");
+                ErrorMessage.setText("Identifications incorrectes.");
                 ErrorMessage.setStyle("-fx-text-fill: red;");
             }
         } catch (Exception e) {
@@ -90,12 +94,4 @@ public class forgotController {
         }
     }
 
-    private void switchScene(ActionEvent event, String fxmlFile) throws IOException {
-        FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlFile));
-        Parent root = loader.load();
-
-        Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-        stage.setScene(new Scene(root));
-        stage.show();
-    }
 }

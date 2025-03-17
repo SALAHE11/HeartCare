@@ -70,7 +70,6 @@
 .transparent-button {
     -fx-background-color: transparent;
     -fx-border-color: transparent;
-    -fx-cursor: hand;
 }
 .button {
     -fx-background-color: transparent; /* Make the button transparent */
@@ -81,9 +80,9 @@
 
 .button .graphic {
     -fx-padding: 0;
-                     -fx-fill: #c1c1c1;/* Remove padding around the graphic */
+    -fx-fill: #c1c1c1;/* Remove padding around the graphic */
 }
 .button .graphic:hover {
     -fx-padding: 0;
-                     -fx-fill: #2e3fb4;/* Remove padding around the graphic */
+    -fx-fill: #2e3fb4;/* Remove padding around the graphic */
 }

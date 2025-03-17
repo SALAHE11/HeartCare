@@ -1,17 +1,19 @@
-package com.example.myjavafxapp;
+package com.example.myjavafxapp.Controllers;
 
+import com.example.myjavafxapp.Models.DatabaseSingleton;
+import com.example.myjavafxapp.Models.Hashing;
+import com.example.myjavafxapp.Models.SwitchScene;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
-import org.mindrot.jbcrypt.BCrypt;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 
-public class renterController {
+public class resetPasswordController {
 
     @FXML
     private PasswordField passwordField;
@@ -39,10 +41,10 @@ public class renterController {
 
     private void updateWelcomeMessage() {
         if (username != null && !username.isEmpty()) {
-            welcomeMessage.setText("Welcome, " + username + "!");
+            welcomeMessage.setText("Bienvenue, " + username + "!");
             welcomeMessage.setStyle("-fx-text-fill: green;");
         } else {
-            welcomeMessage.setText("Welcome!");
+            welcomeMessage.setText("Bienvenue!");
         }
     }
 
@@ -64,34 +66,38 @@ public class renterController {
         });
     }
 
+
+    // Method that get continuously by its listener
     private boolean validatePassword(String password) {
         if (password == null || password.isEmpty()) {
-            passwordError.setText("Password cannot be empty.");
+            passwordError.setText("Le mot de passe ne peut pas être vide!");
             passwordError.setStyle("-fx-text-fill: red;");
             return false;
         } else if (!isPasswordStrong(password)) {
-            passwordError.setText("Password must be at least 8 characters long, contain a number, a special character, and a capital letter.");
+            passwordError.setText("Le mot de passe doit comporter au moins 8 caractères, contenir un chiffre, un caractère spécial et une majuscule.");
             passwordError.setStyle("-fx-text-fill: red;");
             return false;
         } else {
-            passwordError.setText("Password is strong.");
+            passwordError.setText("Le mot de passe est fort.");
             passwordError.setStyle("-fx-text-fill: green;");
             return true;
         }
     }
 
+
+    // Method that get continuously by its listener
     private boolean validateConfirmPassword(String confirmPassword) {
         String password = passwordField.getText();
         if (confirmPassword == null || confirmPassword.isEmpty()) {
-            confirmPasswordError.setText("Confirm password cannot be empty.");
+            confirmPasswordError.setText("Le password de confirmation ne peut pas être vide!");
             confirmPasswordError.setStyle("-fx-text-fill: red;");
             return false;
         } else if (!confirmPassword.equals(password)) {
-            confirmPasswordError.setText("Passwords do not match.");
+            confirmPasswordError.setText("Les mots de passe ne correspondent pas!");
             confirmPasswordError.setStyle("-fx-text-fill: red;");
             return false;
         } else {
-            confirmPasswordError.setText("Passwords match.");
+            confirmPasswordError.setText("Les mots de passe correspondent.");
             confirmPasswordError.setStyle("-fx-text-fill: green;");
             return true;
         }
@@ -121,31 +127,26 @@ public class renterController {
         return true;
     }
 
-    private String hashPassword(String plainPassword) {
-        // Generate a salt and hashes the password
-        return BCrypt.hashpw(plainPassword, BCrypt.gensalt());
-    }
 
     @FXML
+    //Method that gets triggered when user clicks register
     private void handleRegistration(ActionEvent event) {
         if (!validatePassword(passwordField.getText()) || !validateConfirmPassword(ConfirmField.getText())) {
-            welcomeMessage.setText("Certain fields are not valid!");
+            welcomeMessage.setText("Certains champs ne sont pas valides!");
             welcomeMessage.setStyle("-fx-text-fill: red;");
         } else {
-            hashedPassword = hashPassword(passwordField.getText());
+            hashedPassword = Hashing.hashPassword(passwordField.getText());
             String sql = "UPDATE USERS SET PASSWORD=? WHERE USERNAME = ?";
-            DatabaseConnection dbconn = new DatabaseConnection();
-            Connection conn = dbconn.getConnection();
+            Connection conn = DatabaseSingleton.getInstance().getConnection();
             try {
                 PreparedStatement pstm = conn.prepareStatement(sql);
                 pstm.setString(1, hashedPassword);
                 pstm.setString(2, username);
                 int rs = pstm.executeUpdate();
                 if (rs > 0) {
-                    welcomeMessage.setText("Password changed successfully!");
-                    welcomeMessage.setStyle("-fx-text-fill: green;");
+                    SwitchScene.switchScene(event,"/com/example/myjavafxapp/loginForm.fxml");
                 } else {
-                    welcomeMessage.setText("A problem occurred.");
+                    welcomeMessage.setText("Un problème est survenu.");
                     welcomeMessage.setStyle("-fx-text-fill: red;");
                 }
             } catch (Exception e) {
@@ -153,4 +154,5 @@ public class renterController {
             }
         }
     }
+
 }
