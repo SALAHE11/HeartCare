@@ -10,63 +10,70 @@
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.BorderPane?>
-<?import javafx.scene.text.Font?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.geometry.Insets?>
 
-<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="520.0" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.myjavafxapp.Controllers.loginController">
+<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="520.0" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.myjavafxapp.Controllers.loginController" stylesheets="@LoginStyles.css">
 
    <!-- Left Side: Image Section -->
    <left>
-      <AnchorPane fx:id="leftAnchorPane" prefHeight="400.0" prefWidth="228.0" BorderPane.alignment="CENTER">
+      <AnchorPane fx:id="leftAnchorPane" prefHeight="400.0" prefWidth="228.0" styleClass="left-panel" BorderPane.alignment="CENTER">
          <children>
             <ImageView fx:id="mainImageView" fitHeight="188.0" fitWidth="215.0" layoutX="6.0" layoutY="111.0" pickOnBounds="true" preserveRatio="true">
                <image>
-                  <Image url="@../../../Icons/transparent.png" /> <!-- Ensure the image path is correct -->
+                  <Image url="@../../../Icons/transparent.png" />
                </image>
             </ImageView>
          </children>
       </AnchorPane>
    </left>
+
+   <!-- Right Side: Login Form -->
    <center>
-      <AnchorPane fx:id="rightAnchorPane" prefHeight="200.0" prefWidth="320.0" style="-fx-background-color: #ECECE7;" BorderPane.alignment="CENTER">
+      <AnchorPane fx:id="rightAnchorPane" prefHeight="200.0" prefWidth="320.0" styleClass="right-panel" BorderPane.alignment="CENTER">
          <children>
-            <!-- Lock Icon -->
-            <ImageView fx:id="lockImageView" fitHeight="47.0" fitWidth="47.0" layoutX="118.0" layoutY="91.0" pickOnBounds="true" preserveRatio="true">
-               <image>
-                  <Image url="@../../../Icons/lock.png" /> <!-- Ensure the image path is correct -->
-               </image>
-            </ImageView>
+            <VBox alignment="CENTER" spacing="15.0" AnchorPane.topAnchor="80.0" AnchorPane.leftAnchor="20.0" AnchorPane.rightAnchor="20.0" AnchorPane.bottomAnchor="20.0">
+               <!-- Lock Icon -->
+               <ImageView fx:id="lockImageView" fitHeight="50.0" fitWidth="50.0" pickOnBounds="true" preserveRatio="true">
+                  <image>
+                     <Image url="@../../../Icons/lock.png" />
+                  </image>
+                  <VBox.margin>
+                     <Insets bottom="15.0" />
+                  </VBox.margin>
+               </ImageView>
 
-            <!-- Username Label and TextField -->
-            <Label layoutX="28.0" layoutY="179.0" text="Username">
-               <font>
-                  <Font name="Century Gothic" size="13.0" />
-               </font>
-            </Label>
-            <TextField fx:id="userNameField" layoutX="105.0" layoutY="175.0" prefWidth="150.0" promptText="Votre nom username ici" />
+               <!-- Error Message -->
+               <Label fx:id="loginError" alignment="CENTER" maxWidth="Infinity" textAlignment="CENTER" styleClass="error-message" />
 
-            <!-- Password Label and PasswordField -->
-            <Label layoutX="30.0" layoutY="228.0" text="Password">
-               <font>
-                  <Font name="Century Gothic" size="13.0" />
-               </font>
-            </Label>
-            <PasswordField fx:id="passwordField" layoutX="105.0" layoutY="223.0" prefWidth="150.0" promptText="Votre mot de passe ici" />
-            <Label fx:id="loginError" alignment="CENTER" layoutX="18.0" layoutY="260.0" prefHeight="16.0" prefWidth="255.0" textAlignment="CENTER" textFill="RED">
-               <font>
-                  <Font name="Century Gothic" size="11.0" />
-               </font>
-            </Label>
+               <!-- Username Section -->
+               <Label text="Username" styleClass="form-label" alignment="CENTER_LEFT" maxWidth="Infinity" />
+               <TextField fx:id="userNameField" promptText="Votre nom username ici" styleClass="form-field" />
 
-            <!-- Login Button -->
-            <Button fx:id="loginButton" layoutX="65.0" layoutY="286.0" mnemonicParsing="false" onAction="#loginOnAction" prefHeight="26.0" prefWidth="153.0" style="-fx-background-color: #6871d6;" text="Se connecter" textFill="WHITE">
-               <cursor>
-                  <Cursor fx:constant="HAND" />
-               </cursor></Button>
-            <Button fx:id="registerButton" layoutX="65.0" layoutY="324.0" mnemonicParsing="false" onAction="#registerAction" prefHeight="26.0" prefWidth="153.0" style="-fx-background-color: #6871d6;" text="S'inscrire" textFill="WHITE">
-               <cursor>
-                  <Cursor fx:constant="HAND" />
-               </cursor></Button>
-            <Hyperlink layoutX="81.0" layoutY="358.0" onAction="#forgotAction" text="Mot de passe oublié?" />
+               <!-- Password Section -->
+               <Label text="Password" styleClass="form-label" alignment="CENTER_LEFT" maxWidth="Infinity" />
+               <PasswordField fx:id="passwordField" promptText="Votre mot de passe ici" styleClass="form-field" />
+
+               <!-- Login Button -->
+               <Button fx:id="loginButton" mnemonicParsing="false" onAction="#loginOnAction" styleClass="primary-button" text="Se connecter" maxWidth="Infinity">
+                  <cursor>
+                     <Cursor fx:constant="HAND" />
+                  </cursor>
+                  <VBox.margin>
+                     <Insets top="10.0" />
+                  </VBox.margin>
+               </Button>
+
+               <!-- Register Button -->
+               <Button fx:id="registerButton" mnemonicParsing="false" onAction="#registerAction" styleClass="secondary-button" text="S'inscrire" maxWidth="Infinity">
+                  <cursor>
+                     <Cursor fx:constant="HAND" />
+                  </cursor>
+               </Button>
+
+               <!-- Forgot Password Link -->
+               <Hyperlink alignment="CENTER" onAction="#forgotAction" text="Mot de passe oublié?" />
+            </VBox>
          </children>
       </AnchorPane>
    </center>

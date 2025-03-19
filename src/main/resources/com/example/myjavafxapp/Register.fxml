@@ -8,80 +8,52 @@
 <?import javafx.scene.image.Image?>
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.AnchorPane?>
-<?import javafx.scene.text.Font?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.geometry.Insets?>
 
-<AnchorPane prefHeight="452.0" prefWidth="520.0" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.myjavafxapp.Controllers.registerController">
+<AnchorPane prefHeight="452.0" prefWidth="520.0" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.myjavafxapp.Controllers.registerController" stylesheets="@LoginStyles.css">
    <children>
       <!-- Header Section -->
-      <AnchorPane prefHeight="82.0" prefWidth="520.0" style="-fx-background-color: #2e3fb4;">
+      <AnchorPane prefHeight="82.0" prefWidth="520.0" styleClass="header-pane" AnchorPane.topAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0">
          <children>
             <ImageView fitHeight="64.0" fitWidth="74.0" layoutX="26.0" layoutY="9.0" pickOnBounds="true" preserveRatio="true">
                <image>
                   <Image url="@../../../Icons/iconAppMod3.png" />
                </image>
             </ImageView>
-            <Label layoutX="96.0" layoutY="29.0" text="Inscription de l'utilisateur" textFill="WHITE">
-               <font>
-                  <Font name="Century Gothic" size="18.0" />
-               </font>
-            </Label>
+            <Label layoutX="96.0" layoutY="29.0" styleClass="header-title" text="Inscription de l'utilisateur" />
          </children>
       </AnchorPane>
 
-      <!-- Welcome Message -->
-      <Label fx:id="welcomeMessage" alignment="CENTER" layoutX="103.0" layoutY="111.0" prefHeight="18.0" prefWidth="315.0" textAlignment="CENTER" textFill="#00000087">
-         <font>
-            <Font name="Century Gothic" size="14.0" />
-         </font>
-      </Label>
+      <!-- Main Content -->
+      <VBox alignment="TOP_CENTER" spacing="10.0" AnchorPane.topAnchor="100.0" AnchorPane.leftAnchor="50.0" AnchorPane.rightAnchor="50.0" AnchorPane.bottomAnchor="20.0">
+         <!-- Welcome Message -->
+         <Label fx:id="welcomeMessage" alignment="CENTER" prefHeight="25.0" maxWidth="Infinity" styleClass="welcome-message" />
 
-      <!-- Username Section -->
-      <Label layoutX="81.0" layoutY="144.0" text="Username">
-         <font>
-            <Font name="Century Gothic" size="13.0" />
-         </font>
-      </Label>
-      <TextField fx:id="userNameField" layoutX="81.0" layoutY="165.0" prefHeight="26.0" prefWidth="359.0" promptText="Votre username ici" />
-      <Label fx:id="usernameError" layoutX="81.0" layoutY="191.0" prefHeight="18.0" prefWidth="359.0" textFill="RED">
-         <font>
-            <Font name="Century Gothic" size="10.0" />
-         </font>
-      </Label>
+         <!-- Username Section -->
+         <Label text="Username" styleClass="form-label" alignment="CENTER_LEFT" maxWidth="Infinity" />
+         <TextField fx:id="userNameField" promptText="Votre username ici" styleClass="form-field" />
+         <Label fx:id="usernameError" prefHeight="20.0" maxWidth="Infinity" styleClass="error-message" />
 
-      <!-- Password Section -->
-      <Label layoutX="81.0" layoutY="203.0" text="Password">
-         <font>
-            <Font name="Century Gothic" size="13.0" />
-         </font>
-      </Label>
-      <PasswordField fx:id="passwordField" layoutX="81.0" layoutY="223.0" prefWidth="359.0" promptText="Votre password ici" />
-      <Label fx:id="passwordError" layoutX="81.0" layoutY="249.0" prefHeight="18.0" prefWidth="359.0" textFill="RED">
-         <font>
-            <Font name="Century Gothic" size="10.0" />
-         </font>
-      </Label>
+         <!-- Password Section -->
+         <Label text="Password" styleClass="form-label" alignment="CENTER_LEFT" maxWidth="Infinity" />
+         <PasswordField fx:id="passwordField" promptText="Votre password ici" styleClass="form-field" />
+         <Label fx:id="passwordError" prefHeight="20.0" maxWidth="Infinity" styleClass="error-message" />
 
-      <!-- Confirm Password Section -->
-      <Label layoutX="80.0" layoutY="262.0" text="Confirmer Password">
-         <font>
-            <Font name="Century Gothic" size="13.0" />
-         </font>
-      </Label>
-      <PasswordField fx:id="ConfirmField" layoutX="80.0" layoutY="281.0" prefHeight="26.0" prefWidth="359.0" promptText="Confirmer votre password ici" />
-      <Label fx:id="confirmPasswordError" layoutX="80.0" layoutY="307.0" prefHeight="18.0" prefWidth="359.0" textFill="RED">
-         <font>
-            <Font name="Century Gothic" size="10.0" />
-         </font>
-      </Label>
+         <!-- Confirm Password Section -->
+         <Label text="Confirmer Password" styleClass="form-label" alignment="CENTER_LEFT" maxWidth="Infinity" />
+         <PasswordField fx:id="ConfirmField" promptText="Confirmer votre password ici" styleClass="form-field" />
+         <Label fx:id="confirmPasswordError" prefHeight="20.0" maxWidth="Infinity" styleClass="error-message" />
 
-      <!-- Register Button -->
-      <Button fx:id="registerButton" layoutX="189.0" layoutY="339.0" mnemonicParsing="false" onAction="#handleRegistration" prefHeight="26.0" prefWidth="143.0" style="-fx-background-color: #6871d6;" text="S'inscrire" textFill="WHITE">
-         <font>
-            <Font name="Century Gothic" size="13.0" />
-         </font>
-         <cursor>
-            <Cursor fx:constant="HAND" />
-         </cursor>
-      </Button>
+         <!-- Register Button -->
+         <Button fx:id="registerButton" mnemonicParsing="false" onAction="#handleRegistration" styleClass="primary-button" text="S'inscrire">
+            <cursor>
+               <Cursor fx:constant="HAND" />
+            </cursor>
+            <VBox.margin>
+               <Insets top="20.0" />
+            </VBox.margin>
+         </Button>
+      </VBox>
    </children>
 </AnchorPane>

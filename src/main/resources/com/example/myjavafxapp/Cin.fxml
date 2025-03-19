@@ -7,41 +7,54 @@
 <?import javafx.scene.image.Image?>
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.AnchorPane?>
-<?import javafx.scene.text.Font?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.geometry.Insets?>
 
-<AnchorPane prefHeight="400.0" prefWidth="520.0" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.myjavafxapp.Controllers.CinController">
+<StackPane xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.myjavafxapp.Controllers.CinController" stylesheets="@LoginStyles.css">
    <children>
-      <AnchorPane prefHeight="82.0" prefWidth="520.0" style="-fx-background-color: #2e3fb4;">
+      <AnchorPane prefHeight="400.0" prefWidth="520.0">
          <children>
-             <ImageView fitHeight="64.0" fitWidth="74.0" layoutX="26.0" layoutY="9.0" pickOnBounds="true" preserveRatio="true">
-                 <image>
-                     <Image url="@../../../Icons/iconAppMod3.png" />
-                 </image>
-             </ImageView>
-            <Label layoutX="98.0" layoutY="29.0" text="Inscription des utilisateurs" textFill="WHITE">
-               <font>
-                  <Font name="Century Gothic" size="18.0" />
-               </font>
-            </Label>
+            <!-- Header -->
+            <AnchorPane prefHeight="82.0" prefWidth="520.0" styleClass="header-pane" AnchorPane.topAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0">
+               <children>
+                  <ImageView fitHeight="64.0" fitWidth="74.0" layoutX="26.0" layoutY="9.0" pickOnBounds="true" preserveRatio="true">
+                     <image>
+                        <Image url="@../../../Icons/iconAppMod3.png" />
+                     </image>
+                  </ImageView>
+                  <Label layoutX="98.0" layoutY="29.0" styleClass="header-title" text="Inscription des utilisateurs" />
+               </children>
+            </AnchorPane>
+
+            <!-- Main Content -->
+            <VBox alignment="TOP_CENTER" spacing="15.0" layoutX="85.0" layoutY="100.0" AnchorPane.topAnchor="100.0" AnchorPane.leftAnchor="85.0" AnchorPane.rightAnchor="85.0">
+               <children>
+                  <Label fx:id="ErrorMessage" alignment="CENTER" prefHeight="25.0" maxWidth="Infinity" />
+
+                  <Label text="CIN" styleClass="form-label" />
+                  <TextField fx:id="textField" prefHeight="30.0" promptText="entrez votre CIN" styleClass="form-field" />
+
+                  <Button fx:id="submitButton" mnemonicParsing="false" onAction="#submitAction" styleClass="primary-button" text="Soumettre">
+                     <cursor>
+                        <Cursor fx:constant="HAND" />
+                     </cursor>
+                     <VBox.margin>
+                        <Insets top="15.0" />
+                     </VBox.margin>
+                  </Button>
+
+                  <Button fx:id="cancelButton" mnemonicParsing="false" onAction="#cancelAction" styleClass="secondary-button" text="Annuler">
+                     <cursor>
+                        <Cursor fx:constant="HAND" />
+                     </cursor>
+                     <VBox.margin>
+                        <Insets top="10.0" />
+                     </VBox.margin>
+                  </Button>
+               </children>
+            </VBox>
          </children>
       </AnchorPane>
-      <Label layoutX="169.0" layoutY="157.0" text="CIN">
-         <font>
-            <Font name="Century Gothic" size="13.0" />
-         </font>
-      </Label>
-      <TextField fx:id="textField" layoutX="169.0" layoutY="180.0" prefHeight="26.0" prefWidth="181.0" promptText="entrez votre CIN" />
-      <Button fx:id="submitButton" layoutX="210.0" layoutY="229.0" mnemonicParsing="false" onAction="#submitAction" prefHeight="26.0" prefWidth="99.0" style="-fx-background-color: #6871d6;" text="Soumettre" textFill="WHITE">
-         <cursor>
-            <Cursor fx:constant="HAND" />
-         </cursor></Button>
-      <Button fx:id="cancelButton" layoutX="210.0" layoutY="273.0" mnemonicParsing="false" onAction="#cancelAction" prefHeight="26.0" prefWidth="99.0" style="-fx-background-color: #6871d6;" text="Annuler" textFill="WHITE">
-         <cursor>
-            <Cursor fx:constant="HAND" />
-         </cursor></Button>
-      <Label fx:id="ErrorMessage" alignment="CENTER" layoutX="143.0" layoutY="115.0" prefHeight="18.0" prefWidth="234.0" textAlignment="CENTER">
-         <font>
-            <Font name="Century Gothic" size="14.0" />
-         </font></Label>
    </children>
-</AnchorPane>
+</StackPane>
