@@ -14,7 +14,7 @@ public class HelloApplication extends Application {
         FXMLLoader fxmlLoader = new FXMLLoader(HelloApplication.class.getResource("loginForm.fxml"));
         Scene scene = new Scene(fxmlLoader.load());
         stage.setTitle("HeartCare");
-        stage.setResizable(false);
+//        stage.setResizable(false);
 
         Image icon = new Image(getClass().getResourceAsStream("/Icons/iconAppMod3.png")); // Adjust the path to your icon file
 
