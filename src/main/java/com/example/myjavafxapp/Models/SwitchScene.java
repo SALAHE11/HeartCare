@@ -15,7 +15,20 @@ public class SwitchScene {
         Parent root = loader.load();
 
         Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-        stage.setScene(new Scene(root));
+
+        // Get current dimensions before changing the scene
+        double width = stage.getWidth();
+        double height = stage.getHeight();
+
+        // Create new scene with the same dimensions
+        Scene scene = new Scene(root);
+
+        stage.setScene(scene);
+
+        // Apply the dimensions to the stage to ensure consistency
+        stage.setWidth(width);
+        stage.setHeight(height);
+
         stage.show();
     }
 }

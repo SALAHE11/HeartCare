@@ -19,11 +19,14 @@
    <left>
       <AnchorPane fx:id="leftAnchorPane" prefHeight="400.0" prefWidth="228.0" styleClass="left-panel" BorderPane.alignment="CENTER">
          <children>
-            <ImageView fx:id="mainImageView" fitHeight="188.0" fitWidth="215.0" layoutX="6.0" layoutY="111.0" pickOnBounds="true" preserveRatio="true">
-               <image>
-                  <Image url="@../../../Icons/transparent.png" />
-               </image>
-            </ImageView>
+            <!-- VBox to center the image vertically -->
+            <VBox alignment="CENTER" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+               <ImageView fx:id="mainImageView" fitHeight="188.0" fitWidth="215.0" pickOnBounds="true" preserveRatio="true">
+                  <image>
+                     <Image url="@../../../Icons/transparent.png" />
+                  </image>
+               </ImageView>
+            </VBox>
          </children>
       </AnchorPane>
    </left>
