@@ -1,239 +1,525 @@
+/* Base styling variables */
 * {
     -fx-primary-color: #6871d6;
     -fx-secondary-color: #4F5BC6;
+    -fx-accent-color: #2B49B3;
+    -fx-grey-color: #b9b9b9;
     -fx-light-grey: #e9e9e9;
+    -fx-background-grey: #f5f5f5;
     -fx-focus-color: -fx-primary-color;
-    -fx-light-green: #90EE90;
-    -fx-light-blue: #ADD8E6;
+
+    /* Status colors */
+    -fx-scheduled-color: #6871d6;
+    -fx-checked-in-color: #4CAF50;
+    -fx-in-progress-color: #1E88E5;
+    -fx-completed-color: #80CBC4;
+    -fx-missed-color: #EF5350;
+    -fx-cancelled-color: #9E9E9E;
+    -fx-urgent-color: #F44336;
 }
 
-/* Root styles */
-.root {
+/* ==============================================
+   General containers and components
+   ============================================== */
+
+.main-container {
     -fx-background-color: white;
-    -fx-font-family: "System";
+    -fx-background-radius: 0;
 }
 
-/* Sidebar styles */
-.sidebar {
-    -fx-background-color: -fx-primary-color;
-    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.2), 10, 0, 0, 0);
-}
-
-/* Navigation button */
-.nav-button {
-    -fx-background-color: transparent;
-    -fx-background-radius: 30px;
-    -fx-cursor: hand;
-}
-
-.nav-button:hover {
-    -fx-background-color: -fx-secondary-color;
-    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.2), 5, 0, 0, 0);
-}
-
-/* Page title */
-.page-title {
-    -fx-font-size: 16px;
-    -fx-font-weight: bold;
-    -fx-text-fill: #333333;
-    -fx-padding: 5px;
-    -fx-border-color: transparent transparent -fx-light-grey transparent;
-    -fx-border-width: 0 0 1 0;
-}
-
-/* Search container */
-.search-container {
-    -fx-background-color: -fx-light-grey;
-    -fx-background-radius: 5px;
-}
-
-.search-label {
-    -fx-font-weight: bold;
-    -fx-text-fill: #333333;
-}
-
-.search-field {
+.form-container {
     -fx-background-color: white;
+    -fx-padding: 20px;
     -fx-background-radius: 5px;
-    -fx-border-color: #cccccc;
-    -fx-border-radius: 5px;
-    -fx-border-width: 1px;
-    -fx-padding: 5px;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0, 0, 0);
 }
 
-.search-field:focused {
-    -fx-border-color: -fx-primary-color;
-}
-
-/* Add button styles */
-.add-button {
-    -fx-background-color: -fx-primary-color;
-    -fx-text-fill: white;
-    -fx-font-weight: bold;
-    -fx-background-radius: 5px;
-    -fx-cursor: hand;
-}
-
-.add-button:hover {
-    -fx-background-color: -fx-secondary-color;
-    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.2), 3, 0, 0, 0);
-}
-
-/* Patient table styles */
-.patient-table {
+.details-container {
     -fx-background-color: white;
+    -fx-padding: 15px;
+    -fx-background-radius: 5px;
     -fx-border-color: -fx-light-grey;
     -fx-border-radius: 5px;
 }
 
-.patient-table .column-header {
-    -fx-background-color: -fx-primary-color;
-    -fx-text-fill: white;
-    -fx-font-weight: bold;
+.search-container {
+    -fx-background-color: -fx-background-grey;
+    -fx-background-radius: 5px;
     -fx-padding: 10px;
 }
 
-.patient-table .column-header-background .filler {
-    -fx-background-color: -fx-primary-color;
+.stats-panel {
+    -fx-background-color: -fx-background-grey;
+    -fx-padding: 10px;
+    -fx-border-color: -fx-light-grey;
+    -fx-border-width: 0 0 0 1;
 }
 
-.patient-table .table-row-cell {
-    -fx-background-color: white;
-    -fx-border-color: transparent transparent -fx-light-grey transparent;
-    -fx-border-width: 0 0 1 0;
-    -fx-padding: 5px;
-}
+/* ==============================================
+   Text and Labels
+   ============================================== */
 
-.patient-table .table-row-cell:odd {
-    -fx-background-color: #f9f9f9;
-}
-
-.patient-table .table-row-cell:selected {
-    -fx-background-color: derive(-fx-primary-color, 90%);
+.page-title {
+    -fx-font-size: 20px;
+    -fx-font-weight: bold;
     -fx-text-fill: -fx-primary-color;
-}
-
-.patient-table .table-row-cell:hover {
-    -fx-background-color: derive(-fx-primary-color, 95%);
-}
-
-/* Button styles for the actions column */
-.action-button {
-    -fx-background-color: transparent;
-    -fx-cursor: hand;
-    -fx-padding: 5px;
-}
-
-.edit-button {
-    -fx-background-color: -fx-light-green;
-    -fx-background-radius: 5px;
-}
-
-.edit-button:hover {
-    -fx-background-color: derive(-fx-light-green, -10%);
-    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.2), 3, 0, 0, 0);
-}
-
-.folder-button {
-    -fx-background-color: -fx-light-blue;
-    -fx-background-radius: 5px;
-}
-
-.folder-button:hover {
-    -fx-background-color: derive(-fx-light-blue, -10%);
-    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.2), 3, 0, 0, 0);
-}
-
-/* Form styles */
-.form-container {
-    -fx-background-color: white;
-    -fx-background-radius: 10px;
-    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.2), 10, 0, 0, 0);
-    -fx-padding: 20px;
 }
 
 .form-title {
     -fx-font-size: 18px;
     -fx-font-weight: bold;
-    -fx-text-fill: #333333;
-    -fx-padding: 0 0 10px 0;
-    -fx-border-color: transparent transparent -fx-light-grey transparent;
+    -fx-text-fill: -fx-primary-color;
+    -fx-border-color: -fx-light-grey;
     -fx-border-width: 0 0 1 0;
+    -fx-padding: 0 0 10 0;
 }
 
-.form-field {
-    -fx-background-color: white;
-    -fx-background-radius: 5px;
-    -fx-border-color: #cccccc;
-    -fx-border-radius: 5px;
-    -fx-border-width: 1px;
-    -fx-padding: 8px;
-}
-
-.form-field:focused {
-    -fx-border-color: -fx-primary-color;
+.panel-header {
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-accent-color;
+    -fx-padding: 5 0 5 0;
 }
 
 .form-label {
     -fx-font-weight: bold;
-    -fx-text-fill: #333333;
+    -fx-text-fill: #555;
+}
+
+.field-label {
+    -fx-font-weight: bold;
+    -fx-text-fill: #555;
+}
+
+.date-header {
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #333;
+}
+
+.stats-header {
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #333;
+    -fx-border-color: -fx-light-grey;
+    -fx-border-width: 0 0 1 0;
+    -fx-padding: 0 0 5 0;
+}
+
+/* ==============================================
+   Form Controls
+   ============================================== */
+
+.text-field, .text-area, .date-picker, .combo-box {
+    -fx-background-color: white;
+    -fx-background-radius: 4px;
+    -fx-border-color: -fx-grey-color;
+    -fx-border-radius: 4px;
+    -fx-border-width: 1px;
+    -fx-padding: 5px;
+}
+
+.text-field:focused, .text-area:focused, .date-picker:focused, .combo-box:focused {
+    -fx-border-color: -fx-primary-color;
+    -fx-effect: dropshadow(three-pass-box, rgba(104, 113, 214, 0.5), 3, 0, 0, 0);
+}
+
+/* ==============================================
+   Buttons
+   ============================================== */
+
+.button {
+    -fx-background-radius: 4px;
+    -fx-cursor: hand;
+    -fx-padding: 8px 16px;
+}
+
+.primary-button {
+    -fx-background-color: -fx-primary-color;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+}
+
+.primary-button:hover {
+    -fx-background-color: derive(-fx-primary-color, -10%);
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.2), 3, 0, 0, 0);
+}
+
+.secondary-button {
+    -fx-background-color: #90A4AE;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+}
+
+.secondary-button:hover {
+    -fx-background-color: derive(#90A4AE, -10%);
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.2), 3, 0, 0, 0);
+}
+
+.action-button {
+    -fx-background-color: -fx-accent-color;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+}
+
+.action-button:hover {
+    -fx-background-color: derive(-fx-accent-color, -10%);
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.2), 3, 0, 0, 0);
 }
 
 .save-button {
     -fx-background-color: #4CAF50;
     -fx-text-fill: white;
     -fx-font-weight: bold;
-    -fx-background-radius: 5px;
-    -fx-cursor: hand;
-    -fx-padding: 10px 20px;
 }
 
 .save-button:hover {
-    -fx-background-color: #45a049;
+    -fx-background-color: derive(#4CAF50, -10%);
     -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.2), 3, 0, 0, 0);
 }
 
 .cancel-button {
-    -fx-background-color: #f44336;
+    -fx-background-color: #F44336;
     -fx-text-fill: white;
     -fx-font-weight: bold;
-    -fx-background-radius: 5px;
-    -fx-cursor: hand;
-    -fx-padding: 10px 20px;
 }
 
 .cancel-button:hover {
-    -fx-background-color: #d32f2f;
+    -fx-background-color: derive(#F44336, -10%);
     -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.2), 3, 0, 0, 0);
 }
 
-/* Disabled fields */
-.form-field:disabled {
-    -fx-opacity: 0.7;
+.nav-button {
+    -fx-background-color: -fx-background-grey;
+    -fx-text-fill: -fx-accent-color;
+    -fx-border-color: -fx-light-grey;
+    -fx-border-radius: 4px;
+}
+
+.nav-button:hover {
+    -fx-background-color: derive(-fx-background-grey, -5%);
+}
+
+.icon-button {
+    -fx-background-color: transparent;
+    -fx-padding: 2px;
+    -fx-border-color: transparent;
+}
+
+.icon-button:hover {
+    -fx-background-color: -fx-light-grey;
+    -fx-background-radius: 3px;
+}
+
+/* ==============================================
+   Calendar View
+   ============================================== */
+
+.calendar-grid {
+    -fx-background-color: white;
+    -fx-grid-lines-visible: true;
+}
+
+.calendar-header {
+    -fx-background-color: -fx-accent-color;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-padding: 7px;
+    -fx-alignment: center;
+}
+
+.time-label {
+    -fx-font-weight: bold;
+    -fx-padding: 5px;
+    -fx-alignment: center-right;
+}
+
+.time-slot {
+    -fx-background-color: white;
+    -fx-border-color: #eee;
+    -fx-padding: 2px;
+    -fx-alignment: center;
+    -fx-cursor: hand;
+}
+
+.time-slot:hover {
+    -fx-background-color: #f5f5f5;
+}
+
+.appointment-block {
+    -fx-background-radius: 3px;
+    -fx-border-radius: 3px;
+    -fx-padding: 5px;
+    -fx-spacing: 3px;
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 3, 0, 0, 0);
+}
+
+.appointment-scheduled {
+    -fx-background-color: -fx-scheduled-color;
+    -fx-text-fill: white;
+}
+
+.appointment-checked-in {
+    -fx-background-color: -fx-checked-in-color;
+    -fx-text-fill: white;
+}
+
+.appointment-in-progress {
+    -fx-background-color: -fx-in-progress-color;
+    -fx-text-fill: white;
+}
+
+.appointment-completed {
+    -fx-background-color: -fx-completed-color;
+    -fx-text-fill: #333;
+}
+
+.appointment-missed {
+    -fx-background-color: -fx-missed-color;
+    -fx-text-fill: white;
+}
+
+.appointment-cancelled {
+    -fx-background-color: -fx-cancelled-color;
+    -fx-text-fill: white;
+}
+
+.appointment-urgent {
+    -fx-border-color: -fx-urgent-color;
+    -fx-border-width: 2px;
+}
+
+.appointment-time {
+    -fx-font-weight: bold;
+    -fx-font-size: 11px;
+}
+
+.appointment-patient {
+    -fx-font-weight: bold;
+}
+
+.appointment-reason {
+    -fx-font-size: 11px;
+}
+
+.status-box {
+    -fx-min-width: 15px;
+    -fx-min-height: 15px;
+    -fx-max-width: 15px;
+    -fx-max-height: 15px;
+    -fx-background-radius: 3px;
+}
+
+.status-scheduled {
+    -fx-background-color: -fx-scheduled-color;
+}
+
+.status-checked-in {
+    -fx-background-color: -fx-checked-in-color;
+}
+
+.status-in-progress {
+    -fx-background-color: -fx-in-progress-color;
+}
+
+.status-completed {
+    -fx-background-color: -fx-completed-color;
+}
+
+.status-missed {
+    -fx-background-color: -fx-missed-color;
+}
+
+.status-cancelled {
+    -fx-background-color: -fx-cancelled-color;
+}
+
+.status-urgent {
+    -fx-background-color: white;
+    -fx-border-color: -fx-urgent-color;
+    -fx-border-width: 2px;
+    -fx-border-radius: 3px;
+}
+
+.legend-item {
+    -fx-padding: 3px 10px 3px 3px;
+}
+
+/* ==============================================
+   Table Views
+   ============================================== */
+
+.table-view {
+    -fx-background-color: white;
+    -fx-border-color: -fx-light-grey;
+    -fx-border-radius: 3px;
+}
+
+.table-view .column-header {
+    -fx-background-color: -fx-accent-color;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-padding: 8px;
+}
+
+.table-view .column-header-background .filler {
+    -fx-background-color: -fx-accent-color;
+}
+
+.table-view .column-header .label {
+    -fx-text-fill: white;
+    -fx-alignment: center-left;
+}
+
+.table-view .table-row-cell {
+    -fx-background-color: white;
+    -fx-border-color: transparent transparent -fx-light-grey transparent;
+    -fx-border-width: 0 0 1 0;
+    -fx-padding: 3px;
+}
+
+.table-view .table-row-cell:odd {
     -fx-background-color: #f9f9f9;
 }
 
-/* Responsive adjustments */
+.table-view .table-row-cell:selected {
+    -fx-background-color: derive(-fx-primary-color, 90%);
+    -fx-text-fill: -fx-primary-color;
+}
+
+.table-view .table-row-cell:hover {
+    -fx-background-color: derive(-fx-primary-color, 95%);
+}
+
+/* Table row highlighting based on appointment status */
+.table-row-cell.status-scheduled {
+    -fx-background-color: derive(-fx-scheduled-color, 85%);
+}
+
+.table-row-cell.status-checked-in {
+    -fx-background-color: derive(-fx-checked-in-color, 85%);
+}
+
+.table-row-cell.status-in-progress {
+    -fx-background-color: derive(-fx-in-progress-color, 85%);
+}
+
+.table-row-cell.status-completed {
+    -fx-background-color: derive(-fx-completed-color, 85%);
+}
+
+.table-row-cell.status-missed {
+    -fx-background-color: derive(-fx-missed-color, 85%);
+}
+
+.table-row-cell.status-cancelled {
+    -fx-background-color: derive(-fx-cancelled-color, 85%);
+}
+
+/* ==============================================
+   List View
+   ============================================== */
+
+.list-view {
+    -fx-background-color: white;
+    -fx-border-color: -fx-light-grey;
+    -fx-border-radius: 3px;
+}
+
+.list-view .list-cell {
+    -fx-background-color: white;
+    -fx-padding: 8px 15px;
+    -fx-border-color: transparent transparent -fx-light-grey transparent;
+    -fx-border-width: 0 0 1 0;
+}
+
+.list-view .list-cell:odd {
+    -fx-background-color: #f9f9f9;
+}
+
+.list-view .list-cell:selected {
+    -fx-background-color: derive(-fx-primary-color, 70%);
+    -fx-text-fill: -fx-accent-color;
+    -fx-font-weight: bold;
+}
+
+.list-view .list-cell:hover {
+    -fx-background-color: derive(-fx-primary-color, 90%);
+}
+
+/* ==============================================
+   Upcoming Appointments in Stats Panel
+   ============================================== */
+
+.upcoming-appointment {
+    -fx-background-color: white;
+    -fx-border-color: -fx-light-grey;
+    -fx-border-radius: 3px;
+    -fx-background-radius: 3px;
+    -fx-padding: 8px;
+    -fx-spacing: 5px;
+    -fx-margin: 0 0 5 0;
+}
+
+.upcoming-time {
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-accent-color;
+}
+
+.upcoming-patient {
+    -fx-font-weight: bold;
+}
+
+.upcoming-doctor {
+    -fx-font-size: 11px;
+    -fx-text-fill: #666;
+}
+
+.upcoming-action {
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+}
+
+.upcoming-action:hover {
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 2, 0, 0, 0);
+}
+
+/* ==============================================
+   Responsive Design Adjustments
+   ============================================== */
+
+/* For smaller screens */
 @media screen and (max-width: 800px) {
-    .search-field {
-        -fx-pref-width: 200px;
+    .stats-panel {
+        -fx-pref-width: 180px;
     }
 
     .form-container {
         -fx-padding: 15px;
     }
+
+    .button {
+        -fx-padding: 6px 12px;
+    }
 }
 
+/* For extra small screens */
 @media screen and (max-width: 600px) {
-    .search-field {
+    .stats-panel {
         -fx-pref-width: 150px;
     }
 
-    .form-container {
-        -fx-padding: 10px;
+    .form-field {
+        -fx-pref-width: 200px;
     }
 
-    .save-button, .cancel-button {
-        -fx-padding: 8px 15px;
+    .button {
+        -fx-padding: 4px 10px;
+        -fx-font-size: 10px;
+    }
+
+    .page-title {
+        -fx-font-size: 16px;
     }
 }

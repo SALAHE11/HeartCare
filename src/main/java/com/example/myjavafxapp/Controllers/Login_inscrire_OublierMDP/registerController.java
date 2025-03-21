@@ -1,4 +1,4 @@
-package com.example.myjavafxapp.Controllers;
+package com.example.myjavafxapp.Controllers.Login_inscrire_OublierMDP;
 
 import com.example.myjavafxapp.Models.DatabaseSingleton;
 import com.example.myjavafxapp.Models.Hashing;
@@ -14,9 +14,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-
-
-import org.mindrot.jbcrypt.BCrypt;
 
 
 public class registerController {

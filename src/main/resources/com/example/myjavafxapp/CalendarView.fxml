@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
+
+<BorderPane styleClass="main-container" stylesheets="@GestionDossierCss.css" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.myjavafxapp.Controllers.CalendarViewController">
+    <top>
+        <VBox spacing="10.0" BorderPane.alignment="CENTER">
+            <children>
+                <HBox alignment="CENTER_LEFT" spacing="10.0">
+                    <children>
+                        <Button fx:id="prevDayBtn" mnemonicParsing="false" onAction="#previousDay" styleClass="nav-button">
+                            <graphic>
+                                <FontIcon iconColor="#4079ff" iconLiteral="fas-chevron-left" iconSize="16" />
+                            </graphic>
+                        </Button>
+                        <Button fx:id="todayBtn" mnemonicParsing="false" onAction="#goToToday" styleClass="nav-button" text="Today" />
+                        <Button fx:id="nextDayBtn" mnemonicParsing="false" onAction="#nextDay" styleClass="nav-button">
+                            <graphic>
+                                <FontIcon iconColor="#4079ff" iconLiteral="fas-chevron-right" iconSize="16" />
+                            </graphic>
+                        </Button>
+                        <Label fx:id="currentDateLabel" styleClass="date-header" text="Thursday, March 20, 2025">
+                            <font>
+                                <Font name="System Bold" size="18.0" />
+                            </font>
+                        </Label>
+                        <HBox alignment="CENTER_RIGHT" HBox.hgrow="ALWAYS">
+                            <children>
+                                <Label text="Doctor:" />
+                                <ComboBox fx:id="doctorFilter" prefWidth="150.0" promptText="All Doctors" />
+                                <Label text="Status:" HBox.margin="$x1">
+                                    <HBox.margin>
+                                        <Insets left="10.0" />
+                                    </HBox.margin>
+                                </Label>
+                                <ComboBox fx:id="statusFilter" prefWidth="150.0" promptText="All Statuses" />
+                                <Button fx:id="newAppointmentBtn" mnemonicParsing="false" onAction="#newAppointment" styleClass="primary-button" text="+ New">
+                                    <HBox.margin>
+                                        <Insets left="15.0" />
+                                    </HBox.margin>
+                                </Button>
+                            </children>
+                        </HBox>
+                    </children>
+                </HBox>
+                <HBox alignment="CENTER_LEFT" spacing="10.0">
+                    <children>
+                        <Label text="Legend:" />
+                        <HBox alignment="CENTER" spacing="5.0" styleClass="legend-item">
+                            <children>
+                                <Label styleClass="status-box, status-scheduled" />
+                                <Label text="Scheduled" />
+                            </children>
+                        </HBox>
+                        <HBox alignment="CENTER" spacing="5.0" styleClass="legend-item">
+                            <children>
+                                <Label styleClass="status-box, status-checked-in" />
+                                <Label text="Checked In" />
+                            </children>
+                        </HBox>
+                        <HBox alignment="CENTER" spacing="5.0" styleClass="legend-item">
+                            <children>
+                                <Label styleClass="status-box, status-in-progress" />
+                                <Label text="In Progress" />
+                            </children>
+                        </HBox>
+                        <HBox alignment="CENTER" spacing="5.0" styleClass="legend-item">
+                            <children>
+                                <Label styleClass="status-box, status-completed" />
+                                <Label text="Completed" />
+                            </children>
+                        </HBox>
+                        <HBox alignment="CENTER" spacing="5.0" styleClass="legend-item">
+                            <children>
+                                <Label styleClass="status-box, status-missed" />
+                                <Label text="Missed" />
+                            </children>
+                        </HBox>
+                        <HBox alignment="CENTER" spacing="5.0" styleClass="legend-item">
+                            <children>
+                                <Label styleClass="status-box, status-cancelled" />
+                                <Label text="Cancelled" />
+                            </children>
+                        </HBox>
+                        <HBox alignment="CENTER" spacing="5.0" styleClass="legend-item">
+                            <children>
+                                <Label styleClass="status-box, status-urgent" />
+                                <Label text="Urgent" />
+                            </children>
+                        </HBox>
+                    </children>
+                </HBox>
+            </children>
+            <padding>
+                <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+            </padding>
+        </VBox>
+    </top>
+    <center>
+        <ScrollPane fitToWidth="true" BorderPane.alignment="CENTER">
+            <content>
+                <GridPane fx:id="calendarGrid" styleClass="calendar-grid" vgap="1.0">
+                    <columnConstraints>
+                        <ColumnConstraints hgrow="NEVER" minWidth="50.0" prefWidth="50.0" />
+                        <ColumnConstraints hgrow="SOMETIMES" minWidth="100.0" prefWidth="100.0" />
+                        <ColumnConstraints hgrow="SOMETIMES" minWidth="100.0" prefWidth="100.0" />
+                        <ColumnConstraints hgrow="SOMETIMES" minWidth="100.0" prefWidth="100.0" />
+                        <ColumnConstraints hgrow="SOMETIMES" minWidth="100.0" prefWidth="100.0" />
+                    </columnConstraints>
+                    <rowConstraints>
+                        <RowConstraints maxHeight="30.0" minHeight="30.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                    </rowConstraints>
+                    <children>
+                        <Label styleClass="calendar-header" text="Time" />
+                        <Label fx:id="doctor1Label" styleClass="calendar-header" text="Dr. Smith" GridPane.columnIndex="1" />
+                        <Label fx:id="doctor2Label" styleClass="calendar-header" text="Dr. Johnson" GridPane.columnIndex="2" />
+                        <Label fx:id="doctor3Label" styleClass="calendar-header" text="Dr. Williams" GridPane.columnIndex="3" />
+                        <Label fx:id="doctor4Label" styleClass="calendar-header" text="Dr. Brown" GridPane.columnIndex="4" />
+                    </children>
+                </GridPane>
+            </content>
+        </ScrollPane>
+    </center>
+    <right>
+        <VBox prefWidth="200.0" spacing="10.0" styleClass="stats-panel" BorderPane.alignment="CENTER">
+            <children>
+                <Label styleClass="stats-header" text="Today's Summary">
+                    <font>
+                        <Font name="System Bold" size="14.0" />
+                    </font>
+                </Label>
+                <GridPane hgap="10.0" vgap="5.0">
+                    <columnConstraints>
+                        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+                        <ColumnConstraints halignment="RIGHT" hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+                    </columnConstraints>
+                    <rowConstraints>
+                        <RowConstraints minHeight="10.0" prefHeight="25.0" vgrow="SOMETIMES" />
+                        <RowConstraints minHeight="10.0" prefHeight="25.0" vgrow="SOMETIMES" />
+                        <RowConstraints minHeight="10.0" prefHeight="25.0" vgrow="SOMETIMES" />
+                        <RowConstraints minHeight="10.0" prefHeight="25.0" vgrow="SOMETIMES" />
+                        <RowConstraints minHeight="10.0" prefHeight="25.0" vgrow="SOMETIMES" />
+                        <RowConstraints minHeight="10.0" prefHeight="25.0" vgrow="SOMETIMES" />
+                    </rowConstraints>
+                    <children>
+                        <Label text="Total:" />
+                        <Label text="Completed:" GridPane.rowIndex="1" />
+                        <Label text="In Progress:" GridPane.rowIndex="2" />
+                        <Label text="Checked In:" GridPane.rowIndex="3" />
+                        <Label text="Scheduled:" GridPane.rowIndex="4" />
+                        <Label text="Missed:" GridPane.rowIndex="5" />
+                        <Label fx:id="totalAppointmentsLabel" text="0" GridPane.columnIndex="1" />
+                        <Label fx:id="completedAppointmentsLabel" text="0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                        <Label fx:id="inProgressAppointmentsLabel" text="0" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                        <Label fx:id="checkedInAppointmentsLabel" text="0" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+                        <Label fx:id="scheduledAppointmentsLabel" text="0" GridPane.columnIndex="1" GridPane.rowIndex="4" />
+                        <Label fx:id="missedAppointmentsLabel" text="0" GridPane.columnIndex="1" GridPane.rowIndex="5" />
+                    </children>
+                </GridPane>
+                <Label styleClass="stats-header" text="Upcoming Next">
+                    <font>
+                        <Font name="System Bold" size="14.0" />
+                    </font>
+                    <VBox.margin>
+                        <Insets top="10.0" />
+                    </VBox.margin>
+                </Label>
+                <VBox fx:id="upcomingAppointmentsBox" spacing="5.0">
+                    <!-- Upcoming appointments will be added here dynamically -->
+                </VBox>
+            </children>
+            <padding>
+                <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+            </padding>
+        </VBox>
+    </right>
+</BorderPane>
