@@ -31,11 +31,17 @@
                                 <FontIcon iconColor="#4079ff" iconLiteral="fas-chevron-right" iconSize="16" />
                             </graphic>
                         </Button>
+
                         <Label fx:id="currentDateLabel" styleClass="date-header" text="Thursday, March 20, 2025">
                             <font>
                                 <Font name="System Bold" size="18.0" />
                             </font>
                         </Label>
+                        <Button mnemonicParsing="false" onAction="#navigateToPatientRecords" styleClass="nav-button" text="Patient Records">
+                            <graphic>
+                                <FontIcon iconColor="#4079ff" iconLiteral="fas-users" iconSize="14" />
+                            </graphic>
+                        </Button>
                         <HBox alignment="CENTER_RIGHT" HBox.hgrow="ALWAYS">
                             <children>
                                 <Label text="Doctor:" />

@@ -260,12 +260,12 @@
     -fx-text-fill: white;
 }
 
-.appointment-checked-in {
+.appointment-checkedin {
     -fx-background-color: -fx-checked-in-color;
     -fx-text-fill: white;
 }
 
-.appointment-in-progress {
+.appointment-inprogress {
     -fx-background-color: -fx-in-progress-color;
     -fx-text-fill: white;
 }
@@ -280,7 +280,12 @@
     -fx-text-fill: white;
 }
 
-.appointment-cancelled {
+.appointment-patient_cancelled {
+    -fx-background-color: -fx-cancelled-color;
+    -fx-text-fill: white;
+}
+
+.appointment-clinic_cancelled {
     -fx-background-color: -fx-cancelled-color;
     -fx-text-fill: white;
 }

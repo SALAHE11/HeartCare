@@ -263,7 +263,7 @@ public class CalendarViewController implements Initializable {
             boolean includeAppointment = true;
 
             // Filter by doctor
-            if (selectedDoctor != null && !"All Doctors".equals(selectedDoctor.getFirstName())) {
+            if (selectedDoctor != null && !"All".equals(selectedDoctor.getFirstName())) {
                 if (appointment.getMedicinID() == null || !appointment.getMedicinID().equals(selectedDoctor.getId())) {
                     includeAppointment = false;
                 }
@@ -847,5 +847,18 @@ public class CalendarViewController implements Initializable {
         alert.setHeaderText(null);
         alert.setContentText(content);
         alert.showAndWait();
+    }
+
+    @FXML
+    private void navigateToPatientRecords(ActionEvent event) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/example/myjavafxapp/PatientRecordsView.fxml"));
+            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+            stage.setScene(new Scene(loader.load()));
+            stage.show();
+        } catch (IOException e) {
+            e.printStackTrace();
+            showAlert(Alert.AlertType.ERROR, "Error", "Could not open Patient Records view: " + e.getMessage());
+        }
     }
 }
