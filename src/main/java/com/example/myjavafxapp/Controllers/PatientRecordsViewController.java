@@ -42,6 +42,7 @@ public class PatientRecordsViewController implements Initializable {
     @FXML private Label patientPhoneLabel;
     @FXML private Label patientEmailLabel;
 
+    @FXML private Button editPatientButton;
     @FXML private Button viewMedicalRecordButton;
     @FXML private Button newAppointmentButton;
     @FXML private TableView<Appointment> appointmentHistoryTable;
@@ -69,6 +70,7 @@ public class PatientRecordsViewController implements Initializable {
 
         // Initially hide the patient details
         patientDetailsPane.setVisible(false);
+        editPatientButton.setDisable(true);
         viewMedicalRecordButton.setDisable(true);
         newAppointmentButton.setDisable(true);
 
@@ -101,10 +103,12 @@ public class PatientRecordsViewController implements Initializable {
                 currentPatient = newVal;
                 displayPatientDetails(newVal);
                 loadPatientAppointments(newVal);
+                editPatientButton.setDisable(false);
                 viewMedicalRecordButton.setDisable(false);
                 newAppointmentButton.setDisable(false);
             } else {
                 patientDetailsPane.setVisible(false);
+                editPatientButton.setDisable(true);
                 viewMedicalRecordButton.setDisable(true);
                 newAppointmentButton.setDisable(true);
             }
@@ -327,6 +331,49 @@ public class PatientRecordsViewController implements Initializable {
         } catch (IOException e) {
             e.printStackTrace();
             showAlert(Alert.AlertType.ERROR, "Erreur", "Impossible d'ouvrir le formulaire d'ajout de patient : " + e.getMessage());
+        }
+    }
+
+    /**
+     * Handle edit patient button click
+     */
+    @FXML
+    private void handleEditPatient(ActionEvent event) {
+        if (currentPatient == null) {
+            showAlert(Alert.AlertType.WARNING, "Erreur de sélection", "Veuillez sélectionner un patient d'abord");
+            return;
+        }
+
+        try {
+            // Store the selected patient in the data holder for access in the edit screen
+            PatientDataHolder.getInstance().setCurrentPatient(currentPatient);
+
+            // Load edit patient view
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/example/myjavafxapp/editerPatient.fxml"));
+
+            Stage dialog = new Stage();
+            dialog.initModality(Modality.APPLICATION_MODAL);
+            dialog.setTitle("Modifier le patient");
+            dialog.setScene(new Scene(loader.load()));
+
+            dialog.showAndWait();
+
+            // Refresh the patient list and details after dialog closes
+            loadInitialPatients();
+
+            // Refresh the currently displayed patient details if it still exists
+            if (currentPatient != null) {
+                // Retrieve the updated patient data
+                Patient updatedPatient = patientManager.getPatientById(currentPatient.getID());
+                if (updatedPatient != null) {
+                    currentPatient = updatedPatient;
+                    displayPatientDetails(updatedPatient);
+                }
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            showAlert(Alert.AlertType.ERROR, "Erreur", "Impossible d'ouvrir le formulaire de modification de patient : " + e.getMessage());
         }
     }
 

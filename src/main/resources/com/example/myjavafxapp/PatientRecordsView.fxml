@@ -129,6 +129,11 @@
                         </Label>
                         <HBox alignment="CENTER_RIGHT" spacing="10.0">
                             <children>
+                                <Button fx:id="editPatientButton" mnemonicParsing="false" onAction="#handleEditPatient" styleClass="action-button" text="Modifier Patient">
+                                    <graphic>
+                                        <FontIcon iconColor="WHITE" iconLiteral="fas-user-edit" iconSize="14" />
+                                    </graphic>
+                                </Button>
                                 <Button fx:id="viewMedicalRecordButton" mnemonicParsing="false" onAction="#handleViewMedicalRecord" styleClass="secondary-button" text="Dossier Médical">
                                     <graphic>
                                         <FontIcon iconColor="WHITE" iconLiteral="fas-folder-open" iconSize="14" />

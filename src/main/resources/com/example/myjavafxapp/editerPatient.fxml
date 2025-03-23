@@ -15,21 +15,7 @@
 <?import javafx.scene.text.Font?>
 <?import org.kordamp.ikonli.javafx.FontIcon?>
 
-<BorderPane minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="1024.0" stylesheets="@GestionDossierCss.css" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.myjavafxapp.Controllers.EditerPatientController">
-    <left>
-        <VBox alignment="TOP_CENTER" prefHeight="600.0" prefWidth="40.0" styleClass="sidebar">
-            <children>
-                <Button fx:id="backButton" mnemonicParsing="false" onAction="#returnAction" styleClass="nav-button">
-                    <graphic>
-                        <FontIcon iconColor="WHITE" iconLiteral="fas-arrow-left" iconSize="16" />
-                    </graphic>
-                    <VBox.margin>
-                        <Insets top="15.0" />
-                    </VBox.margin>
-                </Button>
-            </children>
-        </VBox>
-    </left>
+<BorderPane minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="800.0" stylesheets="@GestionDossierCss.css" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.myjavafxapp.Controllers.EditerPatientController">
     <center>
         <VBox alignment="CENTER" spacing="20.0" styleClass="form-container" BorderPane.alignment="CENTER">
             <children>
