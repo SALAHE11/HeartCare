@@ -732,7 +732,7 @@ public class CalendarViewController implements Initializable {
 
         // Add "No upcoming appointments" message if none
         if (upcoming.isEmpty()) {
-            Label noAppointmentsLabel = new Label("No upcoming appointments");
+            Label noAppointmentsLabel = new Label("Aucun rendez-vous à venir");
             noAppointmentsLabel.setStyle("-fx-font-style: italic; -fx-text-fill: gray;");
             upcomingAppointmentsBox.getChildren().add(noAppointmentsLabel);
         }
@@ -849,16 +849,90 @@ public class CalendarViewController implements Initializable {
         alert.showAndWait();
     }
 
+
+
+    /* Methods for switching scenes*/
+
+
     @FXML
-    private void navigateToPatientRecords(ActionEvent event) {
+    public void onHome(ActionEvent event) {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/example/myjavafxapp/PatientRecordsView.fxml"));
-            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-            stage.setScene(new Scene(loader.load()));
-            stage.show();
+            SwitchScene.switchScene(event, "/com/example/myjavafxapp/CalendarView.fxml");
         } catch (IOException e) {
-            e.printStackTrace();
-            showAlert(Alert.AlertType.ERROR, "Error", "Could not open Patient Records view: " + e.getMessage());
+            showAlert(Alert.AlertType.ERROR, "Error", "Could not navigate to Dashboard: " + e.getMessage());
+        }
+    }
+
+    @FXML
+    public void onCalendar(ActionEvent event) {
+        // We're already on the calendar view, so just refresh
+        updateCalendarView();
+    }
+
+    @FXML
+    public void onCreditCard(ActionEvent event) {
+        try {
+            SwitchScene.switchScene(event, "/com/example/myjavafxapp/gestionPaiment.fxml");
+        } catch (IOException e) {
+            showAlert(Alert.AlertType.ERROR, "Error", "Could not navigate to Payment Management: " + e.getMessage());
+        }
+    }
+
+    @FXML
+    public void onFolder(ActionEvent event) {
+        try {
+            SwitchScene.switchScene(event, "/com/example/myjavafxapp/PatientRecordsView.fxml");
+        } catch (IOException e) {
+            showAlert(Alert.AlertType.ERROR, "Error", "Could not navigate to Patient Records: " + e.getMessage());
+        }
+    }
+
+    @FXML
+    public void onGlobalStats(ActionEvent event) {
+        try {
+            SwitchScene.switchScene(event, "/com/example/myjavafxapp/statistiquesGlobales.fxml");
+        } catch (IOException e) {
+            showAlert(Alert.AlertType.ERROR, "Error", "Could not navigate to Global Statistics: " + e.getMessage());
+        }
+    }
+
+    @FXML
+    public void onRepport(ActionEvent event) {
+        try {
+            SwitchScene.switchScene(event, "/com/example/myjavafxapp/rapportQuotidien.fxml");
+        } catch (IOException e) {
+            showAlert(Alert.AlertType.ERROR, "Error", "Could not navigate to Daily Reports: " + e.getMessage());
+        }
+    }
+
+    @FXML
+    public void onBackUp(ActionEvent event) {
+        try {
+            SwitchScene.switchScene(event, "/com/example/myjavafxapp/sauvegarde.fxml");
+        } catch (IOException e) {
+            showAlert(Alert.AlertType.ERROR, "Error", "Could not navigate to Backup: " + e.getMessage());
+        }
+    }
+
+    @FXML
+    public void onUsers(ActionEvent event) {
+        try {
+            SwitchScene.switchScene(event, "/com/example/myjavafxapp/gestionUtilisateurs.fxml");
+        } catch (IOException e) {
+            showAlert(Alert.AlertType.ERROR, "Error", "Could not navigate to User Management: " + e.getMessage());
+        }
+    }
+
+    @FXML
+    public void onLogOut(ActionEvent event) {
+        try {
+            // Clear user session
+            UserSession.getInstance().setUsername(null);
+            UserSession.getInstance().setRole(null);
+
+            SwitchScene.switchScene(event, "/com/example/myjavafxapp/loginForm.fxml");
+        } catch (IOException e) {
+            showAlert(Alert.AlertType.ERROR, "Error", "Could not log out: " + e.getMessage());
         }
     }
 }

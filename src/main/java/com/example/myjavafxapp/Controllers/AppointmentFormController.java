@@ -42,6 +42,7 @@ public class AppointmentFormController implements Initializable {
     // Time formatter
     private final DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
 
+
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         // Setup dropdown selectors
@@ -65,33 +66,50 @@ public class AppointmentFormController implements Initializable {
         });
     }
 
-    /**
-     * Set the appointment for editing or create a new one
-     */
+    private boolean isNewAppointment = false;
+
+    // Ajoutez cette nouvelle méthode à la classe AppointmentFormController
+    public void setNewAppointment(boolean isNew) {
+        this.isNewAppointment = isNew;
+        // Mettre à jour le titre du formulaire
+        if (isNew) {
+            formTitleLabel.setText("Nouveau Rendez-vous");
+        } else {
+            formTitleLabel.setText("Modifier Rendez-vous");
+        }
+    }
+
+    // Modifiez la méthode setAppointment pour reconnaître correctement les nouveaux rendez-vous
     public void setAppointment(Appointment appointment) {
         if (appointment != null) {
-            // Edit mode
-            isEditMode = true;
+            // Déterminer si c'est un nouveau rendez-vous ou une édition
+            isNewAppointment = (appointment.getRendezVousID() == 0);
             currentAppointment = appointment;
-            formTitleLabel.setText("Edit Appointment");
 
-            // Load appointment data into form
+            // Mettre à jour le titre du formulaire
+            if (isNewAppointment) {
+                formTitleLabel.setText("Nouveau Rendez-vous");
+            } else {
+                formTitleLabel.setText("Modifier Rendez-vous");
+            }
+
+            // Charger les données du rendez-vous dans le formulaire
             populateForm();
 
-            // Show status field for editing
-            statusLabel.setVisible(true);
-            statusSelector.setVisible(true);
+            // Afficher ou masquer le champ de statut en fonction du mode
+            statusLabel.setVisible(!isNewAppointment);
+            statusSelector.setVisible(!isNewAppointment);
         } else {
-            // New appointment mode
-            isEditMode = false;
+            // Nouveau rendez-vous par défaut
+            isNewAppointment = true;
             currentAppointment = new Appointment();
-            formTitleLabel.setText("New Appointment");
+            formTitleLabel.setText("Nouveau Rendez-vous");
 
-            // Set defaults
+            // Définir les valeurs par défaut
             appointmentDate.setValue(LocalDate.now());
             prioritySelector.getSelectionModel().select("Normal");
 
-            // Hide status field for new appointments
+            // Masquer le champ de statut pour les nouveaux rendez-vous
             statusLabel.setVisible(false);
             statusSelector.setVisible(false);
         }
@@ -375,36 +393,38 @@ public class AppointmentFormController implements Initializable {
     private void handleSave(ActionEvent event) {
         if (validateForm()) {
             try {
-                // Update appointment from form data
+                // Mettre à jour l'objet rendez-vous avec les données du formulaire
                 updateAppointmentFromForm();
 
                 boolean success;
-                if (isEditMode) {
-                    // Update existing appointment
-                    success = appointmentManager.updateAppointment(currentAppointment);
-                } else {
-                    // Create new appointment
+                if (isNewAppointment) {
+                    // Créer un nouveau rendez-vous
                     success = appointmentManager.createAppointment(currentAppointment);
+                    if (success) {
+                        showAlert(Alert.AlertType.INFORMATION, "Succès", "Rendez-vous créé avec succès");
+                        closeForm();
+                    } else {
+                        showAlert(Alert.AlertType.ERROR, "Erreur", "Échec de la création du rendez-vous");
+                    }
+                } else {
+                    // Mettre à jour un rendez-vous existant
+                    success = appointmentManager.updateAppointment(currentAppointment);
+                    if (success) {
+                        showAlert(Alert.AlertType.INFORMATION, "Succès", "Rendez-vous mis à jour avec succès");
+                        closeForm();
+                    } else {
+                        showAlert(Alert.AlertType.ERROR, "Erreur", "Échec de la mise à jour du rendez-vous");
+                    }
                 }
 
-                if (success) {
-                    showAlert(Alert.AlertType.INFORMATION, "Success",
-                            isEditMode ? "Appointment updated successfully" : "Appointment created successfully");
-
-                    // Get the parent controller and force a refresh if possible
-                    Stage stage = (Stage) cancelButton.getScene().getWindow();
-                    if (stage.getUserData() instanceof CalendarViewController) {
-                        CalendarViewController controller = (CalendarViewController) stage.getUserData();
-                        controller.updateCalendarView();
-                    }
-
-                    closeForm();
-                } else {
-                    showAlert(Alert.AlertType.ERROR, "Error",
-                            isEditMode ? "Failed to update appointment" : "Failed to create appointment");
+                // Rafraîchir la vue du calendrier si possible
+                Stage stage = (Stage) cancelButton.getScene().getWindow();
+                if (stage.getUserData() instanceof CalendarViewController) {
+                    CalendarViewController controller = (CalendarViewController) stage.getUserData();
+                    controller.updateCalendarView();
                 }
             } catch (Exception e) {
-                showAlert(Alert.AlertType.ERROR, "Error", "An error occurred: " + e.getMessage());
+                showAlert(Alert.AlertType.ERROR, "Erreur", "Une erreur est survenue : " + e.getMessage());
                 e.printStackTrace();
             }
         }

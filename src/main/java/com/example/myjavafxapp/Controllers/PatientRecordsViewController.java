@@ -134,7 +134,18 @@ public class PatientRecordsViewController implements Initializable {
         });
 
         statusColumn.setCellValueFactory(cellData -> {
-            return new SimpleStringProperty(cellData.getValue().getStatus());
+            String status = cellData.getValue().getStatus();
+            // Translate appointment status for display
+            switch (status) {
+                case "Scheduled": return new SimpleStringProperty("Programmé");
+                case "CheckedIn": return new SimpleStringProperty("Enregistré");
+                case "InProgress": return new SimpleStringProperty("En cours");
+                case "Completed": return new SimpleStringProperty("Terminé");
+                case "Missed": return new SimpleStringProperty("Manqué");
+                case "Patient_Cancelled": return new SimpleStringProperty("Annulé (Patient)");
+                case "Clinic_Cancelled": return new SimpleStringProperty("Annulé (Clinique)");
+                default: return new SimpleStringProperty(status);
+            }
         });
 
         // Set up the actions column
@@ -251,7 +262,7 @@ public class PatientRecordsViewController implements Initializable {
 
             Stage dialog = new Stage();
             dialog.initModality(Modality.APPLICATION_MODAL);
-            dialog.setTitle("View Appointment");
+            dialog.setTitle("Voir Rendez-vous");
             dialog.setScene(new Scene(loader.load()));
 
             // Set the appointment in the controller
@@ -267,7 +278,7 @@ public class PatientRecordsViewController implements Initializable {
 
         } catch (IOException e) {
             e.printStackTrace();
-            showAlert(Alert.AlertType.ERROR, "Error", "Could not open appointment view: " + e.getMessage());
+            showAlert(Alert.AlertType.ERROR, "Erreur", "Impossible d'ouvrir la vue du rendez-vous : " + e.getMessage());
         }
     }
 
@@ -279,7 +290,7 @@ public class PatientRecordsViewController implements Initializable {
         String searchTerm = patientSearchField.getText().trim();
 
         if (searchTerm.isEmpty()) {
-            showAlert(Alert.AlertType.WARNING, "Search Error", "Please enter a search term");
+            showAlert(Alert.AlertType.WARNING, "Erreur de recherche", "Veuillez entrer un terme de recherche");
             return;
         }
 
@@ -287,7 +298,7 @@ public class PatientRecordsViewController implements Initializable {
         List<Patient> results = patientManager.searchPatients(searchTerm);
 
         if (results.isEmpty()) {
-            showAlert(Alert.AlertType.INFORMATION, "No Results", "No patients found matching '" + searchTerm + "'");
+            showAlert(Alert.AlertType.INFORMATION, "Aucun résultat", "Aucun patient trouvé correspondant à '" + searchTerm + "'");
             return;
         }
 
@@ -301,12 +312,11 @@ public class PatientRecordsViewController implements Initializable {
     @FXML
     private void handleAddPatient(ActionEvent event) {
         try {
-            // For this example, assuming there's an AjouterPatientController already
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/example/myjavafxapp/ajouterPatient.fxml"));
 
             Stage dialog = new Stage();
             dialog.initModality(Modality.APPLICATION_MODAL);
-            dialog.setTitle("Add New Patient");
+            dialog.setTitle("Ajouter un nouveau patient");
             dialog.setScene(new Scene(loader.load()));
 
             dialog.showAndWait();
@@ -316,7 +326,7 @@ public class PatientRecordsViewController implements Initializable {
 
         } catch (IOException e) {
             e.printStackTrace();
-            showAlert(Alert.AlertType.ERROR, "Error", "Could not open add patient form: " + e.getMessage());
+            showAlert(Alert.AlertType.ERROR, "Erreur", "Impossible d'ouvrir le formulaire d'ajout de patient : " + e.getMessage());
         }
     }
 
@@ -326,7 +336,7 @@ public class PatientRecordsViewController implements Initializable {
     @FXML
     private void handleViewMedicalRecord(ActionEvent event) {
         if (currentPatient == null) {
-            showAlert(Alert.AlertType.WARNING, "Selection Error", "Please select a patient first");
+            showAlert(Alert.AlertType.WARNING, "Erreur de sélection", "Veuillez sélectionner un patient d'abord");
             return;
         }
 
@@ -339,14 +349,14 @@ public class PatientRecordsViewController implements Initializable {
 
             Stage dialog = new Stage();
             dialog.initModality(Modality.APPLICATION_MODAL);
-            dialog.setTitle("Patient Medical Record");
+            dialog.setTitle("Dossier médical du patient");
             dialog.setScene(new Scene(loader.load()));
 
             dialog.showAndWait();
 
         } catch (IOException e) {
             e.printStackTrace();
-            showAlert(Alert.AlertType.ERROR, "Error", "Could not open medical record: " + e.getMessage());
+            showAlert(Alert.AlertType.ERROR, "Erreur", "Impossible d'ouvrir le dossier médical : " + e.getMessage());
         }
     }
 
@@ -356,27 +366,31 @@ public class PatientRecordsViewController implements Initializable {
     @FXML
     private void handleNewAppointment(ActionEvent event) {
         if (currentPatient == null) {
-            showAlert(Alert.AlertType.WARNING, "Selection Error", "Please select a patient first");
+            showAlert(Alert.AlertType.WARNING, "Erreur de sélection", "Veuillez sélectionner un patient d'abord");
             return;
         }
 
         try {
-            // Create a new appointment for this patient
+            // Create a new appointment for this patient but don't set rendezVousID
+            // This ensures it's treated as a new appointment, not an edit
             Appointment newAppointment = new Appointment();
             newAppointment.setPatientID(currentPatient.getID());
             newAppointment.setPatientName(currentPatient.getFNAME() + " " + currentPatient.getLNAME());
+            // Important: ensure the appointment is correctly flagged as new
+            newAppointment.setRendezVousID(0); // Use 0 to indicate it's a new appointment
 
             // Load the appointment form
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/example/myjavafxapp/AppointmentForm.fxml"));
 
             Stage dialog = new Stage();
             dialog.initModality(Modality.APPLICATION_MODAL);
-            dialog.setTitle("New Appointment");
+            dialog.setTitle("Nouveau Rendez-vous");
             dialog.setScene(new Scene(loader.load()));
 
-            // Set the appointment in the controller
+            // Set the appointment in the controller with a flag indicating it's new
             AppointmentFormController controller = loader.getController();
             controller.setAppointment(newAppointment);
+            controller.setNewAppointment(true); // Add this flag to the controller
 
             dialog.showAndWait();
 
@@ -385,7 +399,7 @@ public class PatientRecordsViewController implements Initializable {
 
         } catch (IOException e) {
             e.printStackTrace();
-            showAlert(Alert.AlertType.ERROR, "Error", "Could not open appointment form: " + e.getMessage());
+            showAlert(Alert.AlertType.ERROR, "Erreur", "Impossible d'ouvrir le formulaire de rendez-vous : " + e.getMessage());
         }
     }
 
@@ -406,7 +420,7 @@ public class PatientRecordsViewController implements Initializable {
 
         } catch (IOException e) {
             e.printStackTrace();
-            showAlert(Alert.AlertType.ERROR, "Error", "Could not open calendar view: " + e.getMessage());
+            showAlert(Alert.AlertType.ERROR, "Erreur", "Impossible d'ouvrir la vue du calendrier : " + e.getMessage());
         }
     }
 

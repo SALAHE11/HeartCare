@@ -205,7 +205,7 @@ public class GestionDossierController implements Initializable {
 
     public void returnAction(ActionEvent actionEvent) {
         try {
-            SwitchScene.switchScene(actionEvent, "/com/example/myjavafxapp/Dashboard.fxml");
+            SwitchScene.switchScene(actionEvent, "/com/example/myjavafxapp/CalendarView.fxml");
         } catch (IOException e) {
             e.printStackTrace();
         }
