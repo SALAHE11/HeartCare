@@ -1,4 +1,4 @@
-package com.example.myjavafxapp.Controllers;
+package com.example.myjavafxapp.Controllers.Login_inscrire_OublierMDP;
 
 import com.example.myjavafxapp.Models.DatabaseSingleton;
 import com.example.myjavafxapp.Models.Hashing;
@@ -6,14 +6,9 @@ import com.example.myjavafxapp.Models.SwitchScene;
 import com.example.myjavafxapp.Models.UserSession;
 import javafx.fxml.FXML;
 import javafx.event.ActionEvent;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Node;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
-import javafx.stage.Stage;
 
 import java.io.IOException;
 import java.sql.Connection;
@@ -40,7 +35,7 @@ public class loginController {
                     // Fetch and store user role
                     fetchUserRole();
 
-                    SwitchScene.switchScene(event, "/com/example/myjavafxapp/Dashboard.fxml");
+                    SwitchScene.switchScene(event, "/com/example/myjavafxapp/CalendarView.fxml");
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }

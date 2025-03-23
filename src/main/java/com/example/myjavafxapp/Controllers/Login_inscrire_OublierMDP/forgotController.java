@@ -1,4 +1,4 @@
-package com.example.myjavafxapp.Controllers;
+package com.example.myjavafxapp.Controllers.Login_inscrire_OublierMDP;
 
 import com.example.myjavafxapp.Models.DatabaseSingleton;
 import com.example.myjavafxapp.Models.SwitchScene;

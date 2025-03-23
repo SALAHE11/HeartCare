@@ -1,18 +1,16 @@
-package com.example.myjavafxapp.Controllers;
+package com.example.myjavafxapp.Controllers.Login_inscrire_OublierMDP;
 
 import com.example.myjavafxapp.Models.DatabaseSingleton;
 import com.example.myjavafxapp.Models.SwitchScene;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
-import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
 
-import javax.swing.*;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;

@@ -3,15 +3,15 @@ package com.example.myjavafxapp.Controllers;
 import com.example.myjavafxapp.Models.DatabaseSingleton;
 import com.example.myjavafxapp.Models.Patient;
 import com.example.myjavafxapp.Models.PatientDataHolder;
-import com.example.myjavafxapp.Models.SwitchScene;
 import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.Node;
 import javafx.scene.control.*;
+import javafx.stage.Stage;
 import javafx.util.StringConverter;
 
-import java.io.IOException;
 import java.net.URL;
 import java.sql.Connection;
 import java.sql.Date;
@@ -85,6 +85,9 @@ public class EditerPatientController implements Initializable {
         currentPatient = PatientDataHolder.getInstance().getCurrentPatient();
         if (currentPatient != null) {
             cinField.setText(currentPatient.getID());
+            // Disable CIN field since it's the primary key
+            cinField.setEditable(false);
+
             nomField.setText(currentPatient.getFNAME());
             prenomField.setText(currentPatient.getLNAME());
             dateNaissanceField.setValue(LocalDate.parse(currentPatient.getBIRTHDATE()));
@@ -114,8 +117,11 @@ public class EditerPatientController implements Initializable {
 
                 int result = pstmt.executeUpdate();
                 if (result > 0) {
+                    // Update the current patient in PatientDataHolder with the new values
+                    updatePatientDataHolder();
+
                     showAlert(Alert.AlertType.INFORMATION, "Succès", "Patient modifié avec succès");
-                    returnAction(event);
+                    closeWindow(event);
                 } else {
                     showAlert(Alert.AlertType.ERROR, "Erreur", "Erreur lors de la modification du patient");
                 }
@@ -125,6 +131,21 @@ public class EditerPatientController implements Initializable {
             } catch (NumberFormatException e) {
                 showAlert(Alert.AlertType.ERROR, "Erreur de format", "Le numéro de téléphone doit être un nombre");
             }
+        }
+    }
+
+    private void updatePatientDataHolder() {
+        // Update the patient data in the data holder
+        if (currentPatient != null) {
+            currentPatient.setFNAME(nomField.getText());
+            currentPatient.setLNAME(prenomField.getText());
+            currentPatient.setBIRTHDATE(dateNaissanceField.getValue().toString());
+            currentPatient.setSEXE(sexeComboBox.getValue());
+            currentPatient.setADRESSE(adresseField.getText());
+            currentPatient.setTELEPHONE(Integer.parseInt(telephoneField.getText()));
+            currentPatient.setEMAIL(emailField.getText());
+
+            PatientDataHolder.getInstance().setCurrentPatient(currentPatient);
         }
     }
 
@@ -179,15 +200,23 @@ public class EditerPatientController implements Initializable {
 
     @FXML
     public void cancelAction(ActionEvent event) {
-        returnAction(event);
+        closeWindow(event);
     }
 
     @FXML
     public void returnAction(ActionEvent event) {
-        try {
-            SwitchScene.switchScene(event, "/com/example/myjavafxapp/gestionDossierPatient.fxml");
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        closeWindow(event);
+    }
+
+    /**
+     * Close the current window/dialog
+     */
+    private void closeWindow(ActionEvent event) {
+        // Get the source of the event
+        Node source = (Node) event.getSource();
+        // Get the stage (window) that contains the source
+        Stage stage = (Stage) source.getScene().getWindow();
+        // Close the window
+        stage.close();
     }
 }

@@ -5,8 +5,10 @@ import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
+import javafx.stage.Stage;
 
 import java.io.IOException;
 import java.net.URL;
@@ -309,10 +311,8 @@ public class DossierPatientController implements Initializable {
 
     @FXML
     public void returnAction(ActionEvent event) {
-        try {
-            SwitchScene.switchScene(event, "/com/example/myjavafxapp/gestionDossierPatient.fxml");
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        // Close the current stage/dialog instead of switching scenes
+        Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+        stage.close();
     }
 }
