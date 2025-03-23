@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import com.gluonhq.charm.glisten.control.TextField?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.DatePicker?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.text.Font?>
+<?import javafx.scene.text.Text?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
+
+<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="1024.0" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1">
+   <left>
+      <AnchorPane prefHeight="100.0" prefWidth="35.0" style="-fx-background-color: #6739a1;" BorderPane.alignment="CENTER">
+         <children>
+            <FontIcon iconColor="WHITE" iconLiteral="fas-angle-left" iconSize="20" layoutX="16.0" layoutY="19.0" AnchorPane.leftAnchor="9.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="10.0" />
+         </children>
+      </AnchorPane>
+   </left>
+   <right>
+      <AnchorPane prefHeight="600.0" prefWidth="989.0" BorderPane.alignment="CENTER">
+         <children>
+            <Text fill="#3544bb" layoutX="337.0" layoutY="35.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Ajout d'un utilisateur" textAlignment="JUSTIFY" AnchorPane.bottomAnchor="563.41796875" AnchorPane.leftAnchor="360.0" AnchorPane.rightAnchor="334.45670572916674" AnchorPane.topAnchor="20.0">
+               <font>
+                  <Font name="System Bold" size="26.0" />
+               </font>
+            </Text>
+            <TextField fx:id="telephone" layoutX="162.0" layoutY="210.0" maxLength="10" prefHeight="36.0" prefWidth="250.0" AnchorPane.leftAnchor="165.0" AnchorPane.topAnchor="270.0" />
+            <Text fill="#3544bb" layoutX="325.0" layoutY="97.0" strokeType="OUTSIDE" strokeWidth="0.0" text="CIN" AnchorPane.leftAnchor="340.0" AnchorPane.topAnchor="110.0">
+               <font>
+                  <Font name="System Bold" size="18.0" />
+               </font>
+            </Text>
+            <Text fill="#3544bb" layoutX="124.0" layoutY="461.0" strokeType="OUTSIDE" strokeWidth="0.0" text="E-mail" AnchorPane.leftAnchor="330.0" AnchorPane.topAnchor="430.0">
+               <font>
+                  <Font name="System Bold" size="18.0" />
+               </font>
+            </Text>
+            <Text fill="#3544bb" layoutX="544.0" layoutY="224.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Prenom" AnchorPane.leftAnchor="540.0" AnchorPane.topAnchor="190.0">
+               <font>
+                  <Font name="System Bold" size="18.0" />
+               </font>
+            </Text>
+            <Text fill="#3544bb" layoutX="123.0" layoutY="214.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Nom" AnchorPane.leftAnchor="111.0" AnchorPane.topAnchor="190.0">
+               <font>
+                  <Font name="System Bold" size="18.0" />
+               </font>
+            </Text>
+            <TextField fx:id="cin" layoutX="394.0" layoutY="87.0" maxLength="8" prefHeight="36.0" prefWidth="250.0" style="-fx-border-radius: 100;" AnchorPane.leftAnchor="394.0" AnchorPane.topAnchor="110.0" />
+            <TextField fx:id="nom" layoutX="206.0" layoutY="204.0" maxLength="50" prefHeight="36.0" prefWidth="250.0" style="-fx-border-radius: 100;" AnchorPane.leftAnchor="165.0" AnchorPane.topAnchor="190.0" />
+            <TextField fx:id="prenom" layoutX="614.0" layoutY="210.0" maxLength="50" prefHeight="36.0" prefWidth="250.0" AnchorPane.leftAnchor="620.0" AnchorPane.topAnchor="190.0" />
+            <Text fill="#3544bb" layoutX="49.0" layoutY="224.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Telephone" AnchorPane.leftAnchor="65.0" AnchorPane.topAnchor="270.0">
+               <font>
+                  <Font name="System Bold" size="18.0" />
+               </font>
+            </Text>
+            <TextField fx:id="adresse" layoutX="632.0" layoutY="300.0" maxLength="255" prefHeight="36.0" prefWidth="250.0" AnchorPane.leftAnchor="620.0" AnchorPane.topAnchor="270.0" />
+            <TextField fx:id="role" layoutX="155.0" layoutY="400.0" maxLength="255" prefHeight="36.0" prefWidth="250.0" AnchorPane.leftAnchor="620.0" AnchorPane.topAnchor="350.0" />
+            <Text fill="#3544bb" layoutX="79.0" layoutY="330.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Date de naissance" AnchorPane.leftAnchor="4.0" AnchorPane.topAnchor="350.0">
+               <font>
+                  <Font name="System Bold" size="18.0" />
+               </font>
+            </Text>
+            <Text fill="#3544bb" layoutX="36.0" layoutY="429.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Adresse" AnchorPane.leftAnchor="540.0" AnchorPane.topAnchor="270.0">
+               <font>
+                  <Font name="System Bold" size="18.0" />
+               </font>
+            </Text>
+            <Text fill="#3544bb" layoutX="542.0" layoutY="461.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Role" AnchorPane.leftAnchor="568.0" AnchorPane.topAnchor="350.0">
+               <font>
+                  <Font name="System Bold" size="18.0" />
+               </font>
+            </Text>
+            <DatePicker fx:id="birthdate" layoutX="320.0" layoutY="312.0" prefWidth="250.0" AnchorPane.leftAnchor="165.0" AnchorPane.topAnchor="350.0" />
+            <TextField fx:id="email" layoutX="199.0" layoutY="355.0" maxLength="50" prefHeight="36.0" prefWidth="250.0" AnchorPane.leftAnchor="394.0" AnchorPane.topAnchor="430.0" />
+            <Button layoutX="445.0" layoutY="512.0" mnemonicParsing="false" style="-fx-background-color: #6739a1;" text="Enregistrer" textFill="WHITE" AnchorPane.bottomAnchor="30.0">
+               <font>
+                  <Font size="18.0" />
+               </font>
+            </Button>
+         </children>
+      </AnchorPane>
+   </right>
+</BorderPane>
