@@ -512,7 +512,7 @@
                                                         <TableColumn fx:id="revenueDoctorColumn" prefWidth="200.0" text="Médecin" />
                                                         <TableColumn fx:id="appointmentCountColumn" prefWidth="150.0" text="Nb. Rendez-vous" />
                                                         <TableColumn fx:id="doctorRevenueColumn" prefWidth="150.0" text="Revenu Total" />
-                                                        <TableColumn fx:id="revenuePercentColumn" prefWidth="150.0" text="% du Revenu Total" />
+                                                        <TableColumn fx:id="revenuePercentColumn" prefWidth="150.0" text="du Revenu Total" />
                                                     </columns>
                                                 </TableView>
                                             </children>
