@@ -887,12 +887,22 @@ public class CalendarViewController implements Initializable {
         }
     }
 
+
     @FXML
     public void onGlobalStats(ActionEvent event) {
         try {
-            SwitchScene.switchScene(event, "/com/example/myjavafxapp/statistiquesGlobales.fxml");
+            // Load the view directly without using resource bundles
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/example/myjavafxapp/StatisticsDashboard.fxml"));
+
+            // Get the current stage
+            Stage currentStage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+
+            // Set the new scene
+            currentStage.setScene(new Scene(loader.load()));
+
         } catch (IOException e) {
-            showAlert(Alert.AlertType.ERROR, "Error", "Could not navigate to Global Statistics: " + e.getMessage());
+            e.printStackTrace();
+            showAlert(Alert.AlertType.ERROR, "Error", "Could not navigate to Statistics: " + e.getMessage());
         }
     }
 
