@@ -92,13 +92,11 @@ public class StatisticsDashboardController implements Initializable {
     // Managers
     private AppointmentManager appointmentManager = AppointmentManager.getInstance();
     private PatientManager patientManager = PatientManager.getInstance();
+    private StatisticsManager statisticsManager = StatisticsManager.getInstance();
 
     // Selected date range
     private LocalDate startDate;
     private LocalDate endDate;
-
-    // Constants for financial calculations (since we don't have actual payment data)
-    private static final double CONSULTATION_FEE = 300.0; // DH
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
@@ -740,22 +738,13 @@ public class StatisticsDashboardController implements Initializable {
      * Load financial performance
      */
     private void loadFinancialPerformance() {
-        // Get all completed appointments in date range
-        List<Appointment> completedAppointments = getCompletedAppointments();
+        // Get financial statistics from statisticsManager
+        Map<String, Object> stats = statisticsManager.getFinancialStatistics(startDate, endDate);
 
-        // Calculate total revenue (assuming a fixed fee per appointment)
-        double totalRevenue = completedAppointments.size() * CONSULTATION_FEE;
-
-        // Calculate unique patient count
-        Set<String> uniquePatients = new HashSet<>();
-        for (Appointment appointment : completedAppointments) {
-            uniquePatients.add(appointment.getPatientID());
-        }
-        int uniquePatientCount = uniquePatients.size();
-
-        // Calculate average revenue per appointment and per patient
-        double avgRevenuePerAppointment = completedAppointments.isEmpty() ? 0 : totalRevenue / completedAppointments.size();
-        double avgRevenuePerPatient = uniquePatientCount == 0 ? 0 : totalRevenue / uniquePatientCount;
+        // Extract data from statistics
+        double totalRevenue = (double) stats.getOrDefault("totalRevenue", 0.0);
+        double avgRevenuePerAppointment = (double) stats.getOrDefault("avgRevenuePerAppointment", 0.0);
+        double avgRevenuePerPatient = (double) stats.getOrDefault("avgRevenuePerPatient", 0.0);
 
         // Update labels
         totalRevenueLabel.setText(String.format("%.2f DH", totalRevenue));
@@ -763,201 +752,112 @@ public class StatisticsDashboardController implements Initializable {
         avgRevenuePerPatientLabel.setText(String.format("%.2f DH", avgRevenuePerPatient));
 
         // Load revenue trend chart
-        loadRevenueTrendChart(completedAppointments);
+        loadRevenueTrendChart(stats);
 
         // Load revenue by doctor
-        loadRevenueByDoctor(completedAppointments);
+        loadRevenueByDoctor(stats);
     }
 
     /**
-     * Load revenue trend chart
+     * Load revenue trend chart using statistics from StatisticsManager
      */
-    private void loadRevenueTrendChart(List<Appointment> appointments) {
-        // Determine period type based on date range
-        long daysBetween = ChronoUnit.DAYS.between(startDate, endDate);
+    private void loadRevenueTrendChart(Map<String, Object> stats) {
+        // Clear existing data
+        revenueTrendChart.getData().clear();
 
-        if (daysBetween <= 7) {
-            // Daily data
-            loadDailyRevenueChart(appointments);
-        } else if (daysBetween <= 90) {
-            // Weekly data
-            loadWeeklyRevenueChart(appointments);
-        } else {
-            // Monthly data
-            loadMonthlyRevenueChart(appointments);
-        }
-    }
+        // Get revenue by period data
+        @SuppressWarnings("unchecked")
+        Map<String, Double> periodRevenue = (Map<String, Double>) stats.get("revenueByPeriod");
+        String periodType = (String) stats.get("periodType");
 
-    /**
-     * Load daily revenue chart
-     */
-    private void loadDailyRevenueChart(List<Appointment> appointments) {
-        Map<LocalDate, Double> dailyRevenue = new TreeMap<>();
-
-        // Initialize all dates in the range with zero
-        LocalDate currentDate = startDate;
-        while (!currentDate.isAfter(endDate)) {
-            dailyRevenue.put(currentDate, 0.0);
-            currentDate = currentDate.plusDays(1);
-        }
-
-        // Calculate revenue by date
-        for (Appointment appointment : appointments) {
-            LocalDate appDate = appointment.getAppointmentDateTime().toLocalDate();
-            dailyRevenue.put(appDate, dailyRevenue.getOrDefault(appDate, 0.0) + CONSULTATION_FEE);
+        if (periodRevenue == null || periodRevenue.isEmpty()) {
+            return;
         }
 
         // Create chart series
         XYChart.Series<String, Number> series = new XYChart.Series<>();
-        series.setName("Revenu par jour");
 
-        for (Map.Entry<LocalDate, Double> entry : dailyRevenue.entrySet()) {
-            series.getData().add(new XYChart.Data<>(
-                    entry.getKey().format(dateFormatter),
-                    entry.getValue()
-            ));
+        // Set series name based on period type
+        switch (periodType) {
+            case "day":
+                series.setName("Revenu par jour");
+                break;
+            case "week":
+                series.setName("Revenu par semaine");
+                break;
+            case "month":
+                series.setName("Revenu par mois");
+                break;
+            default:
+                series.setName("Revenu");
         }
 
-        // Clear existing data and add new series
-        revenueTrendChart.getData().clear();
-        revenueTrendChart.getData().add(series);
-        revenueTrendChart.setTitle("Revenu par jour");
-    }
-
-    /**
-     * Load weekly revenue chart
-     */
-    private void loadWeeklyRevenueChart(List<Appointment> appointments) {
-        Map<String, Double> weeklyRevenue = new LinkedHashMap<>();
-
-        // Group appointments by week
-        for (Appointment appointment : appointments) {
-            LocalDate appDate = appointment.getAppointmentDateTime().toLocalDate();
-            LocalDate weekStart = appDate.with(DayOfWeek.MONDAY);
-            String weekLabel = weekStart.format(dateFormatter);
-            weeklyRevenue.put(weekLabel, weeklyRevenue.getOrDefault(weekLabel, 0.0) + CONSULTATION_FEE);
-        }
-
-        // Create chart series
-        XYChart.Series<String, Number> series = new XYChart.Series<>();
-        series.setName("Revenu par semaine");
-
-        for (Map.Entry<String, Double> entry : weeklyRevenue.entrySet()) {
-            series.getData().add(new XYChart.Data<>(
-                    "Sem. " + entry.getKey(),
-                    entry.getValue()
-            ));
-        }
-
-        // Clear existing data and add new series
-        revenueTrendChart.getData().clear();
-        revenueTrendChart.getData().add(series);
-        revenueTrendChart.setTitle("Revenu par semaine");
-    }
-
-    /**
-     * Load monthly revenue chart
-     */
-    private void loadMonthlyRevenueChart(List<Appointment> appointments) {
-        Map<String, Double> monthlyRevenue = new LinkedHashMap<>();
-
-        // Group appointments by month
-        for (Appointment appointment : appointments) {
-            LocalDate appDate = appointment.getAppointmentDateTime().toLocalDate();
-            String monthKey = appDate.getMonth().getDisplayName(TextStyle.SHORT, Locale.getDefault())
-                    + " " + appDate.getYear();
-            monthlyRevenue.put(monthKey, monthlyRevenue.getOrDefault(monthKey, 0.0) + CONSULTATION_FEE);
-        }
-
-        // Create chart series
-        XYChart.Series<String, Number> series = new XYChart.Series<>();
-        series.setName("Revenu par mois");
-
-        for (Map.Entry<String, Double> entry : monthlyRevenue.entrySet()) {
-            series.getData().add(new XYChart.Data<>(
-                    entry.getKey(),
-                    entry.getValue()
-            ));
-        }
-
-        // Clear existing data and add new series
-        revenueTrendChart.getData().clear();
-        revenueTrendChart.getData().add(series);
-        revenueTrendChart.setTitle("Revenu par mois");
-    }
-
-    /**
-     * Load revenue by doctor
-     */
-    private void loadRevenueByDoctor(List<Appointment> appointments) {
-        // Group appointments by doctor
-        Map<String, DoctorRevenue> doctorRevenueMap = new HashMap<>();
-
-        for (Appointment appointment : appointments) {
-            String doctorId = appointment.getMedicinID();
-            String doctorName = appointment.getDoctorName();
-
-            if (doctorName == null || doctorName.isEmpty()) {
-                // Try to look up doctor name if not available in appointment
-                doctorName = getDoctorName(doctorId);
+        // Add data points
+        for (Map.Entry<String, Double> entry : periodRevenue.entrySet()) {
+            String periodLabel = entry.getKey();
+            // Format period label if needed
+            if ("week".equals(periodType)) {
+                periodLabel = "Sem. " + periodLabel;
             }
 
-            if (doctorName == null || doctorName.isEmpty()) {
-                doctorName = "Dr. " + doctorId;
-            } else if (!doctorName.startsWith("Dr.")) {
+            series.getData().add(new XYChart.Data<>(periodLabel, entry.getValue()));
+        }
+
+        // Add series to chart
+        revenueTrendChart.getData().add(series);
+
+        // Set chart title
+        switch (periodType) {
+            case "day":
+                revenueTrendChart.setTitle("Revenu par jour");
+                break;
+            case "week":
+                revenueTrendChart.setTitle("Revenu par semaine");
+                break;
+            case "month":
+                revenueTrendChart.setTitle("Revenu par mois");
+                break;
+        }
+    }
+
+    /**
+     * Load revenue by doctor using statistics from StatisticsManager
+     */
+    private void loadRevenueByDoctor(Map<String, Object> stats) {
+        // Get revenue by doctor data
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> doctorRevenueData = (List<Map<String, Object>>) stats.get("revenueByDoctor");
+        double totalRevenue = (double) stats.getOrDefault("totalRevenue", 0.0);
+
+        if (doctorRevenueData == null || doctorRevenueData.isEmpty()) {
+            revenueByDoctorTable.setItems(FXCollections.observableArrayList());
+            return;
+        }
+
+        // Convert to DoctorRevenue objects
+        List<DoctorRevenue> doctorRevenueList = new ArrayList<>();
+
+        for (Map<String, Object> doctorData : doctorRevenueData) {
+            String doctorName = (String) doctorData.get("name");
+
+            if (!doctorName.startsWith("Dr.")) {
                 doctorName = "Dr. " + doctorName;
             }
 
-            DoctorRevenue doctorRevenue = doctorRevenueMap.getOrDefault(
-                    doctorId,
-                    new DoctorRevenue(doctorName, 0, 0.0)
-            );
+            int appointmentCount = (int) doctorData.get("appointmentCount");
+            double revenue = (double) doctorData.get("revenue");
 
-            doctorRevenue.incrementAppointmentCount();
-            doctorRevenue.addRevenue(CONSULTATION_FEE);
+            DoctorRevenue doctorRevenue = new DoctorRevenue(doctorName, appointmentCount, revenue);
 
-            doctorRevenueMap.put(doctorId, doctorRevenue);
-        }
-
-        // Calculate total revenue
-        double totalRevenue = appointments.size() * CONSULTATION_FEE;
-
-        // Calculate percentages
-        for (DoctorRevenue doctorRevenue : doctorRevenueMap.values()) {
-            double percent = totalRevenue > 0 ? 100.0 * doctorRevenue.getRevenue() / totalRevenue : 0;
+            // Calculate percentage
+            double percent = totalRevenue > 0 ? 100.0 * revenue / totalRevenue : 0;
             doctorRevenue.setPercentage(String.format("%.1f%%", percent));
-        }
 
-        // Convert to list and sort by revenue
-        List<DoctorRevenue> doctorRevenueList = new ArrayList<>(doctorRevenueMap.values());
-        doctorRevenueList.sort(Comparator.comparing(DoctorRevenue::getRevenue).reversed());
+            doctorRevenueList.add(doctorRevenue);
+        }
 
         // Update table
         revenueByDoctorTable.setItems(FXCollections.observableArrayList(doctorRevenueList));
-    }
-
-    /**
-     * Get doctor name from ID
-     */
-    private String getDoctorName(String doctorId) {
-        if (doctorId == null) return "";
-
-        Connection conn = DatabaseSingleton.getInstance().getConnection();
-
-        try {
-            String query = "SELECT FNAME, LNAME FROM users WHERE ID = ?";
-            PreparedStatement pstmt = conn.prepareStatement(query);
-            pstmt.setString(1, doctorId);
-
-            ResultSet rs = pstmt.executeQuery();
-            if (rs.next()) {
-                return rs.getString("LNAME") + ", " + rs.getString("FNAME");
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-
-        return "";
     }
 
     /**

@@ -16,9 +16,6 @@ import java.util.Map;
 public class StatisticsManager {
     private static StatisticsManager instance;
 
-    // Consultation fee - in a real application this would come from a database
-    private static final double DEFAULT_CONSULTATION_FEE = 300.0; // DH
-
     private StatisticsManager() {}
 
     public static synchronized StatisticsManager getInstance() {
@@ -156,11 +153,26 @@ public class StatisticsManager {
             if (completedRs.next()) {
                 completedCount = completedRs.getInt(1);
             }
-
-            // Calculate total revenue
-            double totalRevenue = completedCount * DEFAULT_CONSULTATION_FEE;
-            statistics.put("totalRevenue", totalRevenue);
             statistics.put("completedAppointments", completedCount);
+
+            // Calculate total revenue from actual payments
+            String revenueQuery =
+                    "SELECT COALESCE(SUM(p.Amount), 0) as totalRevenue " +
+                            "FROM paiment p " +
+                            "JOIN rendezvous r ON p.RendezVousID = r.RendezVousID " +
+                            "WHERE r.Status = 'Completed' " +
+                            "AND DATE(r.AppointmentDateTime) BETWEEN ? AND ?";
+
+            PreparedStatement revenueStmt = conn.prepareStatement(revenueQuery);
+            revenueStmt.setDate(1, java.sql.Date.valueOf(startDate));
+            revenueStmt.setDate(2, java.sql.Date.valueOf(endDate));
+            ResultSet revenueRs = revenueStmt.executeQuery();
+
+            double totalRevenue = 0.0;
+            if (revenueRs.next()) {
+                totalRevenue = revenueRs.getDouble("totalRevenue");
+            }
+            statistics.put("totalRevenue", totalRevenue);
 
             // Count unique patients in completed appointments
             String uniquePatientsQuery =
@@ -178,6 +190,7 @@ public class StatisticsManager {
             if (uniquePatientsRs.next()) {
                 uniquePatients = uniquePatientsRs.getInt(1);
             }
+            statistics.put("uniquePatients", uniquePatients);
 
             // Calculate averages
             double avgRevenuePerAppointment = completedCount > 0 ? totalRevenue / completedCount : 0;
@@ -185,18 +198,20 @@ public class StatisticsManager {
 
             statistics.put("avgRevenuePerAppointment", avgRevenuePerAppointment);
             statistics.put("avgRevenuePerPatient", avgRevenuePerPatient);
-            statistics.put("uniquePatients", uniquePatients);
 
             // Calculate revenue by doctor
             String revenueByDoctorQuery =
-                    "SELECT u.ID, u.FNAME, u.LNAME, COUNT(*) as appointmentCount " +
+                    "SELECT u.ID, u.FNAME, u.LNAME, " +
+                            "COUNT(r.RendezVousID) as appointmentCount, " +
+                            "COALESCE(SUM(p.Amount), 0) as revenue " +
                             "FROM users u " +
                             "JOIN rendezvous r ON u.ID = r.MedecinID " +
+                            "LEFT JOIN paiment p ON r.RendezVousID = p.RendezVousID " +
                             "WHERE u.ROLE = 'medecin' " +
                             "AND r.Status = 'Completed' " +
                             "AND DATE(r.AppointmentDateTime) BETWEEN ? AND ? " +
                             "GROUP BY u.ID " +
-                            "ORDER BY appointmentCount DESC";
+                            "ORDER BY revenue DESC";
 
             PreparedStatement revenueByDoctorStmt = conn.prepareStatement(revenueByDoctorQuery);
             revenueByDoctorStmt.setDate(1, java.sql.Date.valueOf(startDate));
@@ -208,9 +223,8 @@ public class StatisticsManager {
                 Map<String, Object> doctorData = new HashMap<>();
                 doctorData.put("id", revenueByDoctorRs.getString("ID"));
                 doctorData.put("name", revenueByDoctorRs.getString("LNAME") + ", " + revenueByDoctorRs.getString("FNAME"));
-                int count = revenueByDoctorRs.getInt("appointmentCount");
-                doctorData.put("appointmentCount", count);
-                doctorData.put("revenue", count * DEFAULT_CONSULTATION_FEE);
+                doctorData.put("appointmentCount", revenueByDoctorRs.getInt("appointmentCount"));
+                doctorData.put("revenue", revenueByDoctorRs.getDouble("revenue"));
                 doctorRevenue.add(doctorData);
             }
             statistics.put("revenueByDoctor", doctorRevenue);
@@ -223,23 +237,25 @@ public class StatisticsManager {
 
             if (daysBetween <= 7) {
                 // Daily data
-                periodGroup = "DATE(AppointmentDateTime)";
+                periodGroup = "DATE(r.AppointmentDateTime)";
                 periodLabel = "day";
             } else if (daysBetween <= 90) {
                 // Weekly data
-                periodGroup = "YEARWEEK(AppointmentDateTime, 3)"; // ISO week
+                periodGroup = "YEARWEEK(r.AppointmentDateTime, 3)"; // ISO week
                 periodLabel = "week";
             } else {
                 // Monthly data
-                periodGroup = "DATE_FORMAT(AppointmentDateTime, '%Y-%m')";
+                periodGroup = "DATE_FORMAT(r.AppointmentDateTime, '%Y-%m')";
                 periodLabel = "month";
             }
 
             String revenueByPeriodQuery =
-                    "SELECT " + periodGroup + " as period, COUNT(*) as count " +
-                            "FROM rendezvous " +
-                            "WHERE Status = 'Completed' " +
-                            "AND DATE(AppointmentDateTime) BETWEEN ? AND ? " +
+                    "SELECT " + periodGroup + " as period, " +
+                            "COALESCE(SUM(p.Amount), 0) as revenue " +
+                            "FROM rendezvous r " +
+                            "LEFT JOIN paiment p ON r.RendezVousID = p.RendezVousID " +
+                            "WHERE r.Status = 'Completed' " +
+                            "AND DATE(r.AppointmentDateTime) BETWEEN ? AND ? " +
                             "GROUP BY period " +
                             "ORDER BY period";
 
@@ -251,8 +267,7 @@ public class StatisticsManager {
             Map<String, Double> periodRevenue = new HashMap<>();
             while (revenueByPeriodRs.next()) {
                 String period = revenueByPeriodRs.getString("period");
-                int count = revenueByPeriodRs.getInt("count");
-                double revenue = count * DEFAULT_CONSULTATION_FEE;
+                double revenue = revenueByPeriodRs.getDouble("revenue");
                 periodRevenue.put(period, revenue);
             }
 
