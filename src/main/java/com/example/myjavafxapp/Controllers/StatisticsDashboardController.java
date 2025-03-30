@@ -336,15 +336,37 @@ public class StatisticsDashboardController implements Initializable {
             statusCounts.put(status, statusCounts.getOrDefault(status, 0) + 1);
         }
 
-        // Create pie chart data
+        // Create pie chart data with counts included in the labels
         ObservableList<PieChart.Data> pieChartData = FXCollections.observableArrayList();
 
         for (Map.Entry<String, Integer> entry : statusCounts.entrySet()) {
             pieChartData.add(new PieChart.Data(entry.getKey() + " (" + entry.getValue() + ")", entry.getValue()));
         }
 
+        // Remove the legend
+        appointmentStatusChart.setLegendVisible(false);
+
         appointmentStatusChart.setData(pieChartData);
         appointmentStatusChart.setTitle("Distribution des statuts (" + appointments.size() + " rendez-vous)");
+
+        // Ensure chart has enough width for legend
+        appointmentStatusChart.setPrefWidth(400);
+
+        // Add tooltips and visual indication of count
+        for (final PieChart.Data data : pieChartData) {
+            Tooltip tooltip = new Tooltip(data.getName() + ": " + (int)data.getPieValue() + " rendez-vous");
+            Tooltip.install(data.getNode(), tooltip);
+
+            // Optional: Add hover effect
+            data.getNode().setOnMouseEntered(e -> {
+                data.getNode().setScaleX(1.1);
+                data.getNode().setScaleY(1.1);
+            });
+            data.getNode().setOnMouseExited(e -> {
+                data.getNode().setScaleX(1);
+                data.getNode().setScaleY(1);
+            });
+        }
     }
 
     /**
@@ -613,15 +635,38 @@ public class StatisticsDashboardController implements Initializable {
             }
         }
 
-        // Create pie chart data
+        // Create pie chart data with counts included in the labels
         ObservableList<PieChart.Data> pieChartData = FXCollections.observableArrayList(
                 new PieChart.Data("Hommes (" + maleCount + ")", maleCount),
                 new PieChart.Data("Femmes (" + femaleCount + ")", femaleCount)
         );
 
+        // Remove the legend
+        genderDistributionChart.setLegendVisible(false);
+
         genderDistributionChart.setData(pieChartData);
         genderDistributionChart.setTitle("Distribution par sexe (" + patients.size() + " patients)");
+
+        // Ensure chart has enough width for legend
+        genderDistributionChart.setPrefWidth(400);
+
+        // Add tooltips and visual indication of count
+        for (final PieChart.Data data : pieChartData) {
+            Tooltip tooltip = new Tooltip(data.getName() + ": " + (int)data.getPieValue() + " patients");
+            Tooltip.install(data.getNode(), tooltip);
+
+            // Optional: Add labels to the chart showing counts
+            data.getNode().setOnMouseEntered(e -> {
+                data.getNode().setScaleX(1.1);
+                data.getNode().setScaleY(1.1);
+            });
+            data.getNode().setOnMouseExited(e -> {
+                data.getNode().setScaleX(1);
+                data.getNode().setScaleY(1);
+            });
+        }
     }
+
 
     /**
      * Load age distribution chart
