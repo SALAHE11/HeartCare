@@ -1,4 +1,4 @@
-package com.example.myjavafxapp.Controllers;
+package com.example.myjavafxapp.Controllers.GestionDossierPatient;
 
 import com.example.myjavafxapp.Models.DatabaseSingleton;
 import com.example.myjavafxapp.Models.Patient;
