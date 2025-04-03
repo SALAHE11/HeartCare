@@ -1,84 +1,84 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import com.gluonhq.charm.glisten.control.TextField?>
+<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.DatePicker?>
-<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
-<?import javafx.scene.text.Text?>
 <?import org.kordamp.ikonli.javafx.FontIcon?>
 
-<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="1024.0" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1">
-   <left>
-      <AnchorPane prefHeight="100.0" prefWidth="35.0" style="-fx-background-color: #6739a1;" BorderPane.alignment="CENTER">
+<?import javafx.scene.control.ComboBox?>
+<BorderPane minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="800.0" stylesheets="@GestionDossierCss.css" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.myjavafxapp.Controllers.GestionUsers.ajouterUsersController">
+   <center>
+      <VBox alignment="CENTER" spacing="20.0" styleClass="form-container" BorderPane.alignment="CENTER">
          <children>
-            <FontIcon iconColor="WHITE" iconLiteral="fas-angle-left" iconSize="20" layoutX="16.0" layoutY="19.0" AnchorPane.leftAnchor="9.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="10.0" />
-         </children>
-      </AnchorPane>
-   </left>
-   <right>
-      <AnchorPane prefHeight="600.0" prefWidth="989.0" BorderPane.alignment="CENTER">
-         <children>
-            <Text fill="#3544bb" layoutX="337.0" layoutY="35.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Ajout d'un utilisateur" textAlignment="JUSTIFY" AnchorPane.bottomAnchor="563.41796875" AnchorPane.leftAnchor="360.0" AnchorPane.rightAnchor="334.45670572916674" AnchorPane.topAnchor="20.0">
+            <Label styleClass="form-title" text="Ajouter Un Utilisateur">
                <font>
                   <Font name="System Bold" size="26.0" />
                </font>
-            </Text>
-            <TextField fx:id="telephone" layoutX="162.0" layoutY="210.0" maxLength="10" prefHeight="36.0" prefWidth="250.0" AnchorPane.leftAnchor="165.0" AnchorPane.topAnchor="270.0" />
-            <Text fill="#3544bb" layoutX="325.0" layoutY="97.0" strokeType="OUTSIDE" strokeWidth="0.0" text="CIN" AnchorPane.leftAnchor="340.0" AnchorPane.topAnchor="110.0">
-               <font>
-                  <Font name="System Bold" size="18.0" />
-               </font>
-            </Text>
-            <Text fill="#3544bb" layoutX="124.0" layoutY="461.0" strokeType="OUTSIDE" strokeWidth="0.0" text="E-mail" AnchorPane.leftAnchor="330.0" AnchorPane.topAnchor="430.0">
-               <font>
-                  <Font name="System Bold" size="18.0" />
-               </font>
-            </Text>
-            <Text fill="#3544bb" layoutX="544.0" layoutY="224.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Prenom" AnchorPane.leftAnchor="540.0" AnchorPane.topAnchor="190.0">
-               <font>
-                  <Font name="System Bold" size="18.0" />
-               </font>
-            </Text>
-            <Text fill="#3544bb" layoutX="123.0" layoutY="214.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Nom" AnchorPane.leftAnchor="111.0" AnchorPane.topAnchor="190.0">
-               <font>
-                  <Font name="System Bold" size="18.0" />
-               </font>
-            </Text>
-            <TextField fx:id="cin" layoutX="394.0" layoutY="87.0" maxLength="8" prefHeight="36.0" prefWidth="250.0" style="-fx-border-radius: 100;" AnchorPane.leftAnchor="394.0" AnchorPane.topAnchor="110.0" />
-            <TextField fx:id="nom" layoutX="206.0" layoutY="204.0" maxLength="50" prefHeight="36.0" prefWidth="250.0" style="-fx-border-radius: 100;" AnchorPane.leftAnchor="165.0" AnchorPane.topAnchor="190.0" />
-            <TextField fx:id="prenom" layoutX="614.0" layoutY="210.0" maxLength="50" prefHeight="36.0" prefWidth="250.0" AnchorPane.leftAnchor="620.0" AnchorPane.topAnchor="190.0" />
-            <Text fill="#3544bb" layoutX="49.0" layoutY="224.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Telephone" AnchorPane.leftAnchor="65.0" AnchorPane.topAnchor="270.0">
-               <font>
-                  <Font name="System Bold" size="18.0" />
-               </font>
-            </Text>
-            <TextField fx:id="adresse" layoutX="632.0" layoutY="300.0" maxLength="255" prefHeight="36.0" prefWidth="250.0" AnchorPane.leftAnchor="620.0" AnchorPane.topAnchor="270.0" />
-            <TextField fx:id="role" layoutX="155.0" layoutY="400.0" maxLength="255" prefHeight="36.0" prefWidth="250.0" AnchorPane.leftAnchor="620.0" AnchorPane.topAnchor="350.0" />
-            <Text fill="#3544bb" layoutX="79.0" layoutY="330.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Date de naissance" AnchorPane.leftAnchor="4.0" AnchorPane.topAnchor="350.0">
-               <font>
-                  <Font name="System Bold" size="18.0" />
-               </font>
-            </Text>
-            <Text fill="#3544bb" layoutX="36.0" layoutY="429.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Adresse" AnchorPane.leftAnchor="540.0" AnchorPane.topAnchor="270.0">
-               <font>
-                  <Font name="System Bold" size="18.0" />
-               </font>
-            </Text>
-            <Text fill="#3544bb" layoutX="542.0" layoutY="461.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Role" AnchorPane.leftAnchor="568.0" AnchorPane.topAnchor="350.0">
-               <font>
-                  <Font name="System Bold" size="18.0" />
-               </font>
-            </Text>
-            <DatePicker fx:id="birthdate" layoutX="320.0" layoutY="312.0" prefWidth="250.0" AnchorPane.leftAnchor="165.0" AnchorPane.topAnchor="350.0" />
-            <TextField fx:id="email" layoutX="199.0" layoutY="355.0" maxLength="50" prefHeight="36.0" prefWidth="250.0" AnchorPane.leftAnchor="394.0" AnchorPane.topAnchor="430.0" />
-            <Button layoutX="445.0" layoutY="512.0" mnemonicParsing="false" style="-fx-background-color: #6739a1;" text="Enregistrer" textFill="WHITE" AnchorPane.bottomAnchor="30.0">
-               <font>
-                  <Font size="18.0" />
-               </font>
-            </Button>
+            </Label>
+            <GridPane hgap="15.0" vgap="15.0">
+               <columnConstraints>
+                  <ColumnConstraints hgrow="SOMETIMES" maxWidth="200.0" minWidth="150.0" prefWidth="150.0" />
+                  <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="250.0" />
+               </columnConstraints>
+               <rowConstraints>
+                  <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                  <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                  <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                  <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                  <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                  <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                  <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                  <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" /> <!-- Nouvelle ligne pour le rôle -->
+               </rowConstraints>
+               <children>
+                  <Label styleClass="form-label" text="CIN :" />
+                  <Label styleClass="form-label" text="Nom :" GridPane.rowIndex="1" />
+                  <Label styleClass="form-label" text="Prénom :" GridPane.rowIndex="2" />
+                  <Label styleClass="form-label" text="Rôle :" GridPane.rowIndex="3" /> <!-- Nouveau label pour le rôle -->
+                  <Label styleClass="form-label" text="Date de naissance :" GridPane.rowIndex="4" />
+                  <Label styleClass="form-label" text="Téléphone :" GridPane.rowIndex="5" />
+                  <Label styleClass="form-label" text="Adresse :" GridPane.rowIndex="6" />
+                  <Label styleClass="form-label" text="E-mail :" GridPane.rowIndex="7" />
+                  <TextField fx:id="cinField" styleClass="form-field" GridPane.columnIndex="1" />
+                  <TextField fx:id="nomField" styleClass="form-field" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                  <TextField fx:id="prenomField" styleClass="form-field" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                  <ComboBox fx:id="roleComboBox" maxWidth="1.7976931348623157E308" styleClass="form-field" GridPane.columnIndex="1" GridPane.rowIndex="3" /> <!-- Nouveau ComboBox pour le rôle -->
+                  <DatePicker fx:id="dateNaissanceField" maxWidth="1.7976931348623157E308" styleClass="form-field" GridPane.columnIndex="1" GridPane.rowIndex="4" />
+                  <TextField fx:id="telephoneField" styleClass="form-field" GridPane.columnIndex="1" GridPane.rowIndex="5" />
+                  <TextField fx:id="adresseField" styleClass="form-field" GridPane.columnIndex="1" GridPane.rowIndex="6" />
+                  <TextField fx:id="emailField" styleClass="form-field" GridPane.columnIndex="1" GridPane.rowIndex="7" />
+               </children>
+            </GridPane>
+            <HBox alignment="CENTER" spacing="20.0">
+               <children>
+                  <Button fx:id="saveButton" mnemonicParsing="false" onAction="#saveUser" styleClass="save-button" text="Enregistrer">
+                     <graphic>
+                        <FontIcon iconColor="WHITE" iconLiteral="fas-save" iconSize="14" />
+                     </graphic>
+                  </Button>
+                  <Button fx:id="cancelButton" mnemonicParsing="false" onAction="#cancelAction" styleClass="cancel-button" text="Annuler">
+                     <graphic>
+                        <FontIcon iconColor="WHITE" iconLiteral="fas-times" iconSize="14" />
+                     </graphic>
+                  </Button>
+               </children>
+               <VBox.margin>
+                  <Insets top="20.0" />
+               </VBox.margin>
+            </HBox>
          </children>
-      </AnchorPane>
-   </right>
+         <BorderPane.margin>
+            <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
+         </BorderPane.margin>
+      </VBox>
+   </center>
 </BorderPane>

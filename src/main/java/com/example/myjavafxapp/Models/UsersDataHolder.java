@@ -12,7 +12,7 @@ public class UsersDataHolder {
         return instance;
     }
 
-    public void setCurrent(Users user) {
+    public void setCurrentUser(Users user) {
         this.currentUsers = currentUsers;
     }
     public Users getCurrentUsers() {

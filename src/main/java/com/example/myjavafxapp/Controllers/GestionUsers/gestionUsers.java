@@ -1,9 +1,14 @@
 package com.example.myjavafxapp.Controllers.GestionUsers;
 import com.example.myjavafxapp.Models.*;
 import javafx.event.ActionEvent;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Node;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
 import javafx.geometry.Pos;
+import javafx.stage.Stage;
 import javafx.util.Callback;
 import java.util.Optional;
 import java.io.IOException;
@@ -159,8 +164,8 @@ public class gestionUsers implements Initializable {
                 editButton.setOnAction(event -> {
                     Users user = getTableView().getItems().get(getIndex());
                     try {
-                        UsersDataHolder.getInstance().setCurrent(user);
-                        SwitchScene.switchScene(event, "/com/example/myjavafxapp/ModifyUsers.fxml");
+                        UsersDataHolder.getInstance().setCurrentUser(user);
+                        SwitchScene.switchScene(event, "/com/example/myjavafxapp/editerUsers.fxml");
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
@@ -227,9 +232,30 @@ public class gestionUsers implements Initializable {
             // Gérer l'erreur (afficher un message, etc.)
         }
     }
-    public void returnAction(ActionEvent actionEvent) {
+    @FXML
+    public void returnAction(ActionEvent event) {
         try {
-            SwitchScene.switchScene(actionEvent, "/com/example/myjavafxapp/Dashboard.fxml");
+            // Obtenir la source de l'événement
+            Node source = (Node) event.getSource();
+            // Obtenir la scène actuelle
+            Scene currentScene = source.getScene();
+            // Obtenir la fenêtre (Stage) actuelle
+            Stage currentStage = (Stage) currentScene.getWindow();
+
+            // Charger le nouveau FXML
+            URL location = getClass().getResource("/com/example/myjavafxapp/CalendarView.fxml");
+            if (location == null) {
+                System.err.println("Erreur: Impossible de trouver le fichier FXML CalendarView.fxml");
+                throw new IOException("Fichier FXML introuvable");
+            }
+
+            FXMLLoader loader = new FXMLLoader(location);
+            Parent root = loader.load();
+
+            // Définir la nouvelle scène
+            Scene scene = new Scene(root);
+            currentStage.setScene(scene);
+            currentStage.show();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -238,7 +264,7 @@ public class gestionUsers implements Initializable {
     @FXML
     public void addPatientAction(ActionEvent actionEvent) {
         try {
-            SwitchScene.switchScene(actionEvent, "/com/example/myjavafxapp/AddUsers.fxml");
+            SwitchScene.switchScene(actionEvent, "/com/example/myjavafxapp/AddUser.fxml");
         } catch (IOException e) {
             e.printStackTrace();
         }

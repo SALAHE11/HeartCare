@@ -110,4 +110,22 @@ public class Users extends Checkbox {
     public void setROLE(String ROLE) {
         this.ROLE = ROLE;
     }
+
+    @Override
+    public String toString() {
+        return FNAME + " " + LNAME;
+    }
+
+    // Helper methods
+    public boolean isDoctor() {
+        return "medecin".equals(ROLE);
+    }
+
+    public boolean isAdmin() {
+        return "admin".equals(ROLE);
+    }
+
+    public boolean isStaff() {
+        return "personnel".equals(ROLE);
+    }
 }
