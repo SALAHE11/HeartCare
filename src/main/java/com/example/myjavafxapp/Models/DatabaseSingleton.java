@@ -11,7 +11,7 @@ public class DatabaseSingleton {
 
     private static final String URL = "jdbc:mysql://localhost:3307/heartcare";
     private static final String USER = "root";
-    private static final String PASSWORD = "Rihab@1234";  // Change the password here Rihab
+    private static final String PASSWORD = "Zoro*2222";  // Change the password here Rihab
 
     private DatabaseSingleton() {
         try {

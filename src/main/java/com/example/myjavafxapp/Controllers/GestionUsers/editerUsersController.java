@@ -20,6 +20,7 @@ import java.net.URL;
 import java.sql.Connection;
 import java.sql.Date;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -27,44 +28,25 @@ import java.util.ResourceBundle;
 
 public class editerUsersController implements Initializable {
 
-    @FXML
-    private TextField adresseField;
+    @FXML private TextField adresseField;
+    @FXML private Button cancelButton;
+    @FXML private TextField cinField;
+    @FXML private DatePicker dateNaissanceField;
+    @FXML private TextField emailField;
+    @FXML private TextField nomField;
+    @FXML private TextField prenomField;
+    @FXML private ComboBox<String> roleComboBox;
+    @FXML private Button saveButton;
+    @FXML private TextField telephoneField;
 
-    @FXML
-    private Button cancelButton;
-
-    @FXML
-    private TextField cinField;
-
-    @FXML
-    private DatePicker dateNaissanceField;
-
-    @FXML
-    private TextField emailField;
-
-    @FXML
-    private TextField nomField;
-
-    @FXML
-    private TextField prenomField;
-
-    @FXML
-    private ComboBox<String> roleComboBox;
-
-    @FXML
-    private Button saveButton;
-
-    @FXML
-    private TextField telephoneField;
-
-    @FXML
-    private Users currentUser ;
+    private Users currentUser;
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
-
+        // Initialize the role ComboBox with options
         roleComboBox.setItems(FXCollections.observableArrayList("Admin", "Medecin", "Personnel"));
 
+        // Set up DatePicker format
         dateNaissanceField.setConverter(new StringConverter<LocalDate>() {
             private final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
@@ -87,36 +69,99 @@ public class editerUsersController implements Initializable {
             }
         });
 
+        // Load user data
         loadUsersData();
     }
 
     private void loadUsersData() {
-        currentUser=UsersDataHolder.getInstance().getCurrentUsers();
-        if (currentUser != null) {
-            cinField.setText(currentUser.getID());
-            // Disable CIN field since it's the primary key
-            cinField.setEditable(false);
+        // Get the current user from the data holder
+        currentUser = UsersDataHolder.getInstance().getCurrentUsers();
 
-            cinField.setText(currentUser.getID());
-            nomField.setText(currentUser.getFNAME());
-            prenomField.setText(currentUser.getLNAME());
-            dateNaissanceField.setValue(LocalDate.parse(currentUser.getBIRTHDATE()));
-            roleComboBox.setValue(currentUser.getROLE());
-            adresseField.setText(currentUser.getADRESSE());
-            telephoneField.setText(String.valueOf(currentUser.getTELEPHONE()));
-            emailField.setText(currentUser.getEMAIL());
+        // If user data isn't available from the data holder, try to fetch by ID if cinField has a value
+        if (currentUser == null && cinField.getText() != null && !cinField.getText().isEmpty()) {
+            try {
+                loadUserFromDatabase(cinField.getText());
+            } catch (SQLException e) {
+                showAlert(Alert.AlertType.ERROR, "Database Error", "Failed to load user data: " + e.getMessage());
+                e.printStackTrace();
+            }
+        }
+
+        // Populate form fields if we have a user
+        if (currentUser != null) {
+            populateFormFields();
+        } else {
+            showAlert(Alert.AlertType.WARNING, "Data Error", "No user data available to edit");
         }
     }
 
+    private void loadUserFromDatabase(String userId) throws SQLException {
+        Connection conn = DatabaseSingleton.getInstance().getConnection();
+        String query = "SELECT ID, FNAME, LNAME, BIRTHDATE, ROLE, USERNAME, EMAIL, TELEPHONE, ADRESSE FROM USERS WHERE ID = ?";
+
+        PreparedStatement stmt = conn.prepareStatement(query);
+        stmt.setString(1, userId);
+
+        ResultSet rs = stmt.executeQuery();
+        if (rs.next()) {
+            // Create a new Users object with data from database
+            currentUser = new Users(
+                    rs.getString("ID"),
+                    rs.getString("FNAME"),
+                    rs.getString("LNAME"),
+                    rs.getString("BIRTHDATE"),
+                    rs.getString("ROLE"),
+                    rs.getString("USERNAME"),
+                    rs.getString("EMAIL")
+            );
+
+            // Set additional properties that aren't in the constructor
+            currentUser.setTELEPHONE(rs.getInt("TELEPHONE"));
+            currentUser.setADRESSE(rs.getString("ADRESSE"));
+
+            // Update the data holder
+            UsersDataHolder.getInstance().setCurrentUser(currentUser);
+        }
+    }
+
+    private void populateFormFields() {
+        cinField.setText(currentUser.getID());
+        // Disable CIN field since it's the primary key
+        cinField.setEditable(false);
+
+        nomField.setText(currentUser.getFNAME());
+        prenomField.setText(currentUser.getLNAME());
+
+        try {
+            // Try to parse the date - handle potential format issues
+            if (currentUser.getBIRTHDATE() != null && !currentUser.getBIRTHDATE().isEmpty()) {
+                dateNaissanceField.setValue(LocalDate.parse(currentUser.getBIRTHDATE()));
+            }
+        } catch (Exception e) {
+            System.err.println("Error parsing birth date: " + e.getMessage());
+        }
+
+        roleComboBox.setValue(currentUser.getROLE());
+
+        if (currentUser.getADRESSE() != null) {
+            adresseField.setText(currentUser.getADRESSE());
+        }
+
+        // Only set the telephone field if it's a valid non-zero value
+        if (currentUser.getTELEPHONE() > 0) {
+            telephoneField.setText(String.valueOf(currentUser.getTELEPHONE()));
+        }
+
+        emailField.setText(currentUser.getEMAIL());
+    }
 
     @FXML
     void updateUsers(ActionEvent event) {
-        validateFields();
-        {
-            try{
-                Connection conn= DatabaseSingleton.getInstance().getConnection();
-                String updateQuery="UPDATE USERS SET ID=?, FNAME=?, LNAME=?, ROLE=?, BIRTHDATE=?, TELEPHONE=?, ADRESSE=?, EMAIL=? WHERE ID=?";
-                PreparedStatement pstmt=conn.prepareStatement(updateQuery);
+        if (validateFields()) {
+            try {
+                Connection conn = DatabaseSingleton.getInstance().getConnection();
+                String updateQuery = "UPDATE USERS SET ID=?, FNAME=?, LNAME=?, ROLE=?, BIRTHDATE=?, TELEPHONE=?, ADRESSE=?, EMAIL=? WHERE ID=?";
+                PreparedStatement pstmt = conn.prepareStatement(updateQuery);
 
                 pstmt.setString(1, cinField.getText());
                 pstmt.setString(2, nomField.getText());
@@ -130,6 +175,7 @@ public class editerUsersController implements Initializable {
 
                 int result = pstmt.executeUpdate();
                 if (result > 0) {
+                    // Update the current user with the new values
                     updateUsersDataHolder();
 
                     showAlert(Alert.AlertType.INFORMATION, "Succès", "User modifié avec succès");
@@ -146,26 +192,40 @@ public class editerUsersController implements Initializable {
         }
     }
 
+    private void updateUsersDataHolder() {
+        if (currentUser != null) {
+            currentUser.setID(cinField.getText());
+            currentUser.setFNAME(nomField.getText());
+            currentUser.setLNAME(prenomField.getText());
+            currentUser.setROLE(roleComboBox.getValue());
+            currentUser.setBIRTHDATE(dateNaissanceField.getValue().toString());
+            currentUser.setTELEPHONE(Integer.parseInt(telephoneField.getText()));
+            currentUser.setADRESSE(adresseField.getText());
+            currentUser.setEMAIL(emailField.getText());
+
+            // Update the data holder with the modified user
+            UsersDataHolder.getInstance().setCurrentUser(currentUser);
+        }
+    }
+
     public void cancelAction(ActionEvent event) {
         try {
-            // Charger le fichier FXML du tableau de bord
+            // Load the dashboard FXML file
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/example/myjavafxapp/gestionUtilisateurs.fxml"));
             Parent root = loader.load();
 
-            // Obtenir la fenêtre actuelle
+            // Get the current stage
             Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
 
-            // Définir la nouvelle scène
+            // Set the new scene
             Scene scene = new Scene(root);
             stage.setScene(scene);
             stage.show();
         } catch (IOException e) {
             e.printStackTrace();
-            // Vous pouvez afficher une alerte en cas d'erreur
             showAlert(Alert.AlertType.ERROR, "Erreur", "Impossible de charger le tableau de bord.");
         }
     }
-
 
     private void closeWindow(ActionEvent event) {
         // Get the source of the event
@@ -180,23 +240,6 @@ public class editerUsersController implements Initializable {
         closeWindow(event);
     }
 
-
-    private void updateUsersDataHolder() {
-        if(currentUser !=null){
-            currentUser.setID(cinField.getText());
-            currentUser.setFNAME(nomField.getText());
-            currentUser.setLNAME(prenomField.getText());
-            currentUser.setROLE(roleComboBox.getValue());
-            currentUser.setBIRTHDATE(dateNaissanceField.getValue().toString());
-            currentUser.setTELEPHONE(Integer.parseInt(telephoneField.getText()));
-            currentUser.setADRESSE(adresseField.getText());
-            currentUser.setEMAIL(emailField.getText());
-
-            UsersDataHolder.getInstance().setCurrentUser(currentUser);
-
-        }
-    }
-
     private boolean validateFields() {
         StringBuilder errorMessage = new StringBuilder();
 
@@ -209,7 +252,7 @@ public class editerUsersController implements Initializable {
         if (prenomField.getText().isEmpty()) {
             errorMessage.append("Le prénom est obligatoire\n");
         }
-        if (roleComboBox.getValue().isEmpty()) {
+        if (roleComboBox.getValue() == null || roleComboBox.getValue().isEmpty()) {
             errorMessage.append("Le role est obligatoire\n");
         }
         if (dateNaissanceField.getValue() == null) {
@@ -230,12 +273,14 @@ public class editerUsersController implements Initializable {
         if (emailField.getText().isEmpty()) {
             errorMessage.append("L'E-mail est obligatoire\n");
         }
+
         if (errorMessage.length() > 0) {
             showAlert(Alert.AlertType.ERROR, "Erreur de validation", errorMessage.toString());
             return false;
         }
         return true;
     }
+
     private void showAlert(Alert.AlertType alertType, String title, String content) {
         Alert alert = new Alert(alertType);
         alert.setTitle(title);
@@ -243,6 +288,4 @@ public class editerUsersController implements Initializable {
         alert.setContentText(content);
         alert.showAndWait();
     }
-
-
 }

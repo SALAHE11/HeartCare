@@ -1,11 +1,14 @@
 package com.example.myjavafxapp.Models;
-import java.awt.*;
+
 public class UsersDataHolder {
     private static UsersDataHolder instance;
     private Users currentUsers;
 
+    private UsersDataHolder() {
+        // Private constructor
+    }
 
-    public static UsersDataHolder getInstance() {
+    public static synchronized UsersDataHolder getInstance() {
         if (instance == null) {
             instance = new UsersDataHolder();
         }
@@ -13,11 +16,10 @@ public class UsersDataHolder {
     }
 
     public void setCurrentUser(Users user) {
-        this.currentUsers = currentUsers;
+        this.currentUsers = user;  // Fixed: assign parameter to field instead of self-assignment
     }
+
     public Users getCurrentUsers() {
         return currentUsers;
     }
-
-
 }
