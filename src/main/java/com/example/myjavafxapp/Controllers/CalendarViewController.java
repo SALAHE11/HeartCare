@@ -872,7 +872,7 @@ public class CalendarViewController implements Initializable {
     @FXML
     public void onCreditCard(ActionEvent event) {
         try {
-            SwitchScene.switchScene(event, "/com/example/myjavafxapp/GestionPaiment.fxml");
+            SwitchScene.switchScene(event, "/com/example/myjavafxapp/GestionPaiement.fxml");
         } catch (IOException e) {
             showAlert(Alert.AlertType.ERROR, "Error", "Could not navigate to Payment Management: " + e.getMessage());
         }
