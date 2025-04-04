@@ -60,7 +60,7 @@ public class CalendarViewController implements Initializable {
     private Timer refreshTimer;
 
     // Formatters
-    private final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("EEEE, MMMM d, yyyy");
+    private final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("EEEE, d MMMM yyyy");
     private final DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
 
     @Override
@@ -87,8 +87,8 @@ public class CalendarViewController implements Initializable {
 
         // Add a "All Doctors" option at the beginning
         User allDoctors = new User();
-        allDoctors.setFirstName("All");
-        allDoctors.setLastName("Doctors");
+        allDoctors.setFirstName("Tous");
+        allDoctors.setLastName("les Médecins");
 
         List<User> doctorFilterList = new ArrayList<>();
         doctorFilterList.add(allDoctors);
@@ -109,13 +109,13 @@ public class CalendarViewController implements Initializable {
 
     private void setupStatusFilter() {
         ObservableList<String> statusItems = FXCollections.observableArrayList(
-                "All Statuses",
-                "Scheduled",
-                "CheckedIn",
-                "InProgress",
-                "Completed",
-                "Missed",
-                "Cancelled"
+                "Tous les statuts",
+                "Programmé",
+                "Enregistré",
+                "En cours",
+                "Terminé",
+                "Manqué",
+                "Annulé"
         );
 
         statusFilter.setItems(statusItems);
@@ -263,15 +263,17 @@ public class CalendarViewController implements Initializable {
             boolean includeAppointment = true;
 
             // Filter by doctor
-            if (selectedDoctor != null && !"All".equals(selectedDoctor.getFirstName())) {
+            if (selectedDoctor != null && !"Tous".equals(selectedDoctor.getFirstName())) {
                 if (appointment.getMedicinID() == null || !appointment.getMedicinID().equals(selectedDoctor.getId())) {
                     includeAppointment = false;
                 }
             }
 
             // Filter by status
-            if (!"All Statuses".equals(selectedStatus)) {
-                if (!selectedStatus.equals(appointment.getStatus())) {
+            if (!"Tous les statuts".equals(selectedStatus)) {
+                // Map UI status (in French) back to internal status values (in English)
+                String internalStatus = mapFrenchStatusToInternal(selectedStatus);
+                if (!internalStatus.equals(appointment.getStatus())) {
                     includeAppointment = false;
                 }
             }
@@ -295,6 +297,34 @@ public class CalendarViewController implements Initializable {
         updateUpcomingAppointments(appointments);
     }
 
+    // Helper method to map French status labels to internal status values
+    private String mapFrenchStatusToInternal(String frenchStatus) {
+        switch (frenchStatus) {
+            case "Programmé": return "Scheduled";
+            case "Enregistré": return "CheckedIn";
+            case "En cours": return "InProgress";
+            case "Terminé": return "Completed";
+            case "Manqué": return "Missed";
+            case "Annulé": return "Cancelled";
+            default: return frenchStatus; // Fallback
+        }
+    }
+
+    // Helper method to map internal status values to French labels
+    private String mapInternalStatusToFrench(String internalStatus) {
+        switch (internalStatus) {
+            case "Scheduled": return "Programmé";
+            case "CheckedIn": return "Enregistré";
+            case "InProgress": return "En cours";
+            case "Completed": return "Terminé";
+            case "Missed": return "Manqué";
+            case "Patient_Cancelled":
+            case "Clinic_Cancelled":
+            case "Cancelled": return "Annulé";
+            case "Rescheduled": return "Reprogrammé";
+            default: return internalStatus; // Fallback
+        }
+    }
 
     private void clearAppointmentsFromGrid() {
         // Remove all appointment blocks from the grid
@@ -416,33 +446,33 @@ public class CalendarViewController implements Initializable {
     private void showAppointmentActionsDialog(Appointment appointment) {
         // Create a popup with quick actions for this appointment
         Dialog<ButtonType> dialog = new Dialog<>();
-        dialog.setTitle("Appointment Actions");
+        dialog.setTitle("Actions pour le Rendez-vous");
         dialog.setHeaderText("Patient: " + appointment.getPatientName() +
-                "\nTime: " + appointment.getFormattedTime() +
-                "\nStatus: " + appointment.getStatus());
+                "\nHeure: " + appointment.getFormattedTime() +
+                "\nStatut: " + mapInternalStatusToFrench(appointment.getStatus()));
 
         // Add buttons based on current status
-        ButtonType viewEditType = new ButtonType("View/Edit", ButtonBar.ButtonData.LEFT);
+        ButtonType viewEditType = new ButtonType("Voir/Modifier", ButtonBar.ButtonData.LEFT);
         dialog.getDialogPane().getButtonTypes().add(viewEditType);
 
         if ("Scheduled".equals(appointment.getStatus())) {
-            ButtonType checkInType = new ButtonType("Check In", ButtonBar.ButtonData.LEFT);
-            ButtonType missedType = new ButtonType("Missed", ButtonBar.ButtonData.LEFT);
-            ButtonType cancelType = new ButtonType("Cancel", ButtonBar.ButtonData.LEFT);
+            ButtonType checkInType = new ButtonType("Enregistrer l'arrivée", ButtonBar.ButtonData.LEFT);
+            ButtonType missedType = new ButtonType("Absence", ButtonBar.ButtonData.LEFT);
+            ButtonType cancelType = new ButtonType("Annuler", ButtonBar.ButtonData.LEFT);
 
             dialog.getDialogPane().getButtonTypes().addAll(checkInType, missedType, cancelType);
         } else if ("CheckedIn".equals(appointment.getStatus())) {
-            ButtonType startType = new ButtonType("Start Appointment", ButtonBar.ButtonData.LEFT);
+            ButtonType startType = new ButtonType("Démarrer la consultation", ButtonBar.ButtonData.LEFT);
             dialog.getDialogPane().getButtonTypes().add(startType);
         } else if ("InProgress".equals(appointment.getStatus())) {
-            ButtonType completeType = new ButtonType("Complete", ButtonBar.ButtonData.LEFT);
+            ButtonType completeType = new ButtonType("Terminer", ButtonBar.ButtonData.LEFT);
             dialog.getDialogPane().getButtonTypes().add(completeType);
         } else if ("Missed".equals(appointment.getStatus())) {
-            ButtonType rescheduleType = new ButtonType("Reschedule", ButtonBar.ButtonData.LEFT);
+            ButtonType rescheduleType = new ButtonType("Reprogrammer", ButtonBar.ButtonData.LEFT);
             dialog.getDialogPane().getButtonTypes().add(rescheduleType);
         }
 
-        ButtonType closeType = new ButtonType("Close", ButtonBar.ButtonData.CANCEL_CLOSE);
+        ButtonType closeType = new ButtonType("Fermer", ButtonBar.ButtonData.CANCEL_CLOSE);
         dialog.getDialogPane().getButtonTypes().add(closeType);
 
         // Handle button clicks
@@ -452,17 +482,17 @@ public class CalendarViewController implements Initializable {
 
             if (buttonType == viewEditType) {
                 openAppointmentForm(appointment);
-            } else if (buttonType.getText().equals("Check In")) {
+            } else if (buttonType.getText().equals("Enregistrer l'arrivée")) {
                 handleCheckIn(appointment);
-            } else if (buttonType.getText().equals("Start Appointment")) {
+            } else if (buttonType.getText().equals("Démarrer la consultation")) {
                 handleStartAppointment(appointment);
-            } else if (buttonType.getText().equals("Complete")) {
+            } else if (buttonType.getText().equals("Terminer")) {
                 handleCompleteAppointment(appointment);
-            } else if (buttonType.getText().equals("Missed")) {
+            } else if (buttonType.getText().equals("Absence")) {
                 handleMissedAppointment(appointment);
-            } else if (buttonType.getText().equals("Cancel")) {
+            } else if (buttonType.getText().equals("Annuler")) {
                 handleCancelAppointment(appointment);
-            } else if (buttonType.getText().equals("Reschedule")) {
+            } else if (buttonType.getText().equals("Reprogrammer")) {
                 handleRescheduleAppointment(appointment);
             }
         }
@@ -471,58 +501,58 @@ public class CalendarViewController implements Initializable {
     private void handleCheckIn(Appointment appointment) {
         boolean success = appointmentManager.checkInAppointment(appointment.getRendezVousID());
         if (success) {
-            showAlert(Alert.AlertType.INFORMATION, "Success", "Patient checked in successfully.");
+            showAlert(Alert.AlertType.INFORMATION, "Succès", "Patient enregistré avec succès.");
             updateCalendarView();
         } else {
-            showAlert(Alert.AlertType.ERROR, "Error", "Failed to check in patient.");
+            showAlert(Alert.AlertType.ERROR, "Erreur", "Échec de l'enregistrement du patient.");
         }
     }
 
     private void handleStartAppointment(Appointment appointment) {
         boolean success = appointmentManager.startAppointment(appointment.getRendezVousID());
         if (success) {
-            showAlert(Alert.AlertType.INFORMATION, "Success", "Appointment started.");
+            showAlert(Alert.AlertType.INFORMATION, "Succès", "Consultation démarrée.");
             updateCalendarView();
         } else {
-            showAlert(Alert.AlertType.ERROR, "Error", "Failed to start appointment.");
+            showAlert(Alert.AlertType.ERROR, "Erreur", "Échec du démarrage de la consultation.");
         }
     }
 
     private void handleCompleteAppointment(Appointment appointment) {
         // Create a dialog to get notes
         TextInputDialog dialog = new TextInputDialog();
-        dialog.setTitle("Complete Appointment");
-        dialog.setHeaderText("Add completion notes (optional)");
-        dialog.setContentText("Notes:");
+        dialog.setTitle("Terminer la Consultation");
+        dialog.setHeaderText("Ajouter des notes de fin (facultatif)");
+        dialog.setContentText("Notes :");
 
         Optional<String> result = dialog.showAndWait();
         String notes = result.orElse("");
 
         boolean success = appointmentManager.completeAppointment(appointment.getRendezVousID(), notes);
         if (success) {
-            showAlert(Alert.AlertType.INFORMATION, "Success", "Appointment completed.");
+            showAlert(Alert.AlertType.INFORMATION, "Succès", "Consultation terminée.");
             updateCalendarView();
         } else {
-            showAlert(Alert.AlertType.ERROR, "Error", "Failed to complete appointment.");
+            showAlert(Alert.AlertType.ERROR, "Erreur", "Échec de la finalisation de la consultation.");
         }
     }
 
     private void handleMissedAppointment(Appointment appointment) {
         // Create a dialog to get reason
         TextInputDialog dialog = new TextInputDialog();
-        dialog.setTitle("Missed Appointment");
-        dialog.setHeaderText("Provide reason for missed appointment");
-        dialog.setContentText("Reason:");
+        dialog.setTitle("Absence au Rendez-vous");
+        dialog.setHeaderText("Indiquer la raison de l'absence");
+        dialog.setContentText("Raison :");
 
         Optional<String> result = dialog.showAndWait();
         if (result.isPresent()) {
             String reason = result.get();
             boolean success = appointmentManager.markAsMissed(appointment.getRendezVousID(), reason);
             if (success) {
-                showAlert(Alert.AlertType.INFORMATION, "Success", "Appointment marked as missed.");
+                showAlert(Alert.AlertType.INFORMATION, "Succès", "Rendez-vous marqué comme manqué.");
                 updateCalendarView();
             } else {
-                showAlert(Alert.AlertType.ERROR, "Error", "Failed to update appointment.");
+                showAlert(Alert.AlertType.ERROR, "Erreur", "Échec de la mise à jour du rendez-vous.");
             }
         }
     }
@@ -530,11 +560,11 @@ public class CalendarViewController implements Initializable {
     private void handleCancelAppointment(Appointment appointment) {
         // Create a dialog to select cancellation type and reason
         Dialog<Map<String, String>> dialog = new Dialog<>();
-        dialog.setTitle("Cancel Appointment");
-        dialog.setHeaderText("Cancel appointment for " + appointment.getPatientName());
+        dialog.setTitle("Annuler le Rendez-vous");
+        dialog.setHeaderText("Annuler le rendez-vous pour " + appointment.getPatientName());
 
         // Set the button types
-        ButtonType cancelButtonType = new ButtonType("Cancel Appointment", ButtonBar.ButtonData.OK_DONE);
+        ButtonType cancelButtonType = new ButtonType("Annuler le Rendez-vous", ButtonBar.ButtonData.OK_DONE);
         dialog.getDialogPane().getButtonTypes().addAll(cancelButtonType, ButtonType.CANCEL);
 
         // Create content
@@ -544,20 +574,20 @@ public class CalendarViewController implements Initializable {
         grid.setPadding(new Insets(20, 150, 10, 10));
 
         ToggleGroup cancellationTypeGroup = new ToggleGroup();
-        RadioButton patientCancelled = new RadioButton("Cancelled by Patient");
+        RadioButton patientCancelled = new RadioButton("Annulé par le Patient");
         patientCancelled.setToggleGroup(cancellationTypeGroup);
         patientCancelled.setSelected(true);
 
-        RadioButton clinicCancelled = new RadioButton("Cancelled by Clinic");
+        RadioButton clinicCancelled = new RadioButton("Annulé par la Clinique");
         clinicCancelled.setToggleGroup(cancellationTypeGroup);
 
         TextField reasonField = new TextField();
-        reasonField.setPromptText("Reason for cancellation");
+        reasonField.setPromptText("Raison de l'annulation");
 
-        grid.add(new Label("Cancellation Type:"), 0, 0);
+        grid.add(new Label("Type d'annulation :"), 0, 0);
         grid.add(patientCancelled, 1, 0);
         grid.add(clinicCancelled, 1, 1);
-        grid.add(new Label("Reason:"), 0, 2);
+        grid.add(new Label("Raison :"), 0, 2);
         grid.add(reasonField, 1, 2);
 
         dialog.getDialogPane().setContent(grid);
@@ -582,10 +612,10 @@ public class CalendarViewController implements Initializable {
                     appointment.getRendezVousID(), reason, isByPatient);
 
             if (success) {
-                showAlert(Alert.AlertType.INFORMATION, "Success", "Appointment cancelled successfully.");
+                showAlert(Alert.AlertType.INFORMATION, "Succès", "Rendez-vous annulé avec succès.");
                 updateCalendarView();
             } else {
-                showAlert(Alert.AlertType.ERROR, "Error", "Failed to cancel appointment.");
+                showAlert(Alert.AlertType.ERROR, "Erreur", "Échec de l'annulation du rendez-vous.");
             }
         });
     }
@@ -593,11 +623,11 @@ public class CalendarViewController implements Initializable {
     private void handleRescheduleAppointment(Appointment appointment) {
         // Create dialog for rescheduling
         Dialog<Map<String, Object>> dialog = new Dialog<>();
-        dialog.setTitle("Reschedule Appointment");
-        dialog.setHeaderText("Reschedule appointment for " + appointment.getPatientName());
+        dialog.setTitle("Reprogrammer le Rendez-vous");
+        dialog.setHeaderText("Reprogrammer le rendez-vous pour " + appointment.getPatientName());
 
         // Set the button types
-        ButtonType rescheduleButtonType = new ButtonType("Reschedule", ButtonBar.ButtonData.OK_DONE);
+        ButtonType rescheduleButtonType = new ButtonType("Reprogrammer", ButtonBar.ButtonData.OK_DONE);
         dialog.getDialogPane().getButtonTypes().addAll(rescheduleButtonType, ButtonType.CANCEL);
 
         // Create content
@@ -620,13 +650,13 @@ public class CalendarViewController implements Initializable {
         timeComboBox.getSelectionModel().select(0);
 
         TextField reasonField = new TextField();
-        reasonField.setPromptText("Reason for rescheduling");
+        reasonField.setPromptText("Raison du changement");
 
-        grid.add(new Label("New Date:"), 0, 0);
+        grid.add(new Label("Nouvelle date :"), 0, 0);
         grid.add(datePicker, 1, 0);
-        grid.add(new Label("New Time:"), 0, 1);
+        grid.add(new Label("Nouvelle heure :"), 0, 1);
         grid.add(timeComboBox, 1, 1);
-        grid.add(new Label("Reason:"), 0, 2);
+        grid.add(new Label("Raison :"), 0, 2);
         grid.add(reasonField, 1, 2);
 
         dialog.getDialogPane().setContent(grid);
@@ -656,10 +686,10 @@ public class CalendarViewController implements Initializable {
                     appointment.getRendezVousID(), newDateTime, reason);
 
             if (newAppointmentId > 0) {
-                showAlert(Alert.AlertType.INFORMATION, "Success", "Appointment rescheduled successfully.");
+                showAlert(Alert.AlertType.INFORMATION, "Succès", "Rendez-vous reprogrammé avec succès.");
                 updateCalendarView();
             } else {
-                showAlert(Alert.AlertType.ERROR, "Error", "Failed to reschedule appointment.");
+                showAlert(Alert.AlertType.ERROR, "Erreur", "Échec de la reprogrammation du rendez-vous.");
             }
         });
     }
@@ -821,7 +851,7 @@ public class CalendarViewController implements Initializable {
 
             Stage dialog = new Stage();
             dialog.initModality(Modality.APPLICATION_MODAL);
-            dialog.setTitle(appointment == null ? "New Appointment" : "Edit Appointment");
+            dialog.setTitle(appointment == null ? "Nouveau Rendez-vous" : "Modifier le Rendez-vous");
             dialog.setScene(new Scene(loader.load()));
 
             // Set this controller as user data so the form can call back to refresh
@@ -837,7 +867,7 @@ public class CalendarViewController implements Initializable {
 
         } catch (IOException e) {
             e.printStackTrace();
-            showAlert(Alert.AlertType.ERROR, "Error", "Could not open appointment form: " + e.getMessage());
+            showAlert(Alert.AlertType.ERROR, "Erreur", "Impossible d'ouvrir le formulaire de rendez-vous : " + e.getMessage());
         }
     }
 
@@ -849,17 +879,14 @@ public class CalendarViewController implements Initializable {
         alert.showAndWait();
     }
 
-
-
     /* Methods for switching scenes*/
-
 
     @FXML
     public void onHome(ActionEvent event) {
         try {
             SwitchScene.switchScene(event, "/com/example/myjavafxapp/CalendarView.fxml");
         } catch (IOException e) {
-            showAlert(Alert.AlertType.ERROR, "Error", "Could not navigate to Dashboard: " + e.getMessage());
+            showAlert(Alert.AlertType.ERROR, "Erreur", "Impossible de naviguer vers le Tableau de bord : " + e.getMessage());
         }
     }
 
@@ -874,7 +901,7 @@ public class CalendarViewController implements Initializable {
         try {
             SwitchScene.switchScene(event, "/com/example/myjavafxapp/GestionPaiment.fxml");
         } catch (IOException e) {
-            showAlert(Alert.AlertType.ERROR, "Error", "Could not navigate to Payment Management: " + e.getMessage());
+            showAlert(Alert.AlertType.ERROR, "Erreur", "Impossible de naviguer vers la Gestion des Paiements : " + e.getMessage());
         }
     }
 
@@ -883,10 +910,9 @@ public class CalendarViewController implements Initializable {
         try {
             SwitchScene.switchScene(event, "/com/example/myjavafxapp/PatientRecordsView.fxml");
         } catch (IOException e) {
-            showAlert(Alert.AlertType.ERROR, "Error", "Could not navigate to Patient Records: " + e.getMessage());
+            showAlert(Alert.AlertType.ERROR, "Erreur", "Impossible de naviguer vers les Dossiers Patients : " + e.getMessage());
         }
     }
-
 
     @FXML
     public void onGlobalStats(ActionEvent event) {
@@ -894,7 +920,7 @@ public class CalendarViewController implements Initializable {
             SwitchScene.switchScene(event, "/com/example/myjavafxapp/StatisticsDashboard.fxml");
         } catch (IOException e) {
             e.printStackTrace();
-            showAlert(Alert.AlertType.ERROR, "Error", "Could not navigate to Statistics: " + e.getMessage());
+            showAlert(Alert.AlertType.ERROR, "Erreur", "Impossible de naviguer vers les Statistiques : " + e.getMessage());
         }
     }
 
@@ -903,7 +929,7 @@ public class CalendarViewController implements Initializable {
         try {
             SwitchScene.switchScene(event, "/com/example/myjavafxapp/rapportQuotidien.fxml");
         } catch (IOException e) {
-            showAlert(Alert.AlertType.ERROR, "Error", "Could not navigate to Daily Reports: " + e.getMessage());
+            showAlert(Alert.AlertType.ERROR, "Erreur", "Impossible de naviguer vers les Rapports Quotidiens : " + e.getMessage());
         }
     }
 
@@ -912,7 +938,7 @@ public class CalendarViewController implements Initializable {
         try {
             SwitchScene.switchScene(event, "/com/example/myjavafxapp/sauvegarde.fxml");
         } catch (IOException e) {
-            showAlert(Alert.AlertType.ERROR, "Error", "Could not navigate to Backup: " + e.getMessage());
+            showAlert(Alert.AlertType.ERROR, "Erreur", "Impossible de naviguer vers la Sauvegarde : " + e.getMessage());
         }
     }
 
@@ -921,7 +947,7 @@ public class CalendarViewController implements Initializable {
         try {
             SwitchScene.switchScene(event, "/com/example/myjavafxapp/gestionUtilisateurs.fxml");
         } catch (IOException e) {
-            showAlert(Alert.AlertType.ERROR, "Error", "Could not navigate to User Management: " + e.getMessage());
+            showAlert(Alert.AlertType.ERROR, "Erreur", "Impossible de naviguer vers la Gestion des Utilisateurs : " + e.getMessage());
         }
     }
 
@@ -934,7 +960,7 @@ public class CalendarViewController implements Initializable {
 
             SwitchScene.switchScene(event, "/com/example/myjavafxapp/loginForm.fxml");
         } catch (IOException e) {
-            showAlert(Alert.AlertType.ERROR, "Error", "Could not log out: " + e.getMessage());
+            showAlert(Alert.AlertType.ERROR, "Erreur", "Échec de la déconnexion : " + e.getMessage());
         }
     }
 }

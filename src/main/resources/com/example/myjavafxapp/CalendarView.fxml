@@ -18,7 +18,7 @@
     <top>
         <VBox spacing="10.0" BorderPane.alignment="CENTER">
             <children>
-                <!-- Icon-only Horizontal Navbar with better spacing -->
+                <!-- Barre de navigation horizontale avec icônes uniquement et meilleur espacement -->
                 <HBox alignment="CENTER" styleClass="navbar">
                     <children>
                         <HBox alignment="CENTER" spacing="20.0" HBox.hgrow="ALWAYS">
@@ -65,7 +65,7 @@
                                 </Button>
                             </children>
                         </HBox>
-                        <!-- Keep the logout button on the right with text -->
+                        <!-- Garder le bouton de déconnexion à droite avec du texte -->
                         <Button fx:id="logoutButton" mnemonicParsing="false" onAction="#onLogOut" styleClass="logout-button" text="Déconnexion">
                             <graphic>
                                 <FontIcon iconColor="#4079ff" iconLiteral="fas-sign-out-alt" iconSize="18" styleClass="graphic" />
@@ -80,7 +80,7 @@
                     </padding>
                 </HBox>
 
-                <!-- Date Navigation Controls -->
+                <!-- Contrôles de navigation de date -->
                 <HBox alignment="CENTER_LEFT" spacing="10.0">
                     <children>
                         <Button fx:id="prevDayBtn" mnemonicParsing="false" onAction="#previousDay" styleClass="nav-button">
@@ -94,7 +94,7 @@
                                 <FontIcon iconColor="#4079ff" iconLiteral="fas-chevron-right" iconSize="16" />
                             </graphic>
                         </Button>
-                        <Label fx:id="currentDateLabel" styleClass="date-header" text="Thursday, March 20, 2025">
+                        <Label fx:id="currentDateLabel" styleClass="date-header" text="Jeudi 20 mars 2025">
                             <font>
                                 <Font name="System Bold" size="18.0" />
                             </font>
@@ -102,8 +102,8 @@
 
                         <HBox alignment="CENTER_RIGHT" HBox.hgrow="ALWAYS">
                             <children>
-                                <Label text="Docteur :" />
-                                <ComboBox fx:id="doctorFilter" prefWidth="150.0" promptText="Tous les docteurs">
+                                <Label text="Médecin :" />
+                                <ComboBox fx:id="doctorFilter" prefWidth="150.0" promptText="Tous les médecins">
                                     <HBox.margin>
                                         <Insets left="5.0" />
                                     </HBox.margin>
@@ -128,14 +128,14 @@
                     </children>
                 </HBox>
 
-                <!-- Status Legend -->
+                <!-- Légende des statuts -->
                 <HBox alignment="CENTER_LEFT" spacing="10.0">
                     <children>
                         <Label text="Légende :" />
                         <HBox alignment="CENTER" spacing="5.0" styleClass="legend-item">
                             <children>
                                 <Label styleClass="status-box, status-scheduled" />
-                                <Label text="Programmé" />
+                                <Label text="Planifié" />
                             </children>
                         </HBox>
                         <HBox alignment="CENTER" spacing="5.0" styleClass="legend-item">
@@ -198,10 +198,10 @@
                     </rowConstraints>
                     <children>
                         <Label styleClass="calendar-header" text="Heure" />
-                        <Label fx:id="doctor1Label" styleClass="calendar-header" text="Dr. Smith" GridPane.columnIndex="1" />
-                        <Label fx:id="doctor2Label" styleClass="calendar-header" text="Dr. Johnson" GridPane.columnIndex="2" />
-                        <Label fx:id="doctor3Label" styleClass="calendar-header" text="Dr. Williams" GridPane.columnIndex="3" />
-                        <Label fx:id="doctor4Label" styleClass="calendar-header" text="Dr. Brown" GridPane.columnIndex="4" />
+                        <Label fx:id="doctor1Label" styleClass="calendar-header" text="Dr. Dupont" GridPane.columnIndex="1" />
+                        <Label fx:id="doctor2Label" styleClass="calendar-header" text="Dr. Martin" GridPane.columnIndex="2" />
+                        <Label fx:id="doctor3Label" styleClass="calendar-header" text="Dr. Bernard" GridPane.columnIndex="3" />
+                        <Label fx:id="doctor4Label" styleClass="calendar-header" text="Dr. Dubois" GridPane.columnIndex="4" />
                     </children>
                 </GridPane>
             </content>
@@ -233,7 +233,7 @@
                         <Label text="Terminés :" GridPane.rowIndex="1" />
                         <Label text="En cours :" GridPane.rowIndex="2" />
                         <Label text="Enregistrés :" GridPane.rowIndex="3" />
-                        <Label text="Programmés :" GridPane.rowIndex="4" />
+                        <Label text="Planifiés :" GridPane.rowIndex="4" />
                         <Label text="Manqués :" GridPane.rowIndex="5" />
                         <Label fx:id="totalAppointmentsLabel" text="0" GridPane.columnIndex="1" />
                         <Label fx:id="completedAppointmentsLabel" text="0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
@@ -252,7 +252,7 @@
                     </VBox.margin>
                 </Label>
                 <VBox fx:id="upcomingAppointmentsBox" spacing="5.0">
-                    <!-- Upcoming appointments will be added here dynamically -->
+                    <!-- Les rendez-vous à venir seront ajoutés ici dynamiquement -->
                 </VBox>
             </children>
             <padding>

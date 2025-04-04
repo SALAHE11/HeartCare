@@ -7,15 +7,33 @@ import java.sql.*;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class PaymentManager {
     private static PaymentManager instance;
 
-    // CRITICAL: These must match EXACTLY what's in the database enum - check carefully for spaces and case
+    // CRITICAL: These must match EXACTLY what's in the database enum - including spaces!
     public static final String PAYMENT_METHOD_CASH = "Cash";
-    public static final String PAYMENT_METHOD_CREDIT_CARD = "Credit Card";
+    public static final String PAYMENT_METHOD_CREDIT_CARD = " Credit Card"; // Note the leading space!
     public static final String PAYMENT_METHOD_INSURANCE = "Insurance";
+
+    // French translation map for UI display
+    private static final Map<String, String> PAYMENT_METHOD_TRANSLATIONS = new HashMap<>();
+    static {
+        PAYMENT_METHOD_TRANSLATIONS.put(PAYMENT_METHOD_CASH, "Espèces");
+        PAYMENT_METHOD_TRANSLATIONS.put(PAYMENT_METHOD_CREDIT_CARD, "Carte de Crédit");
+        PAYMENT_METHOD_TRANSLATIONS.put(PAYMENT_METHOD_INSURANCE, "Assurance");
+    }
+
+    // Reverse lookup map (French to English)
+    private static final Map<String, String> REVERSE_TRANSLATIONS = new HashMap<>();
+    static {
+        for (Map.Entry<String, String> entry : PAYMENT_METHOD_TRANSLATIONS.entrySet()) {
+            REVERSE_TRANSLATIONS.put(entry.getValue(), entry.getKey());
+        }
+    }
 
     // List of valid payment methods for validation and UI
     private static final List<String> VALID_PAYMENT_METHODS =
@@ -31,10 +49,47 @@ public class PaymentManager {
     }
 
     /**
-     * Get valid payment methods for UI components
+     * Get valid payment methods for UI components in French
+     */
+    public ObservableList<String> getPaymentMethodsForDisplay() {
+        ObservableList<String> displayMethods = FXCollections.observableArrayList();
+        for (String method : VALID_PAYMENT_METHODS) {
+            displayMethods.add(translateToDisplay(method));
+        }
+        return displayMethods;
+    }
+
+    /**
+     * Get valid payment methods in database format
      */
     public ObservableList<String> getValidPaymentMethods() {
         return FXCollections.observableArrayList(VALID_PAYMENT_METHODS);
+    }
+
+    /**
+     * Translate a displayed (French) payment method to database (English) value
+     */
+    public String translateToDatabase(String displayMethod) {
+        // If it's already a valid database value, return as-is
+        if (VALID_PAYMENT_METHODS.contains(displayMethod)) {
+            return displayMethod;
+        }
+
+        // Look up in the reverse translation map
+        String dbValue = REVERSE_TRANSLATIONS.get(displayMethod);
+        if (dbValue != null) {
+            return dbValue;
+        }
+
+        // Fall back to enforceValidPaymentMethod for best-effort matching
+        return enforceValidPaymentMethod(displayMethod);
+    }
+
+    /**
+     * Translate a database (English) payment method to displayed (French) value
+     */
+    public String translateToDisplay(String dbMethod) {
+        return PAYMENT_METHOD_TRANSLATIONS.getOrDefault(dbMethod, dbMethod);
     }
 
     /**
@@ -131,6 +186,60 @@ public class PaymentManager {
     }
 
     /**
+     * Get appointment by ID
+     */
+    public Appointment getAppointmentById(int appointmentId) {
+        Connection conn = DatabaseSingleton.getInstance().getConnection();
+        Appointment appointment = null;
+
+        try {
+            String query = "SELECT r.*, " +
+                    "CONCAT(p.FNAME, ' ', p.LNAME) as PatientName, " +
+                    "CONCAT(u.FNAME, ' ', u.LNAME) as DoctorName " +
+                    "FROM rendezvous r " +
+                    "JOIN patient p ON r.PatientID = p.ID " +
+                    "JOIN users u ON r.MedecinID = u.ID " +
+                    "WHERE r.RendezVousID = ?";
+
+            PreparedStatement pstmt = conn.prepareStatement(query);
+            pstmt.setInt(1, appointmentId);
+
+            ResultSet rs = pstmt.executeQuery();
+
+            if (rs.next()) {
+                appointment = new Appointment();
+                appointment.setRendezVousID(rs.getInt("RendezVousID"));
+                appointment.setPatientID(rs.getString("PatientID"));
+                appointment.setMedicinID(rs.getString("MedecinID"));
+                appointment.setAppointmentDateTime(rs.getTimestamp("AppointmentDateTime").toLocalDateTime());
+                appointment.setReasonForVisit(rs.getString("ReasonForVisit"));
+                appointment.setStatus(rs.getString("Status"));
+                appointment.setStatusReason(rs.getString("StatusReason"));
+                appointment.setNoShowFlag(rs.getBoolean("NoShowFlag"));
+
+                // Handle nullable fields
+                int rescheduledToID = rs.getInt("RescheduledToID");
+                if (!rs.wasNull()) {
+                    appointment.setRescheduledToID(rescheduledToID);
+                }
+
+                Timestamp cancellationTime = rs.getTimestamp("CancellationTime");
+                if (cancellationTime != null) {
+                    appointment.setCancellationTime(cancellationTime.toLocalDateTime());
+                }
+
+                appointment.setPriority(rs.getString("Priority"));
+                appointment.setPatientName(rs.getString("PatientName"));
+                appointment.setDoctorName(rs.getString("DoctorName"));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return appointment;
+    }
+
+    /**
      * Check if payment exists for an appointment
      */
     public boolean isAppointmentPaid(int rendezVousID) {
@@ -165,6 +274,10 @@ public class PaymentManager {
      * @return A guaranteed valid payment method from the ENUM
      */
     private String enforceValidPaymentMethod(String method) {
+        if (method == null) {
+            return PAYMENT_METHOD_CASH;
+        }
+
         // First, check direct equality with our known valid values
         if (PAYMENT_METHOD_CASH.equals(method)) {
             return PAYMENT_METHOD_CASH;
@@ -179,10 +292,10 @@ public class PaymentManager {
         // If not a direct match, try to find the closest match
         String lowerMethod = method.toLowerCase().trim();
 
-        if (lowerMethod.contains("cash") || lowerMethod.contains("espèces")) {
+        if (lowerMethod.contains("cash") || lowerMethod.contains("espèces") || lowerMethod.contains("especes")) {
             return PAYMENT_METHOD_CASH;
         }
-        if (lowerMethod.contains("credit") || lowerMethod.contains("carte")) {
+        if (lowerMethod.contains("credit") || lowerMethod.contains("carte") || lowerMethod.contains("crédit")) {
             return PAYMENT_METHOD_CREDIT_CARD;
         }
         if (lowerMethod.contains("insurance") || lowerMethod.contains("assurance")) {
@@ -201,8 +314,14 @@ public class PaymentManager {
         Connection conn = DatabaseSingleton.getInstance().getConnection();
 
         try {
-            // CRITICAL FIX: Use enforceValidPaymentMethod to guarantee a valid value
-            String validatedMethod = enforceValidPaymentMethod(payment.getPaymentMethod());
+            // CRITICAL FIX: Use translateToDatabase first, then enforceValidPaymentMethod as fallback
+            String paymentMethod = payment.getPaymentMethod();
+            String validatedMethod = translateToDatabase(paymentMethod);
+
+            // Extra validation to ensure it's a valid database value
+            if (!isValidPaymentMethod(validatedMethod)) {
+                validatedMethod = enforceValidPaymentMethod(validatedMethod);
+            }
 
             // Debug output to see what's being sent to the database
             System.out.println("Creating payment for appointment ID: " + payment.getRendezVousID());
@@ -264,8 +383,14 @@ public class PaymentManager {
         Connection conn = DatabaseSingleton.getInstance().getConnection();
 
         try {
-            // CRITICAL FIX: Use enforceValidPaymentMethod to guarantee a valid value
-            String validatedMethod = enforceValidPaymentMethod(payment.getPaymentMethod());
+            // CRITICAL FIX: Use translateToDatabase first, then enforceValidPaymentMethod as fallback
+            String paymentMethod = payment.getPaymentMethod();
+            String validatedMethod = translateToDatabase(paymentMethod);
+
+            // Extra validation to ensure it's a valid database value
+            if (!isValidPaymentMethod(validatedMethod)) {
+                validatedMethod = enforceValidPaymentMethod(validatedMethod);
+            }
 
             // Debug output
             System.out.println("Updating payment ID: " + payment.getPaymentID());
@@ -282,27 +407,6 @@ public class PaymentManager {
             return result > 0;
         } catch (SQLException e) {
             System.err.println("SQL error updating payment: " + e.getMessage());
-            e.printStackTrace();
-        }
-
-        return false;
-    }
-
-    /**
-     * Delete a payment
-     */
-    public boolean deletePayment(int paymentID) {
-        Connection conn = DatabaseSingleton.getInstance().getConnection();
-
-        try {
-            String deleteQuery = "DELETE FROM paiment WHERE PaimentID = ?";
-
-            PreparedStatement pstmt = conn.prepareStatement(deleteQuery);
-            pstmt.setInt(1, paymentID);
-
-            int result = pstmt.executeUpdate();
-            return result > 0;
-        } catch (SQLException e) {
             e.printStackTrace();
         }
 

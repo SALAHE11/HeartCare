@@ -1,5 +1,6 @@
 package com.example.myjavafxapp.Controllers;
 
+import javafx.geometry.Insets;
 import com.example.myjavafxapp.Models.*;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleDoubleProperty;
@@ -11,21 +12,30 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
+import javafx.print.PageLayout;
+import javafx.print.PageOrientation;
+import javafx.print.Paper;
+import javafx.print.PrinterJob;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
+import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import org.kordamp.ikonli.javafx.FontIcon;
 
 import java.io.IOException;
 import java.net.URL;
 import java.sql.Timestamp;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.ResourceBundle;
 
@@ -71,18 +81,18 @@ public class PaymentController implements Initializable {
     // Date formatters
     private final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
     private final DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
+    private final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
     // Models and data
     private PaymentManager paymentManager = PaymentManager.getInstance();
     private ObservableList<Appointment> appointmentsData = FXCollections.observableArrayList();
     private ObservableList<Payment> paymentsData = FXCollections.observableArrayList();
 
-    // CRITICAL: Let's simplify things by using DIRECT database values in the UI
-    // to avoid any translation problems. This is the safest approach.
-    private static final ObservableList<String> PAYMENT_METHOD_OPTIONS = FXCollections.observableArrayList(
-            PaymentManager.PAYMENT_METHOD_CASH,           // "Cash"
-            PaymentManager.PAYMENT_METHOD_CREDIT_CARD,    // "Credit Card"
-            PaymentManager.PAYMENT_METHOD_INSURANCE       // "Insurance"
+    // French display values for the UI
+    private static final ObservableList<String> PAYMENT_METHOD_DISPLAY_OPTIONS = FXCollections.observableArrayList(
+            "Espèces",            // Cash
+            "Carte de Crédit",    // Credit Card
+            "Assurance"           // Insurance
     );
 
     @Override
@@ -194,13 +204,17 @@ public class PaymentController implements Initializable {
         amountColumn.setCellValueFactory(cellData ->
                 new SimpleDoubleProperty(cellData.getValue().getAmount()).asObject());
 
-        paymentMethodColumn.setCellValueFactory(cellData ->
-                new SimpleStringProperty(cellData.getValue().getPaymentMethod()));
+        paymentMethodColumn.setCellValueFactory(cellData -> {
+            // Display the payment method in French
+            String dbMethod = cellData.getValue().getPaymentMethod();
+            String displayMethod = mapDBValueToDisplay(dbMethod);
+            return new SimpleStringProperty(displayMethod);
+        });
 
-        // Set up the actions column with buttons
+        // Set up the actions column with edit and print buttons
         paymentActionsColumn.setCellFactory(col -> new TableCell<Payment, Void>() {
             private final Button editButton = new Button();
-            private final Button deleteButton = new Button();
+            private final Button printButton = new Button();
 
             {
                 // Configure edit button
@@ -210,21 +224,21 @@ public class PaymentController implements Initializable {
                 editButton.getStyleClass().add("icon-button");
                 editButton.setTooltip(new Tooltip("Modifier paiement"));
 
-                // Configure delete button
-                FontIcon deleteIcon = new FontIcon("fas-trash");
-                deleteIcon.setIconSize(14);
-                deleteButton.setGraphic(deleteIcon);
-                deleteButton.getStyleClass().add("icon-button");
-                deleteButton.setTooltip(new Tooltip("Supprimer paiement"));
-
                 editButton.setOnAction(e -> {
                     Payment payment = getTableView().getItems().get(getIndex());
                     showEditPaymentDialog(payment);
                 });
 
-                deleteButton.setOnAction(e -> {
+                // Configure print button
+                FontIcon printIcon = new FontIcon("fas-print");
+                printIcon.setIconSize(14);
+                printButton.setGraphic(printIcon);
+                printButton.getStyleClass().add("icon-button");
+                printButton.setTooltip(new Tooltip("Imprimer facture"));
+
+                printButton.setOnAction(e -> {
                     Payment payment = getTableView().getItems().get(getIndex());
-                    showDeletePaymentConfirmation(payment);
+                    printInvoice(payment);
                 });
             }
 
@@ -234,14 +248,230 @@ public class PaymentController implements Initializable {
                 if (empty) {
                     setGraphic(null);
                 } else {
+                    Payment payment = getTableView().getItems().get(getIndex());
                     HBox buttons = new HBox(5);
-                    buttons.getChildren().addAll(editButton, deleteButton);
+
+                    // Get payment date
+                    boolean isPaymentFromToday = false;
+                    if (payment.getPaymentDate() != null) {
+                        LocalDate paymentDate = payment.getPaymentDate().toLocalDateTime().toLocalDate();
+                        isPaymentFromToday = paymentDate.equals(LocalDate.now());
+                    }
+
+                    // Only allow editing payments from today
+                    if (isPaymentFromToday) {
+                        buttons.getChildren().add(editButton);
+                    }
+
+                    // Always allow printing
+                    buttons.getChildren().add(printButton);
+
                     setGraphic(buttons);
                 }
             }
         });
 
         paymentTable.setItems(paymentsData);
+    }
+
+    /**
+     * Print invoice as PDF for a payment
+     */
+    private void printInvoice(Payment payment) {
+        try {
+            // Get appointment details
+            Appointment appointment = paymentManager.getAppointmentById(payment.getRendezVousID());
+
+            if (appointment == null) {
+                showAlert(Alert.AlertType.ERROR, "Erreur", "Impossible de trouver les détails du rendez-vous.");
+                return;
+            }
+
+            // Create invoice content
+            VBox invoiceContent = createInvoiceContent(payment, appointment);
+
+            // Create and configure PrinterJob
+            PrinterJob job = PrinterJob.createPrinterJob();
+            if (job != null) {
+                // Set up page layout
+                PageLayout pageLayout = job.getPrinter().createPageLayout(
+                        Paper.A4, PageOrientation.PORTRAIT, 50, 50, 50, 50);
+                job.getJobSettings().setPageLayout(pageLayout);
+
+                // Show printer dialog
+                boolean proceed = job.showPrintDialog(null);
+
+                if (proceed) {
+                    // Print the invoice
+                    boolean printed = job.printPage(invoiceContent);
+
+                    if (printed) {
+                        job.endJob();
+                        showAlert(Alert.AlertType.INFORMATION, "Succès", "Facture imprimée avec succès.");
+                    } else {
+                        showAlert(Alert.AlertType.ERROR, "Erreur", "Échec de l'impression de la facture.");
+                    }
+                }
+            } else {
+                showAlert(Alert.AlertType.ERROR, "Erreur", "Impossible de créer un travail d'impression.");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            showAlert(Alert.AlertType.ERROR, "Erreur", "Erreur lors de l'impression: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Create invoice content
+     */
+    private VBox createInvoiceContent(Payment payment, Appointment appointment) {
+        VBox invoice = new VBox(20);
+        invoice.setStyle("-fx-padding: 20; -fx-background-color: white;");
+
+        // Title "FACTURE"
+        Text headerText = new Text("FACTURE");
+        headerText.setFont(Font.font("Arial", FontWeight.BOLD, 24));
+
+        // Clinic info
+        Text clinicInfo = new Text("HeartCare Medical Center\n" +
+                "123 Rue de la Santé\n" +
+                "Casablanca, Maroc\n" +
+                "Tel: +212 522 123456\n" +
+                "Email: contact@heartcare.ma");
+        clinicInfo.setFont(Font.font("Arial", 12));
+
+        // Invoice details
+        GridPane invoiceDetails = new GridPane();
+        invoiceDetails.setHgap(10);
+        invoiceDetails.setVgap(5);
+
+        invoiceDetails.add(createBoldText("N° Facture:"), 0, 0);
+        invoiceDetails.add(new Text("F-" + payment.getPaymentID()), 1, 0);
+
+        invoiceDetails.add(createBoldText("Date:"), 0, 1);
+        invoiceDetails.add(new Text(payment.getPaymentDate().toLocalDateTime().format(dateTimeFormatter)), 1, 1);
+
+        invoiceDetails.add(createBoldText("N° RDV:"), 0, 2);
+        invoiceDetails.add(new Text(String.valueOf(payment.getRendezVousID())), 1, 2);
+
+        // Patient details
+        Text patientHeaderText = createSectionHeader("PATIENT");
+
+        GridPane patientDetails = new GridPane();
+        patientDetails.setHgap(10);
+        patientDetails.setVgap(5);
+
+        patientDetails.add(createBoldText("Nom:"), 0, 0);
+        patientDetails.add(new Text(payment.getPatientName()), 1, 0);
+
+        patientDetails.add(createBoldText("CIN:"), 0, 1);
+        patientDetails.add(new Text(payment.getPatientID()), 1, 1);
+
+        // Appointment details
+        Text appointmentHeaderText = createSectionHeader("DÉTAILS DU RENDEZ-VOUS");
+
+        GridPane appointmentDetails = new GridPane();
+        appointmentDetails.setHgap(10);
+        appointmentDetails.setVgap(5);
+
+        appointmentDetails.add(createBoldText("Date:"), 0, 0);
+        appointmentDetails.add(new Text(appointment.getFormattedDateTime()), 1, 0);
+
+        appointmentDetails.add(createBoldText("Médecin:"), 0, 1);
+        appointmentDetails.add(new Text(appointment.getDoctorName()), 1, 1);
+
+        appointmentDetails.add(createBoldText("Motif:"), 0, 2);
+        appointmentDetails.add(new Text(appointment.getReasonForVisit()), 1, 2);
+
+        // Payment details
+        Text paymentHeaderText = createSectionHeader("DÉTAILS DU PAIEMENT");
+
+        GridPane paymentDetails = new GridPane();
+        paymentDetails.setHgap(10);
+        paymentDetails.setVgap(5);
+
+        paymentDetails.add(createBoldText("Montant:"), 0, 0);
+        paymentDetails.add(new Text(String.format("%.2f DH", payment.getAmount())), 1, 0);
+
+        paymentDetails.add(createBoldText("Méthode:"), 0, 1);
+        // Display the payment method in French on the invoice
+        String displayMethod = mapDBValueToDisplay(payment.getPaymentMethod());
+        paymentDetails.add(new Text(displayMethod), 1, 1);
+
+        // Signature section
+        Text signatureHeaderText = createSectionHeader("SIGNATURES");
+
+        GridPane signatureSection = new GridPane();
+        signatureSection.setHgap(50);
+        signatureSection.setVgap(40);
+
+        // Create signature lines
+        VBox personnelSignature = new VBox(5);
+        Text personnelLabel = new Text("Personnel");
+        personnelLabel.setFont(Font.font("Arial", FontWeight.BOLD, 12));
+
+        Separator personnelLine = new Separator();
+        personnelLine.setPrefWidth(150);
+
+        personnelSignature.getChildren().addAll(personnelLine, personnelLabel);
+        personnelSignature.setAlignment(javafx.geometry.Pos.CENTER);
+
+        VBox clientSignature = new VBox(5);
+        Text clientLabel = new Text("Client");
+        clientLabel.setFont(Font.font("Arial", FontWeight.BOLD, 12));
+
+        Separator clientLine = new Separator();
+        clientLine.setPrefWidth(150);
+
+        clientSignature.getChildren().addAll(clientLine, clientLabel);
+        clientSignature.setAlignment(javafx.geometry.Pos.CENTER);
+
+        // Add to grid
+        signatureSection.add(personnelSignature, 0, 0);
+        signatureSection.add(clientSignature, 1, 0);
+
+        // Center the signature section
+        HBox signatureContainer = new HBox(signatureSection);
+        signatureContainer.setAlignment(javafx.geometry.Pos.CENTER);
+        signatureContainer.setPadding(new Insets(20, 0, 20, 0));
+
+        // Footer
+        Text footerText = new Text("Merci de votre confiance!\nCette facture a été générée automatiquement.");
+        footerText.setFont(Font.font("Arial", 10));
+
+        // Add all components to the invoice
+        invoice.getChildren().addAll(
+                headerText,
+                clinicInfo,
+                new Separator(),
+                invoiceDetails,
+                new Separator(),
+                patientHeaderText,
+                patientDetails,
+                appointmentHeaderText,
+                appointmentDetails,
+                paymentHeaderText,
+                paymentDetails,
+                new Separator(),
+                signatureHeaderText,
+                signatureContainer,
+                new Separator(),
+                footerText
+        );
+
+        return invoice;
+    }
+
+    private Text createBoldText(String content) {
+        Text text = new Text(content);
+        text.setFont(Font.font("Arial", FontWeight.BOLD, 12));
+        return text;
+    }
+
+    private Text createSectionHeader(String content) {
+        Text text = new Text(content);
+        text.setFont(Font.font("Arial", FontWeight.BOLD, 14));
+        return text;
     }
 
     /**
@@ -280,6 +510,29 @@ public class PaymentController implements Initializable {
     }
 
     /**
+     * Maps a database payment method value to a display value (French)
+     */
+    private String mapDBValueToDisplay(String dbValue) {
+        if (dbValue == null) {
+            return "Espèces"; // Default to Cash
+        }
+
+        // Clean up the value by trimming whitespace
+        String cleanValue = dbValue.trim();
+
+        if (cleanValue.equals("Cash")) {
+            return "Espèces";
+        } else if (cleanValue.equals("Credit Card") || cleanValue.equals(" Credit Card")) {
+            return "Carte de Crédit";
+        } else if (cleanValue.equals("Insurance")) {
+            return "Assurance";
+        }
+
+        // Default to the original value if no match
+        return dbValue;
+    }
+
+    /**
      * Show payment dialog for registering a new payment
      */
     private void showPaymentDialog(Appointment appointment) {
@@ -301,9 +554,9 @@ public class PaymentController implements Initializable {
 
         Label methodLabel = new Label("Méthode de Paiement:");
 
-        // CRITICAL FIX: Use direct database enum values in the UI with no translation
-        ComboBox<String> methodComboBox = new ComboBox<>(PAYMENT_METHOD_OPTIONS);
-        methodComboBox.setValue(PaymentManager.PAYMENT_METHOD_CASH);
+        // Use French display values in the UI
+        ComboBox<String> methodComboBox = new ComboBox<>(PAYMENT_METHOD_DISPLAY_OPTIONS);
+        methodComboBox.setValue("Espèces");  // Default to Cash (in French)
 
         formLayout.getChildren().addAll(amountLabel, amountField, methodLabel, methodComboBox);
 
@@ -317,16 +570,18 @@ public class PaymentController implements Initializable {
             if (dialogButton == saveButtonType) {
                 try {
                     double amount = Double.parseDouble(amountField.getText());
-                    String method = methodComboBox.getValue();
+                    String displayMethod = methodComboBox.getValue();
 
                     // Debug what's being selected
-                    System.out.println("Selected payment method: " + method);
+                    System.out.println("Selected payment method (display): " + displayMethod);
 
                     Payment payment = new Payment();
                     payment.setPatientID(appointment.getPatientID());
                     payment.setRendezVousID(appointment.getRendezVousID());
                     payment.setAmount(amount);
-                    payment.setPaymentMethod(method);
+
+                    // Store the display method - it will be translated in PaymentManager
+                    payment.setPaymentMethod(displayMethod);
                     payment.setPaymentDate(Timestamp.valueOf(LocalDateTime.now()));
 
                     return payment;
@@ -357,6 +612,20 @@ public class PaymentController implements Initializable {
      * Show dialog for editing an existing payment
      */
     private void showEditPaymentDialog(Payment payment) {
+        // First check if payment is from today
+        boolean isPaymentFromToday = false;
+        if (payment.getPaymentDate() != null) {
+            LocalDate paymentDate = payment.getPaymentDate().toLocalDateTime().toLocalDate();
+            isPaymentFromToday = paymentDate.equals(LocalDate.now());
+        }
+
+        // Only allow editing payments from today
+        if (!isPaymentFromToday) {
+            showAlert(Alert.AlertType.WARNING, "Modification impossible",
+                    "Seuls les paiements du jour peuvent être modifiés.");
+            return;
+        }
+
         Dialog<Payment> dialog = new Dialog<>();
         dialog.setTitle("Modifier un Paiement");
         dialog.setHeaderText("Paiement ID: " + payment.getPaymentID());
@@ -373,15 +642,12 @@ public class PaymentController implements Initializable {
 
         Label methodLabel = new Label("Méthode de Paiement:");
 
-        // CRITICAL FIX: Use direct database enum values in the UI with no translation
-        ComboBox<String> methodComboBox = new ComboBox<>(PAYMENT_METHOD_OPTIONS);
+        // Use French display values in the UI
+        ComboBox<String> methodComboBox = new ComboBox<>(PAYMENT_METHOD_DISPLAY_OPTIONS);
 
-        // Set current value (will fall back to Cash if not found)
-        if (PAYMENT_METHOD_OPTIONS.contains(payment.getPaymentMethod())) {
-            methodComboBox.setValue(payment.getPaymentMethod());
-        } else {
-            methodComboBox.setValue(PaymentManager.PAYMENT_METHOD_CASH);
-        }
+        // Map database value to display value for the current payment method
+        String displayValue = mapDBValueToDisplay(payment.getPaymentMethod());
+        methodComboBox.setValue(displayValue);
 
         formLayout.getChildren().addAll(amountLabel, amountField, methodLabel, methodComboBox);
 
@@ -395,10 +661,10 @@ public class PaymentController implements Initializable {
             if (dialogButton == saveButtonType) {
                 try {
                     double amount = Double.parseDouble(amountField.getText());
-                    String method = methodComboBox.getValue();
+                    String displayMethod = methodComboBox.getValue();
 
                     payment.setAmount(amount);
-                    payment.setPaymentMethod(method);
+                    payment.setPaymentMethod(displayMethod);
 
                     return payment;
                 } catch (NumberFormatException e) {
@@ -421,28 +687,6 @@ public class PaymentController implements Initializable {
                 showAlert(Alert.AlertType.ERROR, "Erreur", "Échec de la mise à jour du paiement.");
             }
         });
-    }
-
-    /**
-     * Show confirmation dialog for deleting a payment
-     */
-    private void showDeletePaymentConfirmation(Payment payment) {
-        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-        alert.setTitle("Confirmation de Suppression");
-        alert.setHeaderText("Supprimer le Paiement ID: " + payment.getPaymentID());
-        alert.setContentText("Êtes-vous sûr de vouloir supprimer ce paiement?");
-
-        Optional<ButtonType> result = alert.showAndWait();
-        if (result.isPresent() && result.get() == ButtonType.OK) {
-            boolean success = paymentManager.deletePayment(payment.getPaymentID());
-            if (success) {
-                showAlert(Alert.AlertType.INFORMATION, "Succès", "Paiement supprimé avec succès.");
-                loadPaymentHistory(); // Refresh payment history
-                appointmentTable.refresh(); // Refresh appointment table to update paid status
-            } else {
-                showAlert(Alert.AlertType.ERROR, "Erreur", "Échec de la suppression du paiement.");
-            }
-        }
     }
 
     /**
