@@ -1,4 +1,4 @@
-package com.example.myjavafxapp.Controllers.GestionPaiement;
+package com.example.myjavafxapp.Controllers.GestionPaiment;
 
 import javafx.geometry.Insets;
 import com.example.myjavafxapp.Models.*;
@@ -18,8 +18,6 @@ import javafx.print.Paper;
 import javafx.print.PrinterJob;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
