@@ -137,6 +137,7 @@
                                         <Font name="System Bold" size="16.0" />
                                     </font>
                                 </Label>
+                                <!-- Keep the peak hour display -->
                                 <GridPane hgap="15.0" vgap="10.0">
                                     <columnConstraints>
                                         <ColumnConstraints hgrow="SOMETIMES" minWidth="200.0" prefWidth="250.0" />
@@ -150,6 +151,19 @@
                                         <Label fx:id="peakHourLabel" text="N/A" GridPane.columnIndex="1" />
                                     </children>
                                 </GridPane>
+
+                                <!-- New section for all hours with appointments -->
+                                <Label text="Répartition des RDV par heure :" styleClass="form-label">
+                                    <VBox.margin>
+                                        <Insets top="10.0" />
+                                    </VBox.margin>
+                                </Label>
+                                <TableView fx:id="hourlyAppointmentsTable" prefHeight="150.0">
+                                    <columns>
+                                        <TableColumn fx:id="hourColumn" prefWidth="150.0" text="Heure" />
+                                        <TableColumn fx:id="appointmentCountColumn" prefWidth="150.0" text="Nombre de RDV" />
+                                    </columns>
+                                </TableView>
                             </children>
                             <padding>
                                 <Insets bottom="15.0" left="15.0" right="15.0" top="15.0" />

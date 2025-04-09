@@ -3,6 +3,7 @@ package com.example.myjavafxapp.Controllers;
 import com.example.myjavafxapp.Models.DailyReport;
 import com.example.myjavafxapp.Models.DailyReportManager;
 import com.example.myjavafxapp.Models.SwitchScene;
+import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
@@ -27,8 +28,8 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Map;
-import java.util.ResourceBundle;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Controller for the Daily Report view
@@ -56,6 +57,11 @@ public class RapportQuotidienController implements Initializable {
 
     // Peak hours section
     @FXML private Label peakHourLabel;
+
+    // Hourly appointments table
+    @FXML private TableView<Map.Entry<LocalTime, Integer>> hourlyAppointmentsTable;
+    @FXML private TableColumn<Map.Entry<LocalTime, Integer>, String> hourColumn;
+    @FXML private TableColumn<Map.Entry<LocalTime, Integer>, Integer> appointmentCountColumn;
 
     // Revenue section
     @FXML private Label totalRevenueLabel;
@@ -89,9 +95,10 @@ public class RapportQuotidienController implements Initializable {
     }
 
     /**
-     * Set up table columns for the patients list
+     * Set up table columns for the patients list and hourly appointments
      */
     private void setupTableColumns() {
+        // Patient list table
         cinColumn.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getCin()));
         prenomColumn.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getFirstName()));
         nomColumn.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getLastName()));
@@ -101,6 +108,12 @@ public class RapportQuotidienController implements Initializable {
         });
         paymentMethodColumn.setCellValueFactory(data ->
                 new SimpleStringProperty(data.getValue().getPaymentMethod()));
+
+        // Hourly appointments table
+        hourColumn.setCellValueFactory(data ->
+                new SimpleStringProperty(data.getValue().getKey().format(timeFormatter)));
+        appointmentCountColumn.setCellValueFactory(data ->
+                new SimpleIntegerProperty(data.getValue().getValue()).asObject());
     }
 
     /**
@@ -139,6 +152,16 @@ public class RapportQuotidienController implements Initializable {
         } else {
             peakHourLabel.setText("N/A");
         }
+
+        // Update hourly appointments table
+        // Filter to include only hours with at least one appointment and sort by time
+        List<Map.Entry<LocalTime, Integer>> hourlyAppointments = currentReport.getAppointmentsByHour().entrySet()
+                .stream()
+                .filter(entry -> entry.getValue() >= 1)
+                .sorted(Map.Entry.comparingByKey())
+                .collect(Collectors.toList());
+
+        hourlyAppointmentsTable.setItems(FXCollections.observableArrayList(hourlyAppointments));
 
         // Update revenue
         totalRevenueLabel.setText(String.format("%.2f DH", currentReport.getTotalRevenue()));
@@ -348,7 +371,7 @@ public class RapportQuotidienController implements Initializable {
                 yPosition -= 30;
             }
 
-            // Add peak hour
+            // Add peak hour and hourly distribution
             contentStream.setFont(PDType1Font.HELVETICA_BOLD, 14);
             contentStream.beginText();
             contentStream.newLineAtOffset(margin, yPosition);
@@ -366,7 +389,67 @@ public class RapportQuotidienController implements Initializable {
                 contentStream.showText("Heure de pointe : N/A");
             }
             contentStream.endText();
-            yPosition -= 35;
+            yPosition -= 25;
+
+            // Add hourly distribution table
+            contentStream.setFont(PDType1Font.HELVETICA_BOLD, 12);
+            contentStream.beginText();
+            contentStream.newLineAtOffset(margin + indent, yPosition);
+            contentStream.showText("Répartition des RDV par heure :");
+            contentStream.endText();
+            yPosition -= 20;
+
+            // Table headers for hourly distribution
+            contentStream.setFont(PDType1Font.HELVETICA_BOLD, 10);
+            float hourlyTableStartX = margin + indent;
+            float hourlyTableStartY = yPosition;
+            float[] hourlyColumnWidths = {100, 100};
+
+            contentStream.beginText();
+            contentStream.newLineAtOffset(hourlyTableStartX, hourlyTableStartY);
+            contentStream.showText("Heure");
+            contentStream.endText();
+
+            contentStream.beginText();
+            contentStream.newLineAtOffset(hourlyTableStartX + hourlyColumnWidths[0], hourlyTableStartY);
+            contentStream.showText("Nombre de RDV");
+            contentStream.endText();
+
+            yPosition -= 15;
+
+            // Table rows for hourly distribution
+            contentStream.setFont(PDType1Font.HELVETICA, 10);
+            List<Map.Entry<LocalTime, Integer>> hourlyAppointments = currentReport.getAppointmentsByHour().entrySet()
+                    .stream()
+                    .filter(entry -> entry.getValue() >= 1)
+                    .sorted(Map.Entry.comparingByKey())
+                    .collect(Collectors.toList());
+
+            for (Map.Entry<LocalTime, Integer> entry : hourlyAppointments) {
+                // Check if we need a new page
+                if (yPosition < 100) {
+                    contentStream.close();
+                    page = new PDPage(PDRectangle.A4);
+                    document.addPage(page);
+                    contentStream = new PDPageContentStream(document, page);
+                    contentStream.setFont(PDType1Font.HELVETICA, 10);
+                    yPosition = 750;
+                }
+
+                contentStream.beginText();
+                contentStream.newLineAtOffset(hourlyTableStartX, yPosition);
+                contentStream.showText(entry.getKey().format(timeFormatter));
+                contentStream.endText();
+
+                contentStream.beginText();
+                contentStream.newLineAtOffset(hourlyTableStartX + hourlyColumnWidths[0], yPosition);
+                contentStream.showText(String.valueOf(entry.getValue()));
+                contentStream.endText();
+
+                yPosition -= 15;
+            }
+
+            yPosition -= 20;
 
             // Add revenue summary
             contentStream.setFont(PDType1Font.HELVETICA_BOLD, 14);
