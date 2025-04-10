@@ -15,7 +15,7 @@
 <?import javafx.scene.text.Font?>
 <?import org.kordamp.ikonli.javafx.FontIcon?>
 
-<BorderPane prefHeight="700.0" prefWidth="1024.0" styleClass="main-container" stylesheets="@GestionDossierCss.css" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.myjavafxapp.Controllers.PaymentController">
+<BorderPane prefHeight="700.0" prefWidth="1024.0" styleClass="main-container" stylesheets="@GestionDossierCss.css" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.myjavafxapp.Controllers.GestionPaiment.PaymentController">
     <top>
         <VBox spacing="10.0" BorderPane.alignment="CENTER">
             <children>
