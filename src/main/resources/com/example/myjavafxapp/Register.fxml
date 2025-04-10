@@ -37,12 +37,12 @@
 
          <!-- Password Section -->
          <Label text="Password" styleClass="form-label" alignment="CENTER_LEFT" maxWidth="Infinity" />
-         <PasswordField fx:id="passwordField" promptText="Votre password ici" styleClass="form-field" />
+         <PasswordField fx:id="passwordField" promptText="Votre PASSWORD ici" styleClass="form-field" />
          <Label fx:id="passwordError" prefHeight="20.0" maxWidth="Infinity" styleClass="error-message" />
 
          <!-- Confirm Password Section -->
          <Label text="Confirmer Password" styleClass="form-label" alignment="CENTER_LEFT" maxWidth="Infinity" />
-         <PasswordField fx:id="ConfirmField" promptText="Confirmer votre password ici" styleClass="form-field" />
+         <PasswordField fx:id="ConfirmField" promptText="Confirmer votre PASSWORD ici" styleClass="form-field" />
          <Label fx:id="confirmPasswordError" prefHeight="20.0" maxWidth="Infinity" styleClass="error-message" />
 
          <!-- Register Button -->
