@@ -37,15 +37,6 @@ public class CalendarViewController implements Initializable {
     @FXML private Button newAppointmentBtn;
     @FXML private GridPane calendarGrid;
 
-    // Navigation buttons
-    @FXML private Button homeButton;
-    @FXML private Button gestionPaiment;
-    @FXML private Button dossierPatient;
-    @FXML private Button statistiqueGlobales;
-    @FXML private Button rapportQuotidien;
-    @FXML private Button sauvegarde;
-    @FXML private Button gestionUtilisateur;
-
     // Doctor column headers
     @FXML private Label doctor1Label;
     @FXML private Label doctor2Label;
@@ -74,9 +65,6 @@ public class CalendarViewController implements Initializable {
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-        // Set button visibility based on user role
-        configureButtonVisibilityBasedOnRole();
-
         // Load doctors for the filter
         loadDoctorsForFilter();
 
@@ -92,45 +80,6 @@ public class CalendarViewController implements Initializable {
 
         // Setup auto-refresh (every 5 minutes)
         setupAutoRefresh();
-    }
-
-    /**
-     * New method to configure button visibility based on user role
-     */
-    private void configureButtonVisibilityBasedOnRole() {
-        // Get the current user role from UserSession
-        String userRole = UserSession.getInstance().getRole();
-
-        if (userRole == null) {
-            // If role is not set, show a warning and default to basic access
-            System.out.println("Warning: User role is not set in UserSession. Defaulting to basic access.");
-            userRole = "personnel";
-        }
-
-        // Always show these buttons for all roles
-        homeButton.setVisible(true);
-        homeButton.setManaged(true);
-        gestionPaiment.setVisible(true);
-        gestionPaiment.setManaged(true);
-        dossierPatient.setVisible(true);
-        dossierPatient.setManaged(true);
-
-        // Configure visibility based on role
-        boolean isAdmin = "admin".equalsIgnoreCase(userRole);
-
-        // The key is to set both visible AND managed properties
-        // When a node is not managed, it's completely removed from layout calculations
-        statistiqueGlobales.setVisible(isAdmin);
-        statistiqueGlobales.setManaged(isAdmin);
-
-        rapportQuotidien.setVisible(isAdmin);
-        rapportQuotidien.setManaged(isAdmin);
-
-        sauvegarde.setVisible(isAdmin);
-        sauvegarde.setManaged(isAdmin);
-
-        gestionUtilisateur.setVisible(isAdmin);
-        gestionUtilisateur.setManaged(isAdmin);
     }
 
     private void loadDoctorsForFilter() {
@@ -213,16 +162,16 @@ public class CalendarViewController implements Initializable {
             RowConstraints headerRow = new RowConstraints(30);
             calendarGrid.getRowConstraints().add(headerRow);
 
-            // Add time slots (every 30 minutes from 8:00 to 17:30)
+            // Add time slots (every 15 minutes from 8:00 to 17:45)
             LocalTime startTime = LocalTime.of(8, 0);
-            LocalTime endTime = LocalTime.of(17, 30);
+            LocalTime endTime = LocalTime.of(17, 45);
 
             int rowIndex = 1;
             LocalTime currentTime = startTime;
 
             while (!currentTime.isAfter(endTime)) {
                 // Add row constraint
-                RowConstraints rowConstraint = new RowConstraints(60); // 60px tall
+                RowConstraints rowConstraint = new RowConstraints(40); // Reduced from 60px to 40px due to more slots
                 calendarGrid.getRowConstraints().add(rowConstraint);
 
                 // Add time label
@@ -248,8 +197,8 @@ public class CalendarViewController implements Initializable {
                     calendarGrid.add(cellPane, col, rowIndex);
                 }
 
-                // Increment time
-                currentTime = currentTime.plusMinutes(30);
+                // Increment time by 15 minutes instead of 30
+                currentTime = currentTime.plusMinutes(15);
                 rowIndex++;
             }
         }
@@ -438,23 +387,28 @@ public class CalendarViewController implements Initializable {
     }
 
     private int getRowForTime(LocalTime time) {
-        // Calculate row index based on time (8:00 = row 1, 8:30 = row 2, etc.)
+        // Calculate row index based on time (8:00 = row 1, 8:15 = row 2, 8:30 = row 3, etc.)
         int hour = time.getHour();
         int minute = time.getMinute();
 
-        if (hour < 8 || hour > 17 || (hour == 17 && minute > 30)) {
+        if (hour < 8 || hour > 17 || (hour == 17 && minute > 45)) {
             // Outside of calendar range
             return -1;
         }
 
-        // Calculate row: (hour - 8) * 2 + (minute / 30) + 1
+        // Calculate row: (hour - 8) * 4 + (minute / 15) + 1
         // +1 because row 0 is header
-        return (hour - 8) * 2 + (minute / 30) + 1;
+        return (hour - 8) * 4 + (minute / 15) + 1;
     }
 
     private VBox createAppointmentBlock(Appointment appointment) {
         VBox appointmentBlock = new VBox();
         appointmentBlock.getStyleClass().addAll("appointment-block", "appointment-" + appointment.getStatus().toLowerCase());
+
+        // Make blocks smaller due to 15-minute time slots
+        appointmentBlock.setPrefHeight(35);
+        appointmentBlock.setMaxHeight(35);
+        appointmentBlock.setSpacing(2);
 
         // Store appointment ID in the block for later reference
         appointmentBlock.setUserData(appointment);
@@ -467,18 +421,21 @@ public class CalendarViewController implements Initializable {
         // Time
         Label timeLabel = new Label(appointment.getAppointmentDateTime().format(timeFormatter));
         timeLabel.getStyleClass().add("appointment-time");
+        timeLabel.setStyle("-fx-font-size: 10px;");
 
         // Patient name
         Label patientLabel = new Label(appointment.getPatientName());
         patientLabel.getStyleClass().add("appointment-patient");
+        patientLabel.setStyle("-fx-font-size: 10px;");
 
         // Reason (truncated)
         String reasonText = appointment.getReasonForVisit();
-        if (reasonText != null && reasonText.length() > 20) {
-            reasonText = reasonText.substring(0, 17) + "...";
+        if (reasonText != null && reasonText.length() > 15) {
+            reasonText = reasonText.substring(0, 12) + "...";
         }
         Label reasonLabel = new Label(reasonText);
         reasonLabel.getStyleClass().add("appointment-reason");
+        reasonLabel.setStyle("-fx-font-size: 9px;");
 
         // Add components to block
         appointmentBlock.getChildren().addAll(timeLabel, patientLabel, reasonLabel);
@@ -690,12 +647,12 @@ public class CalendarViewController implements Initializable {
         DatePicker datePicker = new DatePicker(LocalDate.now());
         ComboBox<String> timeComboBox = new ComboBox<>();
 
-        // Populate time options (8:00 AM to 5:00 PM in 30-min increments)
+        // Populate time options (8:00 AM to 5:45 PM in 15-min increments)
         ObservableList<String> timeOptions = FXCollections.observableArrayList();
         LocalTime time = LocalTime.of(8, 0);
-        while (!time.isAfter(LocalTime.of(17, 0))) {
+        while (!time.isAfter(LocalTime.of(17, 45))) {
             timeOptions.add(time.format(timeFormatter));
-            time = time.plusMinutes(30);
+            time = time.plusMinutes(15);
         }
         timeComboBox.setItems(timeOptions);
         timeComboBox.getSelectionModel().select(0);
@@ -996,7 +953,7 @@ public class CalendarViewController implements Initializable {
     @FXML
     public void onUsers(ActionEvent event) {
         try {
-            SwitchScene.switchScene(event, "/com/example/myjavafxapp/Users.fxml");
+            SwitchScene.switchScene(event, "/com/example/myjavafxapp/gestionUtilisateurs.fxml");
         } catch (IOException e) {
             showAlert(Alert.AlertType.ERROR, "Erreur", "Impossible de naviguer vers la Gestion des Utilisateurs : " + e.getMessage());
         }
