@@ -37,6 +37,15 @@ public class CalendarViewController implements Initializable {
     @FXML private Button newAppointmentBtn;
     @FXML private GridPane calendarGrid;
 
+    // Navigation buttons
+    @FXML private Button homeButton;
+    @FXML private Button gestionPaiment;
+    @FXML private Button dossierPatient;
+    @FXML private Button statistiqueGlobales;
+    @FXML private Button rapportQuotidien;
+    @FXML private Button sauvegarde;
+    @FXML private Button gestionUtilisateur;
+
     // Doctor column headers
     @FXML private Label doctor1Label;
     @FXML private Label doctor2Label;
@@ -65,6 +74,9 @@ public class CalendarViewController implements Initializable {
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
+        // Set button visibility based on user role
+        configureButtonVisibilityBasedOnRole();
+
         // Load doctors for the filter
         loadDoctorsForFilter();
 
@@ -80,6 +92,45 @@ public class CalendarViewController implements Initializable {
 
         // Setup auto-refresh (every 5 minutes)
         setupAutoRefresh();
+    }
+
+    /**
+     * New method to configure button visibility based on user role
+     */
+    private void configureButtonVisibilityBasedOnRole() {
+        // Get the current user role from UserSession
+        String userRole = UserSession.getInstance().getRole();
+
+        if (userRole == null) {
+            // If role is not set, show a warning and default to basic access
+            System.out.println("Warning: User role is not set in UserSession. Defaulting to basic access.");
+            userRole = "personnel";
+        }
+
+        // Always show these buttons for all roles
+        homeButton.setVisible(true);
+        homeButton.setManaged(true);
+        gestionPaiment.setVisible(true);
+        gestionPaiment.setManaged(true);
+        dossierPatient.setVisible(true);
+        dossierPatient.setManaged(true);
+
+        // Configure visibility based on role
+        boolean isAdmin = "admin".equalsIgnoreCase(userRole);
+
+        // The key is to set both visible AND managed properties
+        // When a node is not managed, it's completely removed from layout calculations
+        statistiqueGlobales.setVisible(isAdmin);
+        statistiqueGlobales.setManaged(isAdmin);
+
+        rapportQuotidien.setVisible(isAdmin);
+        rapportQuotidien.setManaged(isAdmin);
+
+        sauvegarde.setVisible(isAdmin);
+        sauvegarde.setManaged(isAdmin);
+
+        gestionUtilisateur.setVisible(isAdmin);
+        gestionUtilisateur.setManaged(isAdmin);
     }
 
     private void loadDoctorsForFilter() {
@@ -945,7 +996,7 @@ public class CalendarViewController implements Initializable {
     @FXML
     public void onUsers(ActionEvent event) {
         try {
-            SwitchScene.switchScene(event, "/com/example/myjavafxapp/gestionUtilisateurs.fxml");
+            SwitchScene.switchScene(event, "/com/example/myjavafxapp/Users.fxml");
         } catch (IOException e) {
             showAlert(Alert.AlertType.ERROR, "Erreur", "Impossible de naviguer vers la Gestion des Utilisateurs : " + e.getMessage());
         }
