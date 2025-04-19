@@ -241,7 +241,7 @@
     -fx-background-color: white;
     -fx-border-color: #e0e0e0;
     -fx-border-width: 0.5px;
-    -fx-padding: 1px;
+    -fx-padding: 0;
     -fx-alignment: center;
     -fx-cursor: hand;
     -fx-min-height: 30px;
@@ -255,22 +255,25 @@
 
 /* Fixed appointment blocks for 15-minute slots */
 .appointment-block {
-    -fx-background-radius: 3px;
-    -fx-border-radius: 3px;
-    -fx-border-width: 1px;
-    -fx-border-color: derive(-fx-light-grey, -10%);
-    -fx-padding: 1px 2px;
-    -fx-spacing: 1px;
-    -fx-cursor: hand;
-    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 1, 0, 0, 1);
+    -fx-background-radius: 3px !important;
+    -fx-border-radius: 3px !important;
+    -fx-border-width: 1px !important;
+    -fx-border-color: derive(-fx-light-grey, -10%) !important;
+    -fx-padding: 0px 1px !important;
+    -fx-spacing: 0px !important;
+    -fx-cursor: hand !important;
+    /* Removed drop shadow effect which can cause rendering issues */
 
-    /* Fixed sizing for 15-minute slots */
-    -fx-min-height: 28px;
-    -fx-max-height: 28px;
-    -fx-pref-height: 28px;
-    -fx-max-width: 100%;
-    -fx-pref-width: 98%;
-    -fx-alignment: center-left;
+    /* Force fixed size for the block to avoid collapsing */
+    -fx-min-height: 28px !important;
+    -fx-pref-height: 28px !important;
+    -fx-max-height: 28px !important;
+    -fx-min-width: 95% !important;
+    -fx-pref-width: 98% !important;
+    -fx-max-width: 100% !important;
+
+    /* Content alignment */
+    -fx-alignment: center-left !important;
 }
 
 /* Appointment status styling with gradients */
@@ -311,20 +314,30 @@
 
 /* Appointment text elements - reduced font sizes for 15-minute slots */
 .appointment-time {
-    -fx-font-weight: bold;
-    -fx-font-size: 9px;
-    -fx-text-fill: inherit;
+    -fx-font-weight: bold !important;
+    -fx-font-size: 9px !important;
+    -fx-text-fill: inherit !important;
+    -fx-min-height: 9px !important;
+    -fx-pref-height: 9px !important;
+    -fx-wrap-text: false !important;
+    -fx-opacity: 1.0 !important;
 }
 
 .appointment-patient {
-    -fx-font-weight: bold;
-    -fx-font-size: 9px;
-    -fx-wrap-text: true;
+    -fx-font-weight: bold !important;
+    -fx-font-size: 9px !important;
+    -fx-min-height: 9px !important;
+    -fx-pref-height: 9px !important;
+    -fx-wrap-text: false !important;
+    -fx-opacity: 1.0 !important;
 }
 
 .appointment-reason {
-    -fx-font-size: 8px;
-    -fx-wrap-text: true;
+    -fx-font-size: 8px !important;
+    -fx-min-height: 8px !important;
+    -fx-pref-height: 8px !important;
+    -fx-wrap-text: false !important;
+    -fx-opacity: 1.0 !important;
 }
 
 .status-box {
