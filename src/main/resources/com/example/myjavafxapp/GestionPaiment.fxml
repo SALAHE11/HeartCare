@@ -3,6 +3,7 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.DatePicker?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.Separator?>
@@ -11,6 +12,7 @@
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 <?import org.kordamp.ikonli.javafx.FontIcon?>
@@ -96,7 +98,7 @@
                                 <!-- Appointments Table -->
                                 <VBox spacing="5.0" styleClass="details-container">
                                     <children>
-                                        <Label styleClass="panel-header" text="Rendez-vous terminés">
+                                        <Label styleClass="panel-header" text="Rendez-vous terminés du jour">
                                             <font>
                                                 <Font name="System Bold" size="14.0" />
                                             </font>
@@ -123,11 +125,24 @@
                                 <!-- Payments Table -->
                                 <VBox spacing="5.0" styleClass="details-container">
                                     <children>
-                                        <Label styleClass="panel-header" text="Historique des Paiements">
-                                            <font>
-                                                <Font name="System Bold" size="14.0" />
-                                            </font>
-                                        </Label>
+                                        <!-- Modified header to include date filter -->
+                                        <HBox alignment="CENTER_LEFT" spacing="10.0">
+                                            <children>
+                                                <Label styleClass="panel-header" text="Historique des Paiements">
+                                                    <font>
+                                                        <Font name="System Bold" size="14.0" />
+                                                    </font>
+                                                </Label>
+                                                <Region HBox.hgrow="ALWAYS" />
+                                                <Label text="Filtrer par date:" />
+                                                <DatePicker fx:id="paymentDatePicker" promptText="Choisir une date" />
+                                                <Button fx:id="filterPaymentDateButton" mnemonicParsing="false" onAction="#handlePaymentDateFilter" styleClass="action-button" text="Filtrer">
+                                                    <graphic>
+                                                        <FontIcon iconColor="WHITE" iconLiteral="fas-filter" iconSize="14" />
+                                                    </graphic>
+                                                </Button>
+                                            </children>
+                                        </HBox>
                                         <TableView fx:id="paymentTable" prefHeight="200.0" VBox.vgrow="ALWAYS">
                                             <columns>
                                                 <TableColumn fx:id="paymentIdColumn" prefWidth="50.0" text="ID" />

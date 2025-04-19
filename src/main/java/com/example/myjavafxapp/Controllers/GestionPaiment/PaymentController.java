@@ -2,6 +2,7 @@ package com.example.myjavafxapp.Controllers.GestionPaiment;
 
 import javafx.geometry.Insets;
 import com.example.myjavafxapp.Models.*;
+import javafx.application.Platform;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleIntegerProperty;
@@ -37,12 +38,17 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.ResourceBundle;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 public class PaymentController implements Initializable {
 
     @FXML private TextField patientCINField;
     @FXML private Button searchButton;
     @FXML private Button returnToCalendarButton;
+    @FXML private DatePicker paymentDatePicker;
+    @FXML private Button filterPaymentDateButton;
 
     // Appointment table
     @FXML private TableView<Appointment> appointmentTable;
@@ -89,22 +95,31 @@ public class PaymentController implements Initializable {
         setupAppointmentTable();
         setupPaymentTable();
 
-        // Load all payments for the payment history table
+        // Set default date for payment date picker to today
+        if (paymentDatePicker != null) {
+            paymentDatePicker.setValue(LocalDate.now());
+        }
+
+        // Load all payments for the payment history table (filtered for today by default)
         loadPaymentHistory();
 
-        // Load all completed appointments
-        loadAllCompletedAppointments();
+        // Load only today's completed unpaid appointments
+        loadTodayUnpaidCompletedAppointments();
     }
 
     /**
-     * Load all completed appointments
+     * Load today's unpaid completed appointments
      */
-    private void loadAllCompletedAppointments() {
-        List<Appointment> completedAppointments = new ArrayList<>();
+    private void loadTodayUnpaidCompletedAppointments() {
+        List<Appointment> todayUnpaidAppointments = new ArrayList<>();
         Connection conn = DatabaseSingleton.getInstance().getConnection();
 
         try {
-            // Updated query to work with users table instead of medecin table
+            // Get today's date in SQL format
+            LocalDate today = LocalDate.now();
+            String todayStr = today.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+
+            // Query to get today's completed appointments
             String query = "SELECT r.*, " +
                     "p.FNAME AS patientFirstName, p.LNAME AS patientLastName, " +
                     "u.FNAME AS doctorFirstName, u.LNAME AS doctorLastName " +
@@ -112,10 +127,14 @@ public class PaymentController implements Initializable {
                     "JOIN patient p ON r.PatientID = p.ID " +
                     "JOIN users u ON r.MedecinID = u.ID AND u.ROLE = 'medecin' " +
                     "WHERE r.Status = 'Completed' " +
-                    "ORDER BY r.AppointmentDateTime DESC";
+                    "AND DATE(r.AppointmentDateTime) = ? " +
+                    "AND NOT EXISTS (SELECT 1 FROM paiment pay WHERE pay.RendezVousID = r.RendezVousID) " +
+                    "ORDER BY r.AppointmentDateTime";
 
-            Statement stmt = conn.createStatement();
-            ResultSet rs = stmt.executeQuery(query);
+            PreparedStatement pstmt = conn.prepareStatement(query);
+            pstmt.setString(1, todayStr);
+
+            ResultSet rs = pstmt.executeQuery();
 
             while (rs.next()) {
                 Appointment appointment = new Appointment();
@@ -144,7 +163,7 @@ public class PaymentController implements Initializable {
                 appointment.setReasonForVisit(rs.getString("ReasonForVisit"));
                 appointment.setStatus(rs.getString("Status"));
 
-                completedAppointments.add(appointment);
+                todayUnpaidAppointments.add(appointment);
             }
 
         } catch (SQLException e) {
@@ -153,13 +172,23 @@ public class PaymentController implements Initializable {
                     "Erreur lors du chargement des rendez-vous: " + e.getMessage());
         }
 
-        if (completedAppointments.isEmpty()) {
-            showAlert(Alert.AlertType.INFORMATION, "Information",
-                    "Aucun rendez-vous terminé trouvé.");
-        } else {
-            appointmentsData.setAll(completedAppointments);
+        appointmentsData.setAll(todayUnpaidAppointments);
+
+        if (todayUnpaidAppointments.isEmpty()) {
+            // Only show alert if there are no appointments at startup
+            // Don't show alert when payment was just processed - it's expected there are no more unpaid appointments
+            if (!paymentJustProcessed) {
+                showAlert(Alert.AlertType.INFORMATION, "Information",
+                        "Aucun rendez-vous terminé non payé pour aujourd'hui.");
+            }
         }
+
+        // Reset flag
+        paymentJustProcessed = false;
     }
+
+    // Track if payment was just processed to avoid unnecessary alerts
+    private boolean paymentJustProcessed = false;
 
     /**
      * Set up the appointment table columns
@@ -187,7 +216,8 @@ public class PaymentController implements Initializable {
                 new SimpleStringProperty(cellData.getValue().getReasonForVisit()));
 
         isPaidColumn.setCellValueFactory(cellData -> {
-            boolean isPaid = paymentManager.isAppointmentPaid(cellData.getValue().getRendezVousID());
+            // Force a direct database check for payment status on each cell update
+            boolean isPaid = checkAppointmentIsPaid(cellData.getValue().getRendezVousID());
             return new SimpleBooleanProperty(isPaid);
         });
 
@@ -216,7 +246,9 @@ public class PaymentController implements Initializable {
                     setGraphic(null);
                 } else {
                     Appointment appointment = getTableView().getItems().get(getIndex());
-                    boolean isPaid = paymentManager.isAppointmentPaid(appointment.getRendezVousID());
+
+                    // Force a new database check for payment status
+                    boolean isPaid = checkAppointmentIsPaid(appointment.getRendezVousID());
 
                     if (isPaid) {
                         // If already paid, show "Paid" label
@@ -232,6 +264,36 @@ public class PaymentController implements Initializable {
         });
 
         appointmentTable.setItems(appointmentsData);
+    }
+
+    /**
+     * Force a new database check for payment status to avoid cached results
+     */
+    private boolean checkAppointmentIsPaid(int rendezVousID) {
+        Connection conn = DatabaseSingleton.getInstance().getConnection();
+
+        try {
+            // Use a fresh connection and transaction to ensure current data
+            String query = "SELECT COUNT(*) FROM paiment WHERE RendezVousID = ?";
+            PreparedStatement pstmt = conn.prepareStatement(query);
+            pstmt.setInt(1, rendezVousID);
+
+            ResultSet rs = pstmt.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1) > 0;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return false;
+    }
+
+    /**
+     * Remove a paid appointment from the table
+     */
+    private void removeAppointmentById(int rendezVousID) {
+        appointmentsData.removeIf(appointment -> appointment.getRendezVousID() == rendezVousID);
     }
 
     /**
@@ -532,11 +594,86 @@ public class PaymentController implements Initializable {
     }
 
     /**
-     * Load all payments for the payment history table
+     * Load payments for the payment history table (default to today's date)
      */
     private void loadPaymentHistory() {
-        List<Payment> payments = paymentManager.getAllPayments();
-        paymentsData.setAll(payments);
+        // Default to today's payments
+        loadPaymentsByDate(LocalDate.now());
+    }
+
+    /**
+     * Load payments for a specific date
+     */
+    private void loadPaymentsByDate(LocalDate date) {
+        List<Payment> filteredPayments = new ArrayList<>();
+        Connection conn = DatabaseSingleton.getInstance().getConnection();
+
+        try {
+            // Format date for SQL query
+            String dateStr = date.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+
+            // Query to get payments for the selected date
+            String query = "SELECT p.*, " +
+                    "pat.FNAME AS patientFirstName, pat.LNAME AS patientLastName " +
+                    "FROM paiment p " +
+                    "JOIN patient pat ON p.PatientID = pat.ID " +
+                    "WHERE DATE(p.PaymentDate) = ? " +
+                    "ORDER BY p.PaymentDate DESC";
+
+            PreparedStatement pstmt = conn.prepareStatement(query);
+            pstmt.setString(1, dateStr);
+
+            ResultSet rs = pstmt.executeQuery();
+
+            while (rs.next()) {
+                Payment payment = new Payment();
+
+                // Use the correct column name: PaimentID instead of PaymentID
+                payment.setPaymentID(rs.getInt("PaimentID"));
+                payment.setPatientID(rs.getString("PatientID"));
+                payment.setRendezVousID(rs.getInt("RendezVousID"));
+                payment.setAmount(rs.getDouble("Amount"));
+                payment.setPaymentMethod(rs.getString("PaymentMethod"));
+                payment.setPaymentDate(rs.getTimestamp("PaymentDate"));
+
+                // Set patient name
+                String patientFirstName = rs.getString("patientFirstName");
+                String patientLastName = rs.getString("patientLastName");
+                if (patientFirstName != null && patientLastName != null) {
+                    payment.setPatientName(patientFirstName + " " + patientLastName);
+                }
+
+                filteredPayments.add(payment);
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            showAlert(Alert.AlertType.ERROR, "Erreur",
+                    "Erreur lors du chargement des paiements: " + e.getMessage());
+        }
+
+        if (filteredPayments.isEmpty() && !date.equals(LocalDate.now())) {
+            showAlert(Alert.AlertType.INFORMATION, "Information",
+                    "Aucun paiement trouvé pour cette date.");
+        }
+
+        paymentsData.setAll(filteredPayments);
+    }
+
+    /**
+     * Handle date filter button click for payments
+     */
+    @FXML
+    private void handlePaymentDateFilter(ActionEvent event) {
+        LocalDate selectedDate = paymentDatePicker.getValue();
+        if (selectedDate != null) {
+            loadPaymentsByDate(selectedDate);
+        } else {
+            showAlert(Alert.AlertType.WARNING, "Attention",
+                    "Veuillez sélectionner une date valide.");
+            // Set back to today if no date selected
+            paymentDatePicker.setValue(LocalDate.now());
+        }
     }
 
     /**
@@ -547,8 +684,8 @@ public class PaymentController implements Initializable {
         String patientCIN = patientCINField.getText().trim();
 
         if (patientCIN.isEmpty()) {
-            // If search field is empty, load all completed appointments
-            loadAllCompletedAppointments();
+            // If search field is empty, load all today's unpaid completed appointments
+            loadTodayUnpaidCompletedAppointments();
             return;
         }
 
@@ -556,18 +693,26 @@ public class PaymentController implements Initializable {
         Connection conn = DatabaseSingleton.getInstance().getConnection();
 
         try {
-            // Updated query to work with users table instead of medecin table
+            // Get today's date in SQL format
+            LocalDate today = LocalDate.now();
+            String todayStr = today.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+
+            // Updated query to filter by today's date, patient CIN, and unpaid appointments
             String query = "SELECT r.*, " +
                     "p.FNAME AS patientFirstName, p.LNAME AS patientLastName, " +
                     "u.FNAME AS doctorFirstName, u.LNAME AS doctorLastName " +
                     "FROM rendezvous r " +
                     "JOIN patient p ON r.PatientID = p.ID " +
                     "JOIN users u ON r.MedecinID = u.ID AND u.ROLE = 'medecin' " +
-                    "WHERE r.Status = 'Completed' AND r.PatientID = ? " +
-                    "ORDER BY r.AppointmentDateTime DESC";
+                    "WHERE r.Status = 'Completed' " +
+                    "AND DATE(r.AppointmentDateTime) = ? " +
+                    "AND r.PatientID = ? " +
+                    "AND NOT EXISTS (SELECT 1 FROM paiment pay WHERE pay.RendezVousID = r.RendezVousID) " +
+                    "ORDER BY r.AppointmentDateTime";
 
             PreparedStatement pstmt = conn.prepareStatement(query);
-            pstmt.setString(1, patientCIN);
+            pstmt.setString(1, todayStr);
+            pstmt.setString(2, patientCIN);
 
             ResultSet rs = pstmt.executeQuery();
 
@@ -607,15 +752,12 @@ public class PaymentController implements Initializable {
                     "Erreur lors de la recherche: " + e.getMessage());
         }
 
+        appointmentsData.setAll(filteredAppointments);
+
         if (filteredAppointments.isEmpty()) {
             showAlert(Alert.AlertType.INFORMATION, "Aucun Résultat",
-                    "Aucun rendez-vous terminé trouvé pour ce patient.");
-        } else {
-            appointmentsData.setAll(filteredAppointments);
+                    "Aucun rendez-vous terminé non payé trouvé pour ce patient aujourd'hui.");
         }
-
-        // Refresh the is-paid status for each appointment
-        appointmentTable.refresh();
     }
 
     /**
@@ -708,16 +850,34 @@ public class PaymentController implements Initializable {
         result.ifPresent(payment -> {
             boolean success = paymentManager.createPayment(payment);
             if (success) {
-                showAlert(Alert.AlertType.INFORMATION, "Succès", "Paiement enregistré avec succès.");
-                loadPaymentHistory(); // Refresh payment history
+                // Set flag that we just processed a payment
+                paymentJustProcessed = true;
 
-                // Refresh appointment table to reflect new payment status
-                String currentSearch = patientCINField.getText().trim();
-                if (currentSearch.isEmpty()) {
-                    loadAllCompletedAppointments();
-                } else {
-                    handleSearch(null);
-                }
+                showAlert(Alert.AlertType.INFORMATION, "Succès", "Paiement enregistré avec succès.");
+
+                // Remove this specific appointment from the table immediately
+                removeAppointmentById(appointment.getRendezVousID());
+
+                // Refresh payment history
+                loadPaymentHistory();
+
+                // Use a small delay before reloading to ensure database consistency
+                ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
+                executor.schedule(() -> {
+                    Platform.runLater(() -> {
+                        // Double check if we need to reload appointments
+                        // Only reload if table is empty or if there's a search filter
+                        if (appointmentsData.isEmpty() || !patientCINField.getText().trim().isEmpty()) {
+                            String currentSearch = patientCINField.getText().trim();
+                            if (currentSearch.isEmpty()) {
+                                loadTodayUnpaidCompletedAppointments();
+                            } else {
+                                handleSearch(null);
+                            }
+                        }
+                    });
+                    executor.shutdown();
+                }, 500, TimeUnit.MILLISECONDS);
             } else {
                 showAlert(Alert.AlertType.ERROR, "Erreur", "Échec de l'enregistrement du paiement.");
             }
