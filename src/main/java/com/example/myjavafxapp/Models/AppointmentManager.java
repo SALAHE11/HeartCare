@@ -3,6 +3,7 @@ package com.example.myjavafxapp.Models;
 import java.sql.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -160,6 +161,46 @@ public class AppointmentManager {
     }
 
     /**
+     * Check if a patient has overlapping appointments
+     * Returns true if there is an overlap, false otherwise
+     */
+    private boolean hasPatientOverlappingAppointment(String patientID, LocalDateTime dateTime, Integer excludeAppointmentId) {
+        Connection conn = DatabaseSingleton.getInstance().getConnection();
+        boolean hasOverlap = false;
+
+        try {
+            // Build query to check for overlapping appointments within a 15-minute window
+            String query = "SELECT COUNT(*) FROM rendezvous " +
+                    "WHERE PatientID = ? " +
+                    "AND ABS(TIMESTAMPDIFF(MINUTE, AppointmentDateTime, ?)) < 15 " + // 15-minute window
+                    "AND Status NOT IN ('Completed', 'Missed', 'Patient_Cancelled', 'Clinic_Cancelled')";
+
+            // If updating an existing appointment, exclude it from the check
+            if (excludeAppointmentId != null) {
+                query += " AND RendezVousID != ?";
+            }
+
+            PreparedStatement pstmt = conn.prepareStatement(query);
+            pstmt.setString(1, patientID);
+            pstmt.setTimestamp(2, Timestamp.valueOf(dateTime));
+
+            if (excludeAppointmentId != null) {
+                pstmt.setInt(3, excludeAppointmentId);
+            }
+
+            ResultSet rs = pstmt.executeQuery();
+            if (rs.next() && rs.getInt(1) > 0) {
+                hasOverlap = true;
+            }
+        } catch (SQLException e) {
+            System.err.println("Error checking for overlapping appointments: " + e.getMessage());
+            e.printStackTrace();
+        }
+
+        return hasOverlap;
+    }
+
+    /**
      * Create a new appointment
      */
     public boolean createAppointment(Appointment appointment) {
@@ -171,6 +212,12 @@ public class AppointmentManager {
                     appointment.getAppointmentDateTime() == null || appointment.getStatus() == null) {
                 System.err.println("Cannot create appointment with null required fields");
                 return false;
+            }
+
+            // Check if patient already has an appointment at the same time
+            if (hasPatientOverlappingAppointment(appointment.getPatientID(), appointment.getAppointmentDateTime(), null)) {
+                System.err.println("Patient already has an appointment at this time");
+                throw new SQLException("Patient already has an appointment at this time");
             }
 
             // Ensure other fields have default values if null
@@ -235,6 +282,13 @@ public class AppointmentManager {
             // Get current appointment to check for status change
             Appointment currentAppointment = getAppointmentById(appointment.getRendezVousID());
 
+            // Check if patient already has an appointment at the same time (excluding this one)
+            if (hasPatientOverlappingAppointment(appointment.getPatientID(), appointment.getAppointmentDateTime(),
+                    appointment.getRendezVousID())) {
+                System.err.println("Patient already has an appointment at this time");
+                throw new SQLException("Patient already has an appointment at this time");
+            }
+
             String updateQuery = "UPDATE rendezvous SET " +
                     "PatientID = ?, MedecinID = ?, AppointmentDateTime = ?, " +
                     "ReasonForVisit = ?, Status = ?, StatusReason = ?, " +
@@ -284,9 +338,8 @@ public class AppointmentManager {
 
         } catch (SQLException e) {
             e.printStackTrace();
+            return false;
         }
-
-        return false;
     }
 
     /**
@@ -381,6 +434,13 @@ public class AppointmentManager {
             if (oldAppointment == null) {
                 conn.rollback();
                 return -1;
+            }
+
+            // Check if patient already has an appointment at the new time
+            if (hasPatientOverlappingAppointment(oldAppointment.getPatientID(), newDateTime, oldAppointmentId)) {
+                System.err.println("Patient already has an appointment at the new time");
+                conn.rollback();
+                throw new SQLException("Patient already has an appointment at the new time");
             }
 
             // Create a new appointment record
@@ -585,15 +645,15 @@ public class AppointmentManager {
         Connection conn = DatabaseSingleton.getInstance().getConnection();
 
         try {
-            // First, generate all possible time slots (e.g., every 30 minutes from 8 AM to 5 PM)
+            // First, generate all possible time slots (e.g., every 15 minutes from 8 AM to 5 PM)
             List<LocalDateTime> allSlots = new ArrayList<>();
             LocalDateTime startTime = date.atTime(8, 0); // 8:00 AM
-            LocalDateTime endTime = date.atTime(17, 0);  // 5:00 PM
+            LocalDateTime endTime = date.atTime(17, 45);  // 5:45 PM (changed from 5:00 PM)
 
             LocalDateTime current = startTime;
-            while (current.isBefore(endTime)) {
+            while (current.isBefore(endTime) || current.equals(endTime)) {
                 allSlots.add(current);
-                current = current.plusMinutes(30);
+                current = current.plusMinutes(15); // Changed from 30 to 15 minutes
             }
 
             // Then, get all booked slots for the doctor on that date
@@ -616,8 +676,8 @@ public class AppointmentManager {
             for (LocalDateTime slot : allSlots) {
                 boolean isAvailable = true;
                 for (LocalDateTime booked : bookedSlots) {
-                    // Consider a slot booked if it's within 30 minutes of a booked appointment
-                    if (Math.abs(slot.until(booked, java.time.temporal.ChronoUnit.MINUTES)) < 30) {
+                    // Consider a slot booked if it's within 15 minutes of a booked appointment (changed from 30)
+                    if (Math.abs(slot.until(booked, java.time.temporal.ChronoUnit.MINUTES)) < 15) {
                         isAvailable = false;
                         break;
                     }

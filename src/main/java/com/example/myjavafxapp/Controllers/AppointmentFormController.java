@@ -194,19 +194,19 @@ public class AppointmentFormController implements Initializable {
     }
 
     /**
-     * Set up time dropdown with 30-minute increments
+     * Set up time dropdown with 15-minute increments (changed from 30-minute)
      */
     private void setupTimeDropdown() {
         ObservableList<LocalTime> times = FXCollections.observableArrayList();
 
-        // Add times from 8:00 to 17:30 in 30-minute increments
+        // Add times from 8:00 to 17:45 in 15-minute increments (changed from 30-minute)
         LocalTime startTime = LocalTime.of(8, 0);
-        LocalTime endTime = LocalTime.of(17, 30);
+        LocalTime endTime = LocalTime.of(17, 45);
 
         LocalTime current = startTime;
         while (!current.isAfter(endTime)) {
             times.add(current);
-            current = current.plusMinutes(30);
+            current = current.plusMinutes(15); // Changed from 30 to 15 minutes
         }
 
         appointmentTime.setItems(times);

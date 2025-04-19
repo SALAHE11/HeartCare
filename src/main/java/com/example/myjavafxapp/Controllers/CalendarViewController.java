@@ -255,19 +255,25 @@ public class CalendarViewController implements Initializable {
             LocalTime currentTime = startTime;
 
             while (!currentTime.isAfter(endTime)) {
-                // Add row constraint
-                RowConstraints rowConstraint = new RowConstraints(40); // Reduced from 60px to 40px due to more slots
+                // Add row constraint with fixed height to ensure consistent sizing
+                RowConstraints rowConstraint = new RowConstraints(30); // Fixed height for each 15-minute slot
+                rowConstraint.setVgrow(Priority.NEVER); // Prevent vertical growth
                 calendarGrid.getRowConstraints().add(rowConstraint);
 
                 // Add time label
                 Label timeLabel = new Label(currentTime.format(timeFormatter));
                 timeLabel.getStyleClass().add("time-label");
+                timeLabel.setMaxHeight(30);
+                timeLabel.setPrefHeight(30);
                 calendarGrid.add(timeLabel, 0, rowIndex);
 
                 // Add empty panes for each doctor column
                 for (int col = 1; col <= 4; col++) {
                     StackPane cellPane = new StackPane();
                     cellPane.getStyleClass().add("time-slot");
+                    cellPane.setMinHeight(30);
+                    cellPane.setPrefHeight(30);
+                    cellPane.setMaxHeight(30);
 
                     // Store time info in the pane's properties for later use
                     cellPane.getProperties().put("time", currentTime);
@@ -280,9 +286,11 @@ public class CalendarViewController implements Initializable {
                     cellPane.setOnMouseClicked(e -> handleTimeSlotClick(e, doctorColumn, timeForLambda));
 
                     calendarGrid.add(cellPane, col, rowIndex);
+                    GridPane.setFillHeight(cellPane, true);
+                    GridPane.setFillWidth(cellPane, true);
                 }
 
-                // Increment time by 15 minutes instead of 30
+                // Increment time by 15 minutes
                 currentTime = currentTime.plusMinutes(15);
                 rowIndex++;
             }
@@ -490,10 +498,16 @@ public class CalendarViewController implements Initializable {
         VBox appointmentBlock = new VBox();
         appointmentBlock.getStyleClass().addAll("appointment-block", "appointment-" + appointment.getStatus().toLowerCase());
 
-        // Make blocks smaller due to 15-minute time slots
-        appointmentBlock.setPrefHeight(35);
-        appointmentBlock.setMaxHeight(35);
-        appointmentBlock.setSpacing(2);
+        // Adjust the size to fit the 15-minute time slots and ensure they stay within bounds
+        appointmentBlock.setPrefHeight(30);  // Reduced from 35px to 30px
+        appointmentBlock.setMaxHeight(30);
+        appointmentBlock.setMinHeight(30);
+        appointmentBlock.setMaxWidth(Double.MAX_VALUE); // Fill width of cell
+        appointmentBlock.setPrefWidth(Region.USE_COMPUTED_SIZE);
+
+        // Reduce internal spacing to fit more content
+        appointmentBlock.setSpacing(1); // Reduced from 2px to 1px
+        appointmentBlock.setPadding(new Insets(1, 2, 1, 2)); // Minimal padding
 
         // Store appointment ID in the block for later reference
         appointmentBlock.setUserData(appointment);
@@ -506,21 +520,21 @@ public class CalendarViewController implements Initializable {
         // Time
         Label timeLabel = new Label(appointment.getAppointmentDateTime().format(timeFormatter));
         timeLabel.getStyleClass().add("appointment-time");
-        timeLabel.setStyle("-fx-font-size: 10px;");
+        timeLabel.setStyle("-fx-font-size: 9px;"); // Reduced from 10px to 9px
 
         // Patient name
         Label patientLabel = new Label(appointment.getPatientName());
         patientLabel.getStyleClass().add("appointment-patient");
-        patientLabel.setStyle("-fx-font-size: 10px;");
+        patientLabel.setStyle("-fx-font-size: 9px;"); // Reduced from 10px to 9px
 
         // Reason (truncated)
         String reasonText = appointment.getReasonForVisit();
-        if (reasonText != null && reasonText.length() > 15) {
-            reasonText = reasonText.substring(0, 12) + "...";
+        if (reasonText != null && reasonText.length() > 12) { // Reduced character limit
+            reasonText = reasonText.substring(0, 9) + "...";  // Shorter truncation
         }
         Label reasonLabel = new Label(reasonText);
         reasonLabel.getStyleClass().add("appointment-reason");
-        reasonLabel.setStyle("-fx-font-size: 9px;");
+        reasonLabel.setStyle("-fx-font-size: 8px;"); // Reduced from 9px to 8px
 
         // Add components to block
         appointmentBlock.getChildren().addAll(timeLabel, patientLabel, reasonLabel);
