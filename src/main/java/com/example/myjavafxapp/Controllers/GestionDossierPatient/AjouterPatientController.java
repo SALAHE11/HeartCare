@@ -1,4 +1,4 @@
-package com.example.myjavafxapp.Controllers;
+package com.example.myjavafxapp.Controllers.GestionDossierPatient;
 
 import com.example.myjavafxapp.Models.DatabaseSingleton;
 import com.example.myjavafxapp.Models.SwitchScene;
@@ -18,8 +18,10 @@ import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.time.LocalDate;
+import java.time.Period;
 import java.time.format.DateTimeFormatter;
 import java.util.ResourceBundle;
+import java.util.regex.Pattern;
 
 public class AjouterPatientController implements Initializable {
 
@@ -46,6 +48,14 @@ public class AjouterPatientController implements Initializable {
 
     @FXML
     private TextField emailField;
+
+    // Pattern for email validation
+    private static final Pattern EMAIL_PATTERN = Pattern.compile(
+            "^[A-Za-z0-9+_.-]+@(.+)$");
+
+    // Pattern for phone validation (9 digits starting with 6 or 7)
+    private static final Pattern PHONE_PATTERN = Pattern.compile(
+            "^[67]\\d{8}$");
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
@@ -127,6 +137,15 @@ public class AjouterPatientController implements Initializable {
 
         if (dateNaissanceField.getValue() == null) {
             errorMessage.append("La date de naissance est obligatoire\n");
+        } else {
+            // Validate minimum age of 16 years
+            LocalDate birthdate = dateNaissanceField.getValue();
+            LocalDate today = LocalDate.now();
+            int age = Period.between(birthdate, today).getYears();
+
+            if (age < 16) {
+                errorMessage.append("Le patient doit avoir au moins 16 ans\n");
+            }
         }
 
         if (sexeComboBox.getValue() == null) {
@@ -136,10 +155,18 @@ public class AjouterPatientController implements Initializable {
         if (telephoneField.getText().isEmpty()) {
             errorMessage.append("Le téléphone est obligatoire\n");
         } else {
-            try {
-                Integer.parseInt(telephoneField.getText());
-            } catch (NumberFormatException e) {
-                errorMessage.append("Le téléphone doit être un nombre\n");
+            // Validate phone format: 9 digits starting with 6 or 7
+            String phone = telephoneField.getText();
+            if (!PHONE_PATTERN.matcher(phone).matches()) {
+                errorMessage.append("Le numéro de téléphone doit comporter exactement 9 chiffres et commencer par 6 ou 7\n");
+            }
+        }
+
+        if (emailField.getText() != null && !emailField.getText().isEmpty()) {
+            // Validate email format
+            String email = emailField.getText();
+            if (!EMAIL_PATTERN.matcher(email).matches()) {
+                errorMessage.append("L'adresse email n'est pas valide\n");
             }
         }
 

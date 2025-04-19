@@ -37,6 +37,18 @@ public class CalendarViewController implements Initializable {
     @FXML private Button newAppointmentBtn;
     @FXML private GridPane calendarGrid;
 
+    // Navigation buttons
+    @FXML private Button homeButton;
+    @FXML private Button gestionRendezVous;
+    @FXML private Button gestionPaiment;
+    @FXML private Button dossierPatient;
+    @FXML private Button statistiqueGlobales;
+    @FXML private Button rapportQuotidien;
+    @FXML private Button sauvegarde;
+    @FXML private Button gestionUtilisateur;
+    @FXML private Button logoutButton;
+    @FXML private HBox navButtonsContainer;
+
     // Doctor column headers
     @FXML private Label doctor1Label;
     @FXML private Label doctor2Label;
@@ -65,6 +77,9 @@ public class CalendarViewController implements Initializable {
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
+        // Configure icon visibility based on user role
+        configureIconVisibility();
+
         // Load doctors for the filter
         loadDoctorsForFilter();
 
@@ -80,6 +95,76 @@ public class CalendarViewController implements Initializable {
 
         // Setup auto-refresh (every 5 minutes)
         setupAutoRefresh();
+    }
+
+    /**
+     * Configure the visibility of icons based on user role
+     */
+    private void configureIconVisibility() {
+        // Get user role from the session
+        UserSession userSession = UserSession.getInstance();
+        String userRole = userSession.getRole();
+
+        if (userRole == null) {
+            // If role is not set, default to showing only basic icons
+            setBasicIconsVisibility();
+            return;
+        }
+
+        switch (userRole.toLowerCase()) {
+            case "admin":
+                // For admin, show all icons
+                setAllIconsVisibility(true);
+                break;
+            case "medecin":
+            case "personnel":
+                // For medecin and personnel, show only the basic icons
+                setBasicIconsVisibility();
+                break;
+            default:
+                // For unknown roles, show only basic icons
+                setBasicIconsVisibility();
+                break;
+        }
+    }
+
+    /**
+     * Set visibility for basic icons (home, payment, patient folder)
+     * and hide administrative icons
+     */
+    private void setBasicIconsVisibility() {
+        // Clear all existing buttons
+        navButtonsContainer.getChildren().clear();
+
+        // Add only the 3 basic icons in the correct order
+        navButtonsContainer.getChildren().add(homeButton);
+        navButtonsContainer.getChildren().add(gestionPaiment);
+        navButtonsContainer.getChildren().add(dossierPatient);
+    }
+
+    /**
+     * Set visibility for all icons
+     * @param visible true to show all icons, false to hide all icons
+     */
+    private void setAllIconsVisibility(boolean visible) {
+        if (visible) {
+            // Clear all existing buttons
+            navButtonsContainer.getChildren().clear();
+
+            // Add all icons to the container in the correct order
+            // Removed gestionRendezVous (calendar) since it's redundant with the home button
+            navButtonsContainer.getChildren().addAll(
+                    homeButton,
+                    gestionPaiment,
+                    dossierPatient,
+                    statistiqueGlobales,
+                    rapportQuotidien,
+                    sauvegarde,
+                    gestionUtilisateur
+            );
+        } else {
+            navButtonsContainer.getChildren().clear();
+        }
     }
 
     private void loadDoctorsForFilter() {
@@ -953,7 +1038,7 @@ public class CalendarViewController implements Initializable {
     @FXML
     public void onUsers(ActionEvent event) {
         try {
-            SwitchScene.switchScene(event, "/com/example/myjavafxapp/gestionUtilisateurs.fxml");
+            SwitchScene.switchScene(event, "/com/example/myjavafxapp/Users.fxml");
         } catch (IOException e) {
             showAlert(Alert.AlertType.ERROR, "Erreur", "Impossible de naviguer vers la Gestion des Utilisateurs : " + e.getMessage());
         }

@@ -41,6 +41,7 @@ public class PaymentController implements Initializable {
 
     @FXML private TextField patientCINField;
     @FXML private Button searchButton;
+    @FXML private Button returnToCalendarButton;
 
     // Appointment table
     @FXML private TableView<Appointment> appointmentTable;
@@ -64,17 +65,6 @@ public class PaymentController implements Initializable {
     @FXML private TableColumn<Payment, Double> amountColumn;
     @FXML private TableColumn<Payment, String> paymentMethodColumn;
     @FXML private TableColumn<Payment, Void> paymentActionsColumn;
-
-    // Navigation buttons
-    @FXML private Button homeButton;
-    @FXML private Button gestionRendezVous;
-    @FXML private Button gestionPaiment;
-    @FXML private Button dossierPatient;
-    @FXML private Button statistiqueGlobales;
-    @FXML private Button rapportQuotidien;
-    @FXML private Button sauvegarde;
-    @FXML private Button gestionUtilisateur;
-    @FXML private Button logoutButton;
 
     // Date formatters
     private final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
@@ -698,72 +688,17 @@ public class PaymentController implements Initializable {
         alert.showAndWait();
     }
 
-    /* Navigation Methods */
-
-    @FXML
-    public void onHome(ActionEvent event) {
-        navigateTo("/com/example/myjavafxapp/CalendarView.fxml");
-    }
-
-    @FXML
-    public void onCalendar(ActionEvent event) {
-        navigateTo("/com/example/myjavafxapp/CalendarView.fxml");
-    }
-
-    @FXML
-    public void onCreditCard(ActionEvent event) {
-        // Already on this page, do nothing
-    }
-
-    @FXML
-    public void onFolder(ActionEvent event) {
-        navigateTo("/com/example/myjavafxapp/PatientRecordsView.fxml");
-    }
-
-    @FXML
-    public void onGlobalStats(ActionEvent event) {
-        navigateTo("/com/example/myjavafxapp/StatisticsDashboard.fxml");
-    }
-
-    @FXML
-    public void onRepport(ActionEvent event) {
-        navigateTo("/com/example/myjavafxapp/rapportQuotidien.fxml");
-    }
-
-    @FXML
-    public void onBackUp(ActionEvent event) {
-        navigateTo("/com/example/myjavafxapp/sauvegarde.fxml");
-    }
-
-    @FXML
-    public void onUsers(ActionEvent event) {
-        navigateTo("/com/example/myjavafxapp/gestionUtilisateurs.fxml");
-    }
-
-    @FXML
-    public void onLogOut(ActionEvent event) {
-        // Clear user session
-        UserSession.getInstance().setUsername(null);
-        UserSession.getInstance().setRole(null);
-
-        navigateTo("/com/example/myjavafxapp/loginForm.fxml");
-    }
-
     /**
-     * Navigate to another view
+     * Handle back to calendar button click
      */
-    private void navigateTo(String fxmlPath) {
+    @FXML
+    public void handleBackToCalendar(ActionEvent event) {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlPath));
-            Scene scene = new Scene(loader.load());
-
-            Stage stage = (Stage) patientCINField.getScene().getWindow();
-            stage.setScene(scene);
-
+            SwitchScene.switchScene(event, "/com/example/myjavafxapp/CalendarView.fxml");
         } catch (IOException e) {
             e.printStackTrace();
             showAlert(Alert.AlertType.ERROR, "Erreur de Navigation",
-                    "Impossible de charger la page demandée: " + e.getMessage());
+                    "Impossible de charger la page du calendrier: " + e.getMessage());
         }
     }
 }

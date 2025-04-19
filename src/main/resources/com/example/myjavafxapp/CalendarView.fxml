@@ -21,16 +21,11 @@
                 <!-- Barre de navigation horizontale avec icônes uniquement et meilleur espacement -->
                 <HBox alignment="CENTER" styleClass="navbar">
                     <children>
-                        <HBox alignment="CENTER" spacing="20.0" HBox.hgrow="ALWAYS">
+                        <HBox fx:id="navButtonsContainer" alignment="CENTER" spacing="40.0" HBox.hgrow="ALWAYS">
                             <children>
                                 <Button fx:id="homeButton" mnemonicParsing="false" onAction="#onHome" styleClass="nav-icon-button">
                                     <graphic>
                                         <FontIcon iconColor="#4079ff" iconLiteral="fas-home" iconSize="22" styleClass="graphic" />
-                                    </graphic>
-                                </Button>
-                                <Button fx:id="gestionRendezVous" mnemonicParsing="false" onAction="#onCalendar" styleClass="nav-icon-button">
-                                    <graphic>
-                                        <FontIcon iconColor="#4079ff" iconLiteral="fas-calendar" iconSize="22" styleClass="graphic" />
                                     </graphic>
                                 </Button>
                                 <Button fx:id="gestionPaiment" mnemonicParsing="false" onAction="#onCreditCard" styleClass="nav-icon-button">
@@ -41,6 +36,11 @@
                                 <Button fx:id="dossierPatient" mnemonicParsing="false" onAction="#onFolder" styleClass="nav-icon-button">
                                     <graphic>
                                         <FontIcon iconColor="#4079ff" iconLiteral="fas-folder" iconSize="22" styleClass="graphic" />
+                                    </graphic>
+                                </Button>
+                                <Button fx:id="gestionRendezVous" mnemonicParsing="false" onAction="#onCalendar" styleClass="nav-icon-button">
+                                    <graphic>
+                                        <FontIcon iconColor="#4079ff" iconLiteral="fas-calendar" iconSize="22" styleClass="graphic" />
                                     </graphic>
                                 </Button>
                                 <Button fx:id="statistiqueGlobales" mnemonicParsing="false" onAction="#onGlobalStats" styleClass="nav-icon-button">
