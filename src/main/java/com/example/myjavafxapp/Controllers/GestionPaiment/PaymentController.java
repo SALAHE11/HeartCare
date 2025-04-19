@@ -29,10 +29,11 @@ import org.kordamp.ikonli.javafx.FontIcon;
 
 import java.io.IOException;
 import java.net.URL;
-import java.sql.Timestamp;
+import java.sql.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.ResourceBundle;
@@ -90,6 +91,74 @@ public class PaymentController implements Initializable {
 
         // Load all payments for the payment history table
         loadPaymentHistory();
+
+        // Load all completed appointments
+        loadAllCompletedAppointments();
+    }
+
+    /**
+     * Load all completed appointments
+     */
+    private void loadAllCompletedAppointments() {
+        List<Appointment> completedAppointments = new ArrayList<>();
+        Connection conn = DatabaseSingleton.getInstance().getConnection();
+
+        try {
+            // Updated query to work with users table instead of medecin table
+            String query = "SELECT r.*, " +
+                    "p.FNAME AS patientFirstName, p.LNAME AS patientLastName, " +
+                    "u.FNAME AS doctorFirstName, u.LNAME AS doctorLastName " +
+                    "FROM rendezvous r " +
+                    "JOIN patient p ON r.PatientID = p.ID " +
+                    "JOIN users u ON r.MedecinID = u.ID AND u.ROLE = 'medecin' " +
+                    "WHERE r.Status = 'Completed' " +
+                    "ORDER BY r.AppointmentDateTime DESC";
+
+            Statement stmt = conn.createStatement();
+            ResultSet rs = stmt.executeQuery(query);
+
+            while (rs.next()) {
+                Appointment appointment = new Appointment();
+
+                appointment.setRendezVousID(rs.getInt("RendezVousID"));
+                appointment.setPatientID(rs.getString("PatientID"));
+
+                // Combine first and last name for patient
+                String patientFirstName = rs.getString("patientFirstName");
+                String patientLastName = rs.getString("patientLastName");
+                appointment.setPatientName(patientFirstName + " " + patientLastName);
+
+                appointment.setMedicinID(rs.getString("MedecinID"));
+
+                // Combine first and last name for doctor
+                String doctorFirstName = rs.getString("doctorFirstName");
+                String doctorLastName = rs.getString("doctorLastName");
+                appointment.setDoctorName(doctorFirstName + " " + doctorLastName);
+
+                // Parse datetime
+                Timestamp appointmentTimestamp = rs.getTimestamp("AppointmentDateTime");
+                if (appointmentTimestamp != null) {
+                    appointment.setAppointmentDateTime(appointmentTimestamp.toLocalDateTime());
+                }
+
+                appointment.setReasonForVisit(rs.getString("ReasonForVisit"));
+                appointment.setStatus(rs.getString("Status"));
+
+                completedAppointments.add(appointment);
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            showAlert(Alert.AlertType.ERROR, "Erreur",
+                    "Erreur lors du chargement des rendez-vous: " + e.getMessage());
+        }
+
+        if (completedAppointments.isEmpty()) {
+            showAlert(Alert.AlertType.INFORMATION, "Information",
+                    "Aucun rendez-vous terminé trouvé.");
+        } else {
+            appointmentsData.setAll(completedAppointments);
+        }
     }
 
     /**
@@ -478,20 +547,72 @@ public class PaymentController implements Initializable {
         String patientCIN = patientCINField.getText().trim();
 
         if (patientCIN.isEmpty()) {
-            showAlert(Alert.AlertType.WARNING, "Recherche Vide", "Veuillez entrer un CIN de patient.");
+            // If search field is empty, load all completed appointments
+            loadAllCompletedAppointments();
             return;
         }
 
-        List<Appointment> completedAppointments = paymentManager.searchCompletedAppointmentsByPatientCIN(patientCIN);
+        List<Appointment> filteredAppointments = new ArrayList<>();
+        Connection conn = DatabaseSingleton.getInstance().getConnection();
 
-        if (completedAppointments.isEmpty()) {
+        try {
+            // Updated query to work with users table instead of medecin table
+            String query = "SELECT r.*, " +
+                    "p.FNAME AS patientFirstName, p.LNAME AS patientLastName, " +
+                    "u.FNAME AS doctorFirstName, u.LNAME AS doctorLastName " +
+                    "FROM rendezvous r " +
+                    "JOIN patient p ON r.PatientID = p.ID " +
+                    "JOIN users u ON r.MedecinID = u.ID AND u.ROLE = 'medecin' " +
+                    "WHERE r.Status = 'Completed' AND r.PatientID = ? " +
+                    "ORDER BY r.AppointmentDateTime DESC";
+
+            PreparedStatement pstmt = conn.prepareStatement(query);
+            pstmt.setString(1, patientCIN);
+
+            ResultSet rs = pstmt.executeQuery();
+
+            while (rs.next()) {
+                Appointment appointment = new Appointment();
+
+                appointment.setRendezVousID(rs.getInt("RendezVousID"));
+                appointment.setPatientID(rs.getString("PatientID"));
+
+                // Combine first and last name for patient
+                String patientFirstName = rs.getString("patientFirstName");
+                String patientLastName = rs.getString("patientLastName");
+                appointment.setPatientName(patientFirstName + " " + patientLastName);
+
+                appointment.setMedicinID(rs.getString("MedecinID"));
+
+                // Combine first and last name for doctor
+                String doctorFirstName = rs.getString("doctorFirstName");
+                String doctorLastName = rs.getString("doctorLastName");
+                appointment.setDoctorName(doctorFirstName + " " + doctorLastName);
+
+                // Parse datetime
+                Timestamp appointmentTimestamp = rs.getTimestamp("AppointmentDateTime");
+                if (appointmentTimestamp != null) {
+                    appointment.setAppointmentDateTime(appointmentTimestamp.toLocalDateTime());
+                }
+
+                appointment.setReasonForVisit(rs.getString("ReasonForVisit"));
+                appointment.setStatus(rs.getString("Status"));
+
+                filteredAppointments.add(appointment);
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            showAlert(Alert.AlertType.ERROR, "Erreur",
+                    "Erreur lors de la recherche: " + e.getMessage());
+        }
+
+        if (filteredAppointments.isEmpty()) {
             showAlert(Alert.AlertType.INFORMATION, "Aucun Résultat",
-                    "Aucun rendez-vous terminé trouvé pour ce patient aujourd'hui.");
-            appointmentsData.clear();
-            return;
+                    "Aucun rendez-vous terminé trouvé pour ce patient.");
+        } else {
+            appointmentsData.setAll(filteredAppointments);
         }
-
-        appointmentsData.setAll(completedAppointments);
 
         // Refresh the is-paid status for each appointment
         appointmentTable.refresh();
@@ -589,7 +710,14 @@ public class PaymentController implements Initializable {
             if (success) {
                 showAlert(Alert.AlertType.INFORMATION, "Succès", "Paiement enregistré avec succès.");
                 loadPaymentHistory(); // Refresh payment history
-                appointmentTable.refresh(); // Refresh appointment table to update paid status
+
+                // Refresh appointment table to reflect new payment status
+                String currentSearch = patientCINField.getText().trim();
+                if (currentSearch.isEmpty()) {
+                    loadAllCompletedAppointments();
+                } else {
+                    handleSearch(null);
+                }
             } else {
                 showAlert(Alert.AlertType.ERROR, "Erreur", "Échec de l'enregistrement du paiement.");
             }
