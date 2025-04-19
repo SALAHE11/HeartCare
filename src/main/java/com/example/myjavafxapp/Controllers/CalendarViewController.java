@@ -8,9 +8,7 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
-import javafx.geometry.HPos;
 import javafx.geometry.Insets;
-import javafx.geometry.VPos;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
@@ -257,25 +255,19 @@ public class CalendarViewController implements Initializable {
             LocalTime currentTime = startTime;
 
             while (!currentTime.isAfter(endTime)) {
-                // Add row constraint with fixed height to ensure consistent sizing
-                RowConstraints rowConstraint = new RowConstraints(30); // Fixed height for each 15-minute slot
-                rowConstraint.setVgrow(Priority.NEVER); // Prevent vertical growth
+                // Add row constraint
+                RowConstraints rowConstraint = new RowConstraints(40); // Reduced from 60px to 40px due to more slots
                 calendarGrid.getRowConstraints().add(rowConstraint);
 
                 // Add time label
                 Label timeLabel = new Label(currentTime.format(timeFormatter));
                 timeLabel.getStyleClass().add("time-label");
-                timeLabel.setMaxHeight(30);
-                timeLabel.setPrefHeight(30);
                 calendarGrid.add(timeLabel, 0, rowIndex);
 
                 // Add empty panes for each doctor column
                 for (int col = 1; col <= 4; col++) {
                     StackPane cellPane = new StackPane();
                     cellPane.getStyleClass().add("time-slot");
-                    cellPane.setMinHeight(30);
-                    cellPane.setPrefHeight(30);
-                    cellPane.setMaxHeight(30);
 
                     // Store time info in the pane's properties for later use
                     cellPane.getProperties().put("time", currentTime);
@@ -288,11 +280,9 @@ public class CalendarViewController implements Initializable {
                     cellPane.setOnMouseClicked(e -> handleTimeSlotClick(e, doctorColumn, timeForLambda));
 
                     calendarGrid.add(cellPane, col, rowIndex);
-                    GridPane.setFillHeight(cellPane, true);
-                    GridPane.setFillWidth(cellPane, true);
                 }
 
-                // Increment time by 15 minutes
+                // Increment time by 15 minutes instead of 30
                 currentTime = currentTime.plusMinutes(15);
                 rowIndex++;
             }
@@ -478,16 +468,6 @@ public class CalendarViewController implements Initializable {
 
             // Add it to the grid
             calendarGrid.add(appointmentBlock, column, row);
-
-            // Set proper constraints to ensure the element fills the cell
-            GridPane.setFillHeight(appointmentBlock, true);
-            GridPane.setFillWidth(appointmentBlock, true);
-            GridPane.setHgrow(appointmentBlock, Priority.ALWAYS);
-            GridPane.setVgrow(appointmentBlock, Priority.ALWAYS);
-
-            // Ensure proper alignment within cell
-            GridPane.setValignment(appointmentBlock, VPos.CENTER);
-            GridPane.setHalignment(appointmentBlock, HPos.CENTER);
         }
     }
 
@@ -510,18 +490,10 @@ public class CalendarViewController implements Initializable {
         VBox appointmentBlock = new VBox();
         appointmentBlock.getStyleClass().addAll("appointment-block", "appointment-" + appointment.getStatus().toLowerCase());
 
-        // Important: Setting fixed sizes programmatically rather than relying solely on CSS
-        appointmentBlock.setMinHeight(28);
-        appointmentBlock.setPrefHeight(28);
-        appointmentBlock.setMaxHeight(28);
-
-        // Make sure it fills the width of the cell
-        appointmentBlock.setPrefWidth(Region.USE_COMPUTED_SIZE);
-        appointmentBlock.setMaxWidth(Double.MAX_VALUE);
-
-        // Reduce internal spacing to fit more content
-        appointmentBlock.setSpacing(1);
-        appointmentBlock.setPadding(new Insets(1, 2, 1, 2));
+        // Make blocks smaller due to 15-minute time slots
+        appointmentBlock.setPrefHeight(35);
+        appointmentBlock.setMaxHeight(35);
+        appointmentBlock.setSpacing(2);
 
         // Store appointment ID in the block for later reference
         appointmentBlock.setUserData(appointment);
@@ -534,33 +506,21 @@ public class CalendarViewController implements Initializable {
         // Time
         Label timeLabel = new Label(appointment.getAppointmentDateTime().format(timeFormatter));
         timeLabel.getStyleClass().add("appointment-time");
-        timeLabel.setStyle("-fx-font-size: 9px;");
-
-        // Make sure the time label doesn't get pushed out
-        timeLabel.setMinHeight(Control.USE_PREF_SIZE);
-        timeLabel.setMaxHeight(Control.USE_PREF_SIZE);
+        timeLabel.setStyle("-fx-font-size: 10px;");
 
         // Patient name
         Label patientLabel = new Label(appointment.getPatientName());
         patientLabel.getStyleClass().add("appointment-patient");
-        patientLabel.setStyle("-fx-font-size: 9px;");
-
-        // Make sure the patient label doesn't get pushed out
-        patientLabel.setMinHeight(Control.USE_PREF_SIZE);
-        patientLabel.setMaxHeight(Control.USE_PREF_SIZE);
+        patientLabel.setStyle("-fx-font-size: 10px;");
 
         // Reason (truncated)
         String reasonText = appointment.getReasonForVisit();
-        if (reasonText != null && reasonText.length() > 12) { // Reduced character limit
-            reasonText = reasonText.substring(0, 9) + "...";  // Shorter truncation
+        if (reasonText != null && reasonText.length() > 15) {
+            reasonText = reasonText.substring(0, 12) + "...";
         }
         Label reasonLabel = new Label(reasonText);
         reasonLabel.getStyleClass().add("appointment-reason");
-        reasonLabel.setStyle("-fx-font-size: 8px;");
-
-        // Make sure the reason label doesn't get pushed out
-        reasonLabel.setMinHeight(Control.USE_PREF_SIZE);
-        reasonLabel.setMaxHeight(Control.USE_PREF_SIZE);
+        reasonLabel.setStyle("-fx-font-size: 9px;");
 
         // Add components to block
         appointmentBlock.getChildren().addAll(timeLabel, patientLabel, reasonLabel);
@@ -570,7 +530,6 @@ public class CalendarViewController implements Initializable {
 
         return appointmentBlock;
     }
-
 
     private void handleAppointmentClick(Appointment appointment) {
         // Show appointment actions dialog

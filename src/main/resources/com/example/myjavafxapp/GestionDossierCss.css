@@ -218,8 +218,6 @@
 .calendar-grid {
     -fx-background-color: white;
     -fx-grid-lines-visible: true;
-    -fx-border-color: #d0d0d0;
-    -fx-border-width: 1px;
 }
 
 .calendar-header {
@@ -234,46 +232,37 @@
     -fx-font-weight: bold;
     -fx-padding: 5px;
     -fx-alignment: center-right;
-    -fx-font-size: 10px;
 }
 
 .time-slot {
     -fx-background-color: white;
-    -fx-border-color: #e0e0e0;
-    -fx-border-width: 0.5px;
-    -fx-padding: 0;
+    -fx-border-color: #eee;
+    -fx-padding: 2px;
     -fx-alignment: center;
     -fx-cursor: hand;
-    -fx-min-height: 30px;
-    -fx-pref-height: 30px;
-    -fx-max-height: 30px;
 }
 
 .time-slot:hover {
     -fx-background-color: #f5f5f5;
 }
 
-/* Fixed appointment blocks for 15-minute slots */
+/* CORRECTED: Appointment blocks - proper sizing without collapsing */
 .appointment-block {
-    -fx-background-radius: 3px !important;
-    -fx-border-radius: 3px !important;
-    -fx-border-width: 1px !important;
-    -fx-border-color: derive(-fx-light-grey, -10%) !important;
-    -fx-padding: 0px 1px !important;
-    -fx-spacing: 0px !important;
-    -fx-cursor: hand !important;
-    /* Removed drop shadow effect which can cause rendering issues */
+    -fx-background-radius: 5px;
+    -fx-border-radius: 5px;
+    -fx-padding: 5px;
+    -fx-spacing: 3px;
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.15), 2, 0, 0, 0);
 
-    /* Force fixed size for the block to avoid collapsing */
-    -fx-min-height: 28px !important;
-    -fx-pref-height: 28px !important;
-    -fx-max-height: 28px !important;
-    -fx-min-width: 95% !important;
-    -fx-pref-width: 98% !important;
-    -fx-max-width: 100% !important;
+    /* These properties ensure the block fills available space without overflowing */
+    -fx-min-height: 50px; /* Ensure minimum height */
+    -fx-pref-width: 95%; /* Take up most of the cell width */
+    -fx-alignment: center-left; /* Left-align content */
 
-    /* Content alignment */
-    -fx-alignment: center-left !important;
+    /* Remove properties that were causing issues */
+    /* -fx-max-width and -fx-max-height were causing collapse */
+    /* -fx-margin is not a valid JavaFX CSS property, use -fx-padding instead */
 }
 
 /* Appointment status styling with gradients */
@@ -312,32 +301,22 @@
     -fx-border-width: 2px;
 }
 
-/* Appointment text elements - reduced font sizes for 15-minute slots */
+/* Appointment text elements - ensure they're visible */
 .appointment-time {
-    -fx-font-weight: bold !important;
-    -fx-font-size: 9px !important;
-    -fx-text-fill: inherit !important;
-    -fx-min-height: 9px !important;
-    -fx-pref-height: 9px !important;
-    -fx-wrap-text: false !important;
-    -fx-opacity: 1.0 !important;
+    -fx-font-weight: bold;
+    -fx-font-size: 11px;
+    -fx-text-fill: inherit;
 }
 
 .appointment-patient {
-    -fx-font-weight: bold !important;
-    -fx-font-size: 9px !important;
-    -fx-min-height: 9px !important;
-    -fx-pref-height: 9px !important;
-    -fx-wrap-text: false !important;
-    -fx-opacity: 1.0 !important;
+    -fx-font-weight: bold;
+    -fx-font-size: 12px;
+    -fx-wrap-text: true;
 }
 
 .appointment-reason {
-    -fx-font-size: 8px !important;
-    -fx-min-height: 8px !important;
-    -fx-pref-height: 8px !important;
-    -fx-wrap-text: false !important;
-    -fx-opacity: 1.0 !important;
+    -fx-font-size: 11px;
+    -fx-wrap-text: true;
 }
 
 .status-box {
@@ -496,6 +475,7 @@
     -fx-background-radius: 3px;
     -fx-padding: 8px;
     -fx-spacing: 5px;
+    -fx-margin: 0 0 5 0;
 }
 
 .upcoming-time {
