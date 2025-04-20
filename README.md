@@ -65,6 +65,101 @@ HeartCare is a comprehensive medical clinic management system designed to stream
    private static final String URL = "jdbc:mysql://localhost:3307/heartcare";
    private static final String USER = "root";
    private static final String PASSWORD = "your_password";
+   ```
+3. Execute the following SQL statements to create the required tables:
+
+```sql
+-- Patient table
+CREATE TABLE patient ( 
+  ID varchar(8) PRIMARY KEY, 
+  FNAME varchar(50), 
+  LNAME varchar(50), 
+  BIRTHDATE date, 
+  SEXE enum('male','female'), 
+  ADRESSE varchar(255), 
+  TELEPHONE int, 
+  EMAIL varchar(255), 
+  CREATED_AT timestamp DEFAULT CURRENT_TIMESTAMP 
+);
+
+-- Medical record table 
+CREATE TABLE dossierpatient ( 
+  DossierID int AUTO_INCREMENT PRIMARY KEY, 
+  PatientID varchar(8), 
+  BloodType enum('A-','A+','B-','B+','AB-','AB+','O-','O+'), 
+  Allergies text, 
+  MedicalHistory text, 
+  CurrentMedications text, 
+  DateCreated timestamp DEFAULT CURRENT_TIMESTAMP, 
+  LastUpdated timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, 
+  BloodPressure varchar(20), 
+  ChronicConditions text, 
+  PreviousSurgeries text, 
+  FamilyMedicalHistory text, 
+  InsuranceProvider varchar(100), 
+  InsurancePolicyNumber varchar(50), 
+  FOREIGN KEY (PatientID) REFERENCES patient(ID) 
+);
+
+-- Users table 
+CREATE TABLE users ( 
+  ID varchar(8) PRIMARY KEY, 
+  USERNAME varchar(50) UNIQUE, 
+  PASSWORD varchar(255), 
+  FNAME varchar(50), 
+  LNAME varchar(50), 
+  EMAIL varchar(50), 
+  TELEPHONE int, 
+  ADRESSE varchar(255), 
+  BIRTHDATE date, 
+  ROLE enum('medecin','admin','personnel') 
+);
+
+-- Appointments table 
+CREATE TABLE rendezvous ( 
+  RendezVousID int AUTO_INCREMENT PRIMARY KEY, 
+  PatientID varchar(8), 
+  MedecinID varchar(8), 
+  AppointmentDateTime datetime, 
+  ReasonForVisit text, 
+  Status enum('Scheduled','CheckedIn','InProgress','Completed','Missed','Rescheduled','Patient_Cancelled','Clinic_Cancelled') DEFAULT 'Scheduled', 
+  DateCreated timestamp DEFAULT CURRENT_TIMESTAMP, 
+  LastUpdated timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, 
+  StatusReason text, 
+  NoShowFlag tinyint(1) DEFAULT 0, 
+  RescheduledToID int NULL, 
+  CancellationTime datetime NULL, 
+  Priority enum('Normal','Urgent') DEFAULT 'Normal', 
+  FOREIGN KEY (PatientID) REFERENCES patient(ID), 
+  FOREIGN KEY (MedecinID) REFERENCES users(ID), 
+  FOREIGN KEY (RescheduledToID) REFERENCES rendezvous(RendezVousID) 
+);
+
+-- Appointment history table 
+CREATE TABLE rendezvous_history ( 
+  HistoryID int AUTO_INCREMENT PRIMARY KEY, 
+  RendezVousID int, 
+  PreviousStatus enum('Scheduled','CheckedIn','InProgress','Completed','Missed','Rescheduled','Patient_Cancelled','Clinic_Cancelled'), 
+  NewStatus enum('Scheduled','CheckedIn','InProgress','Completed','Missed','Rescheduled','Patient_Cancelled','Clinic_Cancelled'), 
+  StatusReason text, 
+  ChangedBy varchar(50), 
+  ChangedAt datetime DEFAULT CURRENT_TIMESTAMP, 
+  FOREIGN KEY (RendezVousID) REFERENCES rendezvous(RendezVousID) 
+);
+
+-- Payments table 
+CREATE TABLE paiment ( 
+  PaimentID int AUTO_INCREMENT PRIMARY KEY, 
+  PatientID varchar(8), 
+  RendezVousID int, 
+  Amount decimal(10,2), 
+  PaymentMethod enum('Cash','Credit Card','Insurance'), 
+  PaimentDate datetime DEFAULT CURRENT_TIMESTAMP, 
+  FOREIGN KEY (PatientID) REFERENCES patient(ID), 
+  FOREIGN KEY (RendezVousID) REFERENCES rendezvous(RendezVousID) 
+);
+```
+
 ### Running the Application
 1. Clone the repository
 2. Configure the database connection
