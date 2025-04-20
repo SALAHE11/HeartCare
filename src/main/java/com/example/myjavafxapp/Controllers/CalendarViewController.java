@@ -486,13 +486,15 @@ public class CalendarViewController implements Initializable {
         return (hour - 8) * 4 + (minute / 15) + 1;
     }
 
+    // Replace the createAppointmentBlock method in CalendarViewController.java
+// with this improved version:
+
     private VBox createAppointmentBlock(Appointment appointment) {
         VBox appointmentBlock = new VBox();
         appointmentBlock.getStyleClass().addAll("appointment-block", "appointment-" + appointment.getStatus().toLowerCase());
 
-        // Make blocks smaller due to 15-minute time slots
-        appointmentBlock.setPrefHeight(35);
-        appointmentBlock.setMaxHeight(35);
+        // CRITICAL: Remove height restrictions to allow content to determine size
+        // Do NOT set setPrefHeight or setMaxHeight here
         appointmentBlock.setSpacing(2);
 
         // Store appointment ID in the block for later reference
@@ -503,27 +505,27 @@ public class CalendarViewController implements Initializable {
             appointmentBlock.getStyleClass().add("appointment-urgent");
         }
 
-        // Time
-        Label timeLabel = new Label(appointment.getAppointmentDateTime().format(timeFormatter));
-        timeLabel.getStyleClass().add("appointment-time");
-        timeLabel.setStyle("-fx-font-size: 10px;");
+        // REMOVED: Time label - not needed as time is shown in row header
 
-        // Patient name
+        // Patient name - with direct styling to ensure visibility
         Label patientLabel = new Label(appointment.getPatientName());
         patientLabel.getStyleClass().add("appointment-patient");
-        patientLabel.setStyle("-fx-font-size: 10px;");
+        patientLabel.setStyle("-fx-font-size: 11px; -fx-text-fill: white; -fx-font-weight: bold;");
+        patientLabel.setWrapText(true);
+        patientLabel.setMaxWidth(Double.MAX_VALUE);
 
-        // Reason (truncated)
+        // Reason for visit - do not truncate anymore
         String reasonText = appointment.getReasonForVisit();
-        if (reasonText != null && reasonText.length() > 15) {
-            reasonText = reasonText.substring(0, 12) + "...";
-        }
+        // REMOVED: Code that truncated reason to 15 characters
+
         Label reasonLabel = new Label(reasonText);
         reasonLabel.getStyleClass().add("appointment-reason");
-        reasonLabel.setStyle("-fx-font-size: 9px;");
+        reasonLabel.setStyle("-fx-font-size: 10px; -fx-text-fill: white;");
+        reasonLabel.setWrapText(true);
+        reasonLabel.setMaxWidth(Double.MAX_VALUE);
 
-        // Add components to block
-        appointmentBlock.getChildren().addAll(timeLabel, patientLabel, reasonLabel);
+        // Add components to block (without time label)
+        appointmentBlock.getChildren().addAll(patientLabel, reasonLabel);
 
         // Add click handler
         appointmentBlock.setOnMouseClicked(e -> handleAppointmentClick(appointment));
