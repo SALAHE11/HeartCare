@@ -35,6 +35,11 @@ import java.util.ResourceBundle;
 
 public class UserManagementController implements Initializable {
 
+    // Role limits constants
+    private static final int ADMIN_LIMIT = 2;
+    private static final int MEDECIN_LIMIT = 4;
+    private static final int PERSONNEL_LIMIT = 4;
+
     // Main view components
     @FXML private VBox usersListView;
     @FXML private TextField searchField;
@@ -47,6 +52,7 @@ public class UserManagementController implements Initializable {
     @FXML private TableColumn<Users, String> userNameColumn;
     @FXML private TableColumn<Users, String> emailColumn;
     @FXML private TableColumn<Users, Void> actionColumn;
+    @FXML private Button addButton;
 
     // Form view components
     @FXML private ScrollPane userFormView;
@@ -80,11 +86,123 @@ public class UserManagementController implements Initializable {
         // Load users data
         loadUsersData();
 
+        // Check if "Add" button should be enabled (if any role is available)
+        updateAddButtonState();
+
         // Set up actions column with edit/delete buttons
         setupActionsColumn();
 
         // Set up search filter
         setupSearchFilter();
+
+        // Set up role change listener
+        roleComboBox.valueProperty().addListener((observable, oldValue, newValue) -> {
+            if (newValue != null) {
+                // If changing to a different role, check availability
+                if (!isEditMode || (isEditMode && !newValue.equals(currentUser.getROLE()))) {
+                    checkRoleAvailability(newValue);
+                }
+            }
+        });
+    }
+
+    /**
+     * Update the state of the Add button based on role availability
+     */
+    private void updateAddButtonState() {
+        // Check if any role is available
+        boolean anyRoleAvailable = isRoleAvailable("Admin") ||
+                isRoleAvailable("Medecin") ||
+                isRoleAvailable("Personnel");
+
+        // Enable add button only if at least one role is available
+        addButton.setDisable(!anyRoleAvailable);
+
+        // Update tooltip
+        if (!anyRoleAvailable) {
+            addButton.setTooltip(new Tooltip("Impossible d'ajouter plus d'utilisateurs, toutes les limites de rôles sont atteintes"));
+        } else {
+            addButton.setTooltip(new Tooltip("Ajouter un nouvel utilisateur"));
+        }
+    }
+
+    /**
+     * Check if a role is available and show a warning if not
+     */
+    private void checkRoleAvailability(String role) {
+        if (!isRoleAvailable(role)) {
+            String message = "Le rôle '" + role + "' a atteint sa limite maximale";
+            switch (role) {
+                case "Admin":
+                    message += " (" + ADMIN_LIMIT + " administrateurs maximum)";
+                    break;
+                case "Medecin":
+                    message += " (" + MEDECIN_LIMIT + " médecins maximum)";
+                    break;
+                case "Personnel":
+                    message += " (" + PERSONNEL_LIMIT + " personnels maximum)";
+                    break;
+            }
+            showAlert(Alert.AlertType.WARNING, "Limite de rôle atteinte", message);
+
+            // Reset to previous value if in edit mode
+            if (isEditMode && currentUser != null) {
+                roleComboBox.setValue(currentUser.getROLE());
+            } else {
+                roleComboBox.setValue(null);
+            }
+        }
+    }
+
+    /**
+     * Check if a role is available based on database counts
+     */
+    private boolean isRoleAvailable(String role) {
+        int currentCount = countUsersWithRole(role);
+        int limit;
+
+        switch (role) {
+            case "Admin":
+                limit = ADMIN_LIMIT;
+                break;
+            case "Medecin":
+                limit = MEDECIN_LIMIT;
+                break;
+            case "Personnel":
+                limit = PERSONNEL_LIMIT;
+                break;
+            default:
+                return true;
+        }
+
+        // If in edit mode and not changing role, the role is available
+        if (isEditMode && currentUser != null && currentUser.getROLE().equals(role)) {
+            return true;
+        }
+
+        return currentCount < limit;
+    }
+
+    /**
+     * Count users with a specific role directly from the database
+     */
+    private int countUsersWithRole(String role) {
+        Connection conn = DatabaseSingleton.getInstance().getConnection();
+        String query = "SELECT COUNT(*) FROM USERS WHERE ROLE = ?";
+
+        try {
+            PreparedStatement stmt = conn.prepareStatement(query);
+            stmt.setString(1, role);
+            ResultSet rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return 0;
     }
 
     /**
@@ -133,7 +251,6 @@ public class UserManagementController implements Initializable {
     private void loadUsersData() {
         usersData.clear();
         Connection conn = DatabaseSingleton.getInstance().getConnection();
-        // Removed WHERE deleted_at IS NULL condition since column has been deleted
         String usersQuery = "SELECT ID, FNAME, LNAME, BIRTHDATE, ROLE, USERNAME, EMAIL, TELEPHONE, ADRESSE FROM USERS";
 
         try {
@@ -177,6 +294,9 @@ public class UserManagementController implements Initializable {
                     "Impossible de charger les données des utilisateurs: " + e.getMessage());
             e.printStackTrace();
         }
+
+        // Update add button state after loading data
+        updateAddButtonState();
     }
 
     /**
@@ -287,6 +407,9 @@ public class UserManagementController implements Initializable {
         // Show form, hide list
         usersListView.setVisible(false);
         userFormView.setVisible(true);
+
+        // Reset save button
+        saveButton.setDisable(false);
     }
 
     /**
@@ -306,6 +429,9 @@ public class UserManagementController implements Initializable {
         // Show form, hide list
         usersListView.setVisible(false);
         userFormView.setVisible(true);
+
+        // Reset save button
+        saveButton.setDisable(false);
     }
 
     /**
@@ -355,6 +481,17 @@ public class UserManagementController implements Initializable {
             return;
         }
 
+        // Check role availability again (final check)
+        String selectedRole = roleComboBox.getValue();
+        if (!isEditMode || (isEditMode && !selectedRole.equals(currentUser.getROLE()))) {
+            if (!isRoleAvailable(selectedRole)) {
+                showAlert(Alert.AlertType.ERROR, "Limite de rôle atteinte",
+                        "Impossible de " + (isEditMode ? "modifier" : "créer") + " l'utilisateur. " +
+                                "La limite pour le rôle '" + selectedRole + "' est atteinte.");
+                return;
+            }
+        }
+
         if (isEditMode) {
             updateUser();
         } else {
@@ -369,7 +506,7 @@ public class UserManagementController implements Initializable {
         try {
             Connection conn = DatabaseSingleton.getInstance().getConnection();
 
-            // First check if user with this ID already exists
+            // Check if user with this ID already exists
             String checkQuery = "SELECT COUNT(*) FROM USERS WHERE ID = ?";
             PreparedStatement checkStmt = conn.prepareStatement(checkQuery);
             checkStmt.setString(1, cinField.getText());
@@ -492,6 +629,9 @@ public class UserManagementController implements Initializable {
                 // Remove from the observable list
                 usersData.remove(user);
                 usersTable.refresh();
+
+                // Update add button state as a role spot may have opened up
+                updateAddButtonState();
 
                 showAlert(Alert.AlertType.INFORMATION, "Succès", "Utilisateur supprimé avec succès");
             } else {
