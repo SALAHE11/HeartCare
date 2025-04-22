@@ -36,7 +36,7 @@ import java.util.ResourceBundle;
 public class UserManagementController implements Initializable {
 
     // Role limits constants
-    private static final int ADMIN_LIMIT = 2;
+    private static final int ADMIN_LIMIT = 1;
     private static final int MEDECIN_LIMIT = 4;
     private static final int PERSONNEL_LIMIT = 4;
 
