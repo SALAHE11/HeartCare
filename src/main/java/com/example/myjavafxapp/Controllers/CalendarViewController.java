@@ -62,6 +62,7 @@ public class CalendarViewController implements Initializable {
     @FXML private Label checkedInAppointmentsLabel;
     @FXML private Label scheduledAppointmentsLabel;
     @FXML private Label missedAppointmentsLabel;
+    @FXML private Label cancelledAppointmentsLabel; // Added new label for cancelled appointments
 
     @FXML private VBox upcomingAppointmentsBox;
 
@@ -914,6 +915,7 @@ public class CalendarViewController implements Initializable {
         int checkedIn = 0;
         int scheduled = 0;
         int missed = 0;
+        int cancelled = 0; // Added new counter for cancelled appointments
 
         for (Appointment appointment : appointments) {
             switch (appointment.getStatus()) {
@@ -932,6 +934,12 @@ public class CalendarViewController implements Initializable {
                 case "Missed":
                     missed++;
                     break;
+                // Handle all cancellation types in the same counter
+                case "Cancelled":
+                case "Patient_Cancelled":
+                case "Clinic_Cancelled":
+                    cancelled++;
+                    break;
             }
         }
 
@@ -941,6 +949,7 @@ public class CalendarViewController implements Initializable {
         checkedInAppointmentsLabel.setText(Integer.toString(checkedIn));
         scheduledAppointmentsLabel.setText(Integer.toString(scheduled));
         missedAppointmentsLabel.setText(Integer.toString(missed));
+        cancelledAppointmentsLabel.setText(Integer.toString(cancelled)); // Set the cancelled count
     }
 
     private void updateUpcomingAppointments(List<Appointment> appointments) {
