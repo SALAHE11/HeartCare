@@ -541,6 +541,7 @@ public class CalendarViewController implements Initializable {
         Dialog<ButtonType> dialog = new Dialog<>();
         dialog.setTitle("Actions pour le Rendez-vous");
         dialog.setHeaderText("Patient: " + appointment.getPatientName() +
+                "\nCIN: " + appointment.getPatientID() +
                 "\nHeure: " + appointment.getFormattedTime() +
                 "\nStatut: " + mapInternalStatusToFrench(appointment.getStatus()));
 
