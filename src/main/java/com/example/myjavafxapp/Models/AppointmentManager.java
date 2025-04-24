@@ -787,4 +787,62 @@ public class AppointmentManager {
             e.printStackTrace();
         }
     }
+
+    /**
+     * Changes the time of an existing appointment
+     *
+     * @param appointmentId The ID of the appointment to update
+     * @param newDateTime The new date and time for the appointment
+     * @param reason Optional reason for the time change
+     * @return true if successful, false otherwise
+     */
+    public boolean changeAppointmentTime(int appointmentId, LocalDateTime newDateTime, String reason) {
+        try {
+            // Get a reference to the appointment in the database
+            Appointment appointment = getAppointmentById(appointmentId);
+            if (appointment == null) {
+                System.out.println("Appointment not found: " + appointmentId);
+                return false;
+            }
+
+            // Save the old time for logging
+            LocalDateTime oldDateTime = appointment.getAppointmentDateTime();
+
+            // Update the appointment time
+            appointment.setAppointmentDateTime(newDateTime);
+
+            // Add notes about the time change if a reason was provided
+            if (reason != null && !reason.isEmpty()) {
+                String existingNotes = appointment.getNotes();
+                String timeChangeNote = "[" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")) + "] " +
+                        "Rendez-vous avancé de " + oldDateTime.format(DateTimeFormatter.ofPattern("HH:mm")) +
+                        " à " + newDateTime.format(DateTimeFormatter.ofPattern("HH:mm")) +
+                        ". Raison: " + reason;
+
+                // Append to existing notes or create new notes
+                if (existingNotes != null && !existingNotes.isEmpty()) {
+                    appointment.setNotes(existingNotes + "\n\n" + timeChangeNote);
+                } else {
+                    appointment.setNotes(timeChangeNote);
+                }
+            }
+
+            // Save the updated appointment to the database
+            boolean updated = updateAppointment(appointment);
+
+            // Log the time change
+            if (updated) {
+                System.out.println("Appointment time changed: " + appointmentId +
+                        " from " + oldDateTime + " to " + newDateTime);
+
+                // You might want to add code here to notify relevant parties about the change
+            }
+
+            return updated;
+        } catch (Exception e) {
+            System.err.println("Error changing appointment time: " + e.getMessage());
+            e.printStackTrace();
+            return false;
+        }
+    }
 }

@@ -486,9 +486,6 @@ public class CalendarViewController implements Initializable {
         return (hour - 8) * 4 + (minute / 15) + 1;
     }
 
-    // Replace the createAppointmentBlock method in CalendarViewController.java
-// with this improved version:
-
     private VBox createAppointmentBlock(Appointment appointment) {
         VBox appointmentBlock = new VBox();
         appointmentBlock.getStyleClass().addAll("appointment-block", "appointment-" + appointment.getStatus().toLowerCase());
@@ -645,6 +642,10 @@ public class CalendarViewController implements Initializable {
             boolean success = appointmentManager.markAsMissed(appointment.getRendezVousID(), reason);
             if (success) {
                 showAlert(Alert.AlertType.INFORMATION, "Succès", "Rendez-vous marqué comme manqué.");
+
+                // Try to shift checked-in appointments after updating status
+                shiftCheckedInAppointments(appointment);
+
                 updateCalendarView();
             } else {
                 showAlert(Alert.AlertType.ERROR, "Erreur", "Échec de la mise à jour du rendez-vous.");
@@ -708,11 +709,112 @@ public class CalendarViewController implements Initializable {
 
             if (success) {
                 showAlert(Alert.AlertType.INFORMATION, "Succès", "Rendez-vous annulé avec succès.");
+
+                // Try to shift checked-in appointments after cancellation
+                shiftCheckedInAppointments(appointment);
+
                 updateCalendarView();
             } else {
                 showAlert(Alert.AlertType.ERROR, "Erreur", "Échec de l'annulation du rendez-vous.");
             }
         });
+    }
+
+    /**
+     * Shift checked-in appointments to fill the slots of cancelled or missed appointments
+     * Only shifts consecutive checked-in appointments until a non-checked-in appointment is encountered
+     * @param cancelledAppointment The appointment that was cancelled or missed
+     */
+    private void shiftCheckedInAppointments(Appointment cancelledAppointment) {
+        // Get all appointments for the current day
+        List<Appointment> appointments = appointmentManager.getAppointmentsByDate(currentDate);
+
+        // Get the time of the cancelled appointment
+        LocalDateTime cancelledTime = cancelledAppointment.getAppointmentDateTime();
+        String doctorId = cancelledAppointment.getMedicinID();
+
+        // Sort all doctor's appointments by time
+        List<Appointment> doctorAppointments = appointments.stream()
+                .filter(appt -> appt.getMedicinID().equals(doctorId))
+                .sorted(Comparator.comparing(Appointment::getAppointmentDateTime))
+                .collect(java.util.stream.Collectors.toList());
+
+        // Find the consecutive checked-in appointments after the cancelled appointment
+        List<Appointment> consecutiveCheckedIn = new ArrayList<>();
+        boolean foundCancelled = false;
+
+        for (Appointment appt : doctorAppointments) {
+            // First, find our cancelled appointment in the sequence
+            if (!foundCancelled) {
+                if (appt.getRendezVousID() == cancelledAppointment.getRendezVousID()) {
+                    foundCancelled = true;
+                }
+                continue;
+            }
+
+            // After finding the cancelled appointment, collect consecutive checked-in appointments
+            if ("CheckedIn".equals(appt.getStatus())) {
+                consecutiveCheckedIn.add(appt);
+            } else {
+                // Stop as soon as we find a non-checked-in appointment
+                break;
+            }
+        }
+
+        // If we have any consecutive checked-in appointments that can be moved
+        if (!consecutiveCheckedIn.isEmpty()) {
+            // Ask user if they want to shift all applicable appointments
+            Alert confirmAllShifts = new Alert(Alert.AlertType.CONFIRMATION);
+            confirmAllShifts.setTitle("Avancer les Rendez-vous");
+            confirmAllShifts.setHeaderText("Il y a " + consecutiveCheckedIn.size() +
+                    " patient(s) consécutifs déjà enregistré(s) qui peuvent être avancés");
+            confirmAllShifts.setContentText("Souhaitez-vous avancer ces rendez-vous pour combler le créneau libéré ?");
+
+            Optional<ButtonType> allResult = confirmAllShifts.showAndWait();
+            if (allResult.isPresent() && allResult.get() == ButtonType.OK) {
+                // Process each appointment in order
+                LocalDateTime availableTime = cancelledTime;
+                List<Appointment> successfullyShifted = new ArrayList<>();
+
+                for (Appointment appointmentToShift : consecutiveCheckedIn) {
+                    // Store the original time before changing it
+                    LocalDateTime originalTime = appointmentToShift.getAppointmentDateTime();
+                    String patientName = appointmentToShift.getPatientName();
+
+                    // Change the appointment time
+                    boolean success = appointmentManager.changeAppointmentTime(
+                            appointmentToShift.getRendezVousID(),
+                            availableTime,
+                            "Avancé pour remplacer un rendez-vous annulé/manqué");
+
+                    if (success) {
+                        // Add to list of successfully shifted appointments
+                        successfullyShifted.add(appointmentToShift);
+
+                        // Update the available time for the next appointment to shift
+                        availableTime = originalTime;
+                    } else {
+                        showAlert(Alert.AlertType.ERROR, "Erreur",
+                                "Impossible d'avancer le rendez-vous de " + patientName);
+                        break; // Stop processing if an error occurs
+                    }
+                }
+
+                // Show a summary of all shifted appointments
+                if (!successfullyShifted.isEmpty()) {
+                    StringBuilder message = new StringBuilder("Les rendez-vous suivants ont été avancés :\n");
+                    for (Appointment shifted : successfullyShifted) {
+                        message.append("- ")
+                                .append(shifted.getPatientName())
+                                .append(" à ")
+                                .append(shifted.getAppointmentDateTime().format(DateTimeFormatter.ofPattern("HH:mm")))
+                                .append("\n");
+                    }
+
+                    showAlert(Alert.AlertType.INFORMATION, "Succès", message.toString());
+                }
+            }
+        }
     }
 
     private void handleRescheduleAppointment(Appointment appointment) {
@@ -777,11 +879,27 @@ public class CalendarViewController implements Initializable {
             LocalTime newTime = LocalTime.parse(timeString, timeFormatter);
             LocalDateTime newDateTime = LocalDateTime.of(newDate, newTime);
 
+            // Store the old appointment data before rescheduling
+            LocalDateTime oldDateTime = appointment.getAppointmentDateTime();
+            String doctorId = appointment.getMedicinID();
+
             int newAppointmentId = appointmentManager.rescheduleAppointment(
                     appointment.getRendezVousID(), newDateTime, reason);
 
             if (newAppointmentId > 0) {
                 showAlert(Alert.AlertType.INFORMATION, "Succès", "Rendez-vous reprogrammé avec succès.");
+
+                // Only try to shift appointments if the rescheduled appointment was for today
+                if (oldDateTime.toLocalDate().equals(currentDate)) {
+                    // Create a temporary appointment object with the old data for shifting
+                    Appointment oldAppointment = new Appointment();
+                    oldAppointment.setAppointmentDateTime(oldDateTime);
+                    oldAppointment.setMedicinID(doctorId);
+
+                    // Try to shift checked-in appointments
+                    shiftCheckedInAppointments(oldAppointment);
+                }
+
                 updateCalendarView();
             } else {
                 showAlert(Alert.AlertType.ERROR, "Erreur", "Échec de la reprogrammation du rendez-vous.");
