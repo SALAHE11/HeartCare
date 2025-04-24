@@ -994,11 +994,7 @@ public class CalendarViewController implements Initializable {
         HBox item = new HBox(5);
         item.getStyleClass().add("upcoming-appointment");
 
-        // Time
-        Label timeLabel = new Label(appointment.getFormattedTime());
-        timeLabel.getStyleClass().add("upcoming-time");
-
-        // Patient name and doctor
+        // Patient name and doctor - removed time label
         VBox detailsBox = new VBox(2);
         Label patientLabel = new Label(appointment.getPatientName());
         patientLabel.getStyleClass().add("upcoming-patient");
@@ -1017,8 +1013,8 @@ public class CalendarViewController implements Initializable {
 
         actionButton.setOnAction(e -> handleAppointmentClick(appointment));
 
-        // Add to item
-        item.getChildren().addAll(timeLabel, detailsBox);
+        // Add to item (without time label)
+        item.getChildren().add(detailsBox);
         HBox.setHgrow(detailsBox, Priority.ALWAYS);
         item.getChildren().add(actionButton);
 
