@@ -20,6 +20,10 @@ public class HelloApplication extends Application {
         stage.setWidth(1024);
         stage.setHeight(600);
 
+        // Set minimum dimensions
+        stage.setMinWidth(1024);
+        stage.setMinHeight(600);
+
         Image icon = new Image(getClass().getResourceAsStream("/Icons/iconAppMod3.png"));
 
         // Set the icon for the stage (window)
