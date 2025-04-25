@@ -393,31 +393,46 @@ public class AppointmentFormController implements Initializable {
     private void handleSave(ActionEvent event) {
         if (validateForm()) {
             try {
-                // Mettre à jour l'objet rendez-vous avec les données du formulaire
+                // Update the appointment object with form data
                 updateAppointmentFromForm();
 
                 boolean success;
-                if (isNewAppointment) {
-                    // Créer un nouveau rendez-vous
-                    success = appointmentManager.createAppointment(currentAppointment);
+
+                // Check if this is a new urgent appointment
+                if (isNewAppointment && "Urgent".equals(currentAppointment.getPriority())) {
+                    // Use the special urgent scheduling method
+                    success = appointmentManager.scheduleUrgentAppointment(currentAppointment);
                     if (success) {
-                        showAlert(Alert.AlertType.INFORMATION, "Succès", "Rendez-vous créé avec succès");
+                        showAlert(Alert.AlertType.INFORMATION, "Succès",
+                                "Rendez-vous urgent créé avec succès et les autres rendez-vous ont été décalés si nécessaire");
                         closeForm();
                     } else {
-                        showAlert(Alert.AlertType.ERROR, "Erreur", "Échec de la création du rendez-vous");
+                        showAlert(Alert.AlertType.ERROR, "Erreur", "Échec de la création du rendez-vous urgent");
                     }
                 } else {
-                    // Mettre à jour un rendez-vous existant
-                    success = appointmentManager.updateAppointment(currentAppointment);
-                    if (success) {
-                        showAlert(Alert.AlertType.INFORMATION, "Succès", "Rendez-vous mis à jour avec succès");
-                        closeForm();
+                    // Normal appointment handling (unchanged)
+                    if (isNewAppointment) {
+                        // Create a new appointment
+                        success = appointmentManager.createAppointment(currentAppointment);
+                        if (success) {
+                            showAlert(Alert.AlertType.INFORMATION, "Succès", "Rendez-vous créé avec succès");
+                            closeForm();
+                        } else {
+                            showAlert(Alert.AlertType.ERROR, "Erreur", "Échec de la création du rendez-vous");
+                        }
                     } else {
-                        showAlert(Alert.AlertType.ERROR, "Erreur", "Échec de la mise à jour du rendez-vous");
+                        // Update an existing appointment
+                        success = appointmentManager.updateAppointment(currentAppointment);
+                        if (success) {
+                            showAlert(Alert.AlertType.INFORMATION, "Succès", "Rendez-vous mis à jour avec succès");
+                            closeForm();
+                        } else {
+                            showAlert(Alert.AlertType.ERROR, "Erreur", "Échec de la mise à jour du rendez-vous");
+                        }
                     }
                 }
 
-                // Rafraîchir la vue du calendrier si possible
+                // Refresh the calendar view if possible
                 Stage stage = (Stage) cancelButton.getScene().getWindow();
                 if (stage.getUserData() instanceof CalendarViewController) {
                     CalendarViewController controller = (CalendarViewController) stage.getUserData();

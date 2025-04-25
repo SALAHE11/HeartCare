@@ -370,7 +370,7 @@
 }
 
 .status-urgent {
-    
+
     -fx-border-color: -fx-urgent-color;
     -fx-border-width: 2px;
     -fx-border-radius: 3px;

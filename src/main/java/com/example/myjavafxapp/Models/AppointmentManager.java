@@ -5,10 +5,8 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class AppointmentManager {
     private static AppointmentManager instance;
@@ -843,6 +841,122 @@ public class AppointmentManager {
             System.err.println("Error changing appointment time: " + e.getMessage());
             e.printStackTrace();
             return false;
+        }
+    }
+
+    /**
+     * Schedules an urgent appointment and shifts other appointments as needed.
+     * This will place the appointment after the last Completed or InProgress appointment,
+     * or as the first appointment of the day if none exists. All subsequent appointments
+     * will be shifted by 15 minutes.
+     *
+     * @param urgentAppointment The urgent appointment to be scheduled
+     * @return true if successful, false otherwise
+     */
+    public boolean scheduleUrgentAppointment(Appointment urgentAppointment) {
+        Connection conn = DatabaseSingleton.getInstance().getConnection();
+        try {
+            // Set auto-commit to false for transaction
+            conn.setAutoCommit(false);
+
+            // Get the date and doctor ID
+            LocalDate appointmentDate = urgentAppointment.getAppointmentDateTime().toLocalDate();
+            String doctorId = urgentAppointment.getMedicinID();
+
+            // Get all appointments for this doctor on this date
+            List<Appointment> appointments = getAppointmentsByDate(appointmentDate);
+            List<Appointment> doctorAppointments = appointments.stream()
+                    .filter(a -> a.getMedicinID().equals(doctorId))
+                    .collect(Collectors.toList());
+
+            // Find the latest completed or in-progress appointment
+            doctorAppointments.sort(Comparator.comparing(Appointment::getAppointmentDateTime));
+
+            Appointment latestActiveAppointment = null;
+            for (Appointment app : doctorAppointments) {
+                if ("Completed".equals(app.getStatus()) || "InProgress".equals(app.getStatus())) {
+                    latestActiveAppointment = app;
+                }
+            }
+
+            // Determine the insertion time
+            LocalDateTime insertionTime;
+            if (latestActiveAppointment != null) {
+                // Place after the latest active appointment
+                insertionTime = latestActiveAppointment.getAppointmentDateTime().plusMinutes(15);
+            } else {
+                // Place at the start of the day (8:00 AM)
+                insertionTime = appointmentDate.atTime(8, 0);
+            }
+
+            // Set the appointment time
+            urgentAppointment.setAppointmentDateTime(insertionTime);
+
+            // Check if we need to shift any appointments at this time
+            boolean timeOccupied = doctorAppointments.stream()
+                    .anyMatch(a -> a.getAppointmentDateTime().equals(insertionTime) &&
+                            !("Completed".equals(a.getStatus()) || "InProgress".equals(a.getStatus())));
+
+            if (timeOccupied) {
+                // Shift appointments at or after the insertion time
+                List<Appointment> appointmentsToShift = doctorAppointments.stream()
+                        .filter(a -> !("Completed".equals(a.getStatus()) || "InProgress".equals(a.getStatus())))
+                        .filter(a -> a.getAppointmentDateTime().compareTo(insertionTime) >= 0)
+                        .sorted(Comparator.comparing(Appointment::getAppointmentDateTime).reversed())
+                        .collect(Collectors.toList());
+
+                // Shift each appointment by 15 minutes
+                for (Appointment appointment : appointmentsToShift) {
+                    LocalDateTime newTime = appointment.getAppointmentDateTime().plusMinutes(15);
+
+                    // Check clinic hours (8:00 AM to 5:45 PM)
+                    if (newTime.isAfter(appointmentDate.atTime(17, 45))) {
+                        // Cannot shift beyond clinic hours
+                        System.out.println("Warning: Cannot shift appointment " + appointment.getRendezVousID() +
+                                " as it would go beyond clinic hours.");
+                        continue;
+                    }
+
+                    boolean shiftSuccess = changeAppointmentTime(
+                            appointment.getRendezVousID(),
+                            newTime,
+                            "Décalé pour accommoder un rendez-vous urgent"
+                    );
+
+                    if (!shiftSuccess) {
+                        System.out.println("Failed to shift appointment: " + appointment.getRendezVousID());
+                        conn.rollback();
+                        return false;
+                    }
+                }
+            }
+
+            // Insert the urgent appointment
+            boolean success = createAppointment(urgentAppointment);
+            if (!success) {
+                conn.rollback();
+                return false;
+            }
+
+            // Commit the transaction
+            conn.commit();
+            return true;
+
+        } catch (Exception e) {
+            try {
+                conn.rollback();
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+            }
+            System.err.println("Error scheduling urgent appointment: " + e.getMessage());
+            e.printStackTrace();
+            return false;
+        } finally {
+            try {
+                conn.setAutoCommit(true);
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
         }
     }
 }
