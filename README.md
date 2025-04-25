@@ -153,7 +153,7 @@ CREATE TABLE paiment (
   PatientID varchar(8), 
   RendezVousID int, 
   Amount decimal(10,2), 
-  PaymentMethod enum('Cash','Credit Card','Insurance'), 
+  PaymentMethod enum('Cash',' Credit Card','Insurance'), 
   PaimentDate datetime DEFAULT CURRENT_TIMESTAMP, 
   FOREIGN KEY (PatientID) REFERENCES patient(ID), 
   FOREIGN KEY (RendezVousID) REFERENCES rendezvous(RendezVousID) 
