@@ -26,6 +26,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class CalendarViewController implements Initializable {
     @FXML private Button prevDayBtn;
@@ -62,7 +63,7 @@ public class CalendarViewController implements Initializable {
     @FXML private Label checkedInAppointmentsLabel;
     @FXML private Label scheduledAppointmentsLabel;
     @FXML private Label missedAppointmentsLabel;
-    @FXML private Label cancelledAppointmentsLabel; // Added new label for cancelled appointments
+    @FXML private Label cancelledAppointmentsLabel;
 
     @FXML private VBox upcomingAppointmentsBox;
 
@@ -355,11 +356,29 @@ public class CalendarViewController implements Initializable {
                 }
             }
 
+            // Check if the status is "Missed" or some form of "Cancelled" or "Rescheduled"
+            boolean isMissedOrCancelled = "Missed".equals(appointment.getStatus()) ||
+                    isCancellationStatus(appointment.getStatus()) ||
+                    "Rescheduled".equals(appointment.getStatus());
+
             // Filter by status
             if (!"Tous les statuts".equals(selectedStatus)) {
                 // Map UI status (in French) back to internal status values (in English)
                 String internalStatus = mapFrenchStatusToInternal(selectedStatus);
-                if (!internalStatus.equals(appointment.getStatus())) {
+
+                // Handle the special case for cancelled appointments
+                if ("CANCELLED_ANY".equals(internalStatus)) {
+                    // For "Annulé" filter, include any status that is a cancellation type
+                    if (!isCancellationStatus(appointment.getStatus())) {
+                        includeAppointment = false;
+                    }
+                } else if (!internalStatus.equals(appointment.getStatus())) {
+                    includeAppointment = false;
+                }
+            } else {
+                // If "Tous les statuts" (All statuses) is selected but the appointment is missed or cancelled,
+                // exclude it from the default view
+                if (isMissedOrCancelled) {
                     includeAppointment = false;
                 }
             }
@@ -391,9 +410,15 @@ public class CalendarViewController implements Initializable {
             case "En cours": return "InProgress";
             case "Terminé": return "Completed";
             case "Manqué": return "Missed";
-            case "Annulé": return "Cancelled";
+            // For "Annulé" filter, we will handle this as a special case in the filter logic
+            case "Annulé": return "CANCELLED_ANY";  // Special marker
             default: return frenchStatus; // Fallback
         }
+    }
+
+    // Helper method to determine if a status is one of the cancellation types
+    private boolean isCancellationStatus(String status) {
+        return "Patient_Cancelled".equals(status) || "Clinic_Cancelled".equals(status);
     }
 
     // Helper method to map internal status values to French labels
@@ -405,8 +430,7 @@ public class CalendarViewController implements Initializable {
             case "Completed": return "Terminé";
             case "Missed": return "Manqué";
             case "Patient_Cancelled":
-            case "Clinic_Cancelled":
-            case "Cancelled": return "Annulé";
+            case "Clinic_Cancelled": return "Annulé";
             case "Rescheduled": return "Reprogrammé";
             default: return internalStatus; // Fallback
         }
@@ -489,7 +513,28 @@ public class CalendarViewController implements Initializable {
 
     private VBox createAppointmentBlock(Appointment appointment) {
         VBox appointmentBlock = new VBox();
-        appointmentBlock.getStyleClass().addAll("appointment-block", "appointment-" + appointment.getStatus().toLowerCase());
+
+        // Determine the correct style class for appointment status
+        String statusStyleClass;
+        if (isCancellationStatus(appointment.getStatus())) {
+            // Use the same style for all types of cancelled appointments
+            statusStyleClass = "status-cancelled";
+        } else if ("Missed".equals(appointment.getStatus())) {
+            statusStyleClass = "status-missed";
+        } else if ("Scheduled".equals(appointment.getStatus())) {
+            statusStyleClass = "status-scheduled";
+        } else if ("CheckedIn".equals(appointment.getStatus())) {
+            statusStyleClass = "status-checked-in";
+        } else if ("InProgress".equals(appointment.getStatus())) {
+            statusStyleClass = "status-in-progress";
+        } else if ("Completed".equals(appointment.getStatus())) {
+            statusStyleClass = "status-completed";
+        } else {
+            // Default style based on status (lowercase for CSS)
+            statusStyleClass = "status-" + appointment.getStatus().toLowerCase();
+        }
+
+        appointmentBlock.getStyleClass().addAll("appointment-block", statusStyleClass);
 
         // CRITICAL: Remove height restrictions to allow content to determine size
         // Do NOT set setPrefHeight or setMaxHeight here
@@ -500,7 +545,7 @@ public class CalendarViewController implements Initializable {
 
         // If urgent, add additional style
         if ("Urgent".equals(appointment.getPriority())) {
-            appointmentBlock.getStyleClass().add("appointment-urgent");
+            appointmentBlock.getStyleClass().add("status-urgent");
         }
 
         // REMOVED: Time label - not needed as time is shown in row header
@@ -645,6 +690,9 @@ public class CalendarViewController implements Initializable {
             if (success) {
                 showAlert(Alert.AlertType.INFORMATION, "Succès", "Rendez-vous marqué comme manqué.");
 
+                // The appointment will now be removed from the calendar view
+                // since we changed the filtering logic
+
                 // Try to shift checked-in appointments after updating status
                 shiftCheckedInAppointments(appointment);
 
@@ -712,6 +760,9 @@ public class CalendarViewController implements Initializable {
             if (success) {
                 showAlert(Alert.AlertType.INFORMATION, "Succès", "Rendez-vous annulé avec succès.");
 
+                // The appointment will now be removed from the calendar view
+                // since we changed the filtering logic
+
                 // Try to shift checked-in appointments after cancellation
                 shiftCheckedInAppointments(appointment);
 
@@ -723,8 +774,8 @@ public class CalendarViewController implements Initializable {
     }
 
     /**
-     * Shift checked-in appointments to fill the slots of cancelled or missed appointments
-     * Only shifts consecutive checked-in appointments until a non-checked-in appointment is encountered
+     * Shift all checked-in appointments to fill the slots of cancelled or missed appointments
+     * This version will shift all checked-in appointments, not just consecutive ones
      * @param cancelledAppointment The appointment that was cancelled or missed
      */
     private void shiftCheckedInAppointments(Appointment cancelledAppointment) {
@@ -735,70 +786,65 @@ public class CalendarViewController implements Initializable {
         LocalDateTime cancelledTime = cancelledAppointment.getAppointmentDateTime();
         String doctorId = cancelledAppointment.getMedicinID();
 
-        // Sort all doctor's appointments by time
+        // Get all doctor's appointments for this day
         List<Appointment> doctorAppointments = appointments.stream()
                 .filter(appt -> appt.getMedicinID().equals(doctorId))
+                .collect(Collectors.toList());
+
+        // Find all checked-in appointments for this doctor
+        List<Appointment> checkedInAppointments = doctorAppointments.stream()
+                .filter(appt -> "CheckedIn".equals(appt.getStatus()))
+                .filter(appt -> appt.getAppointmentDateTime().isAfter(cancelledTime))
                 .sorted(Comparator.comparing(Appointment::getAppointmentDateTime))
-                .collect(java.util.stream.Collectors.toList());
+                .collect(Collectors.toList());
 
-        // Find the consecutive checked-in appointments after the cancelled appointment
-        List<Appointment> consecutiveCheckedIn = new ArrayList<>();
-        boolean foundCancelled = false;
-
-        for (Appointment appt : doctorAppointments) {
-            // First, find our cancelled appointment in the sequence
-            if (!foundCancelled) {
-                if (appt.getRendezVousID() == cancelledAppointment.getRendezVousID()) {
-                    foundCancelled = true;
-                }
-                continue;
-            }
-
-            // After finding the cancelled appointment, collect consecutive checked-in appointments
-            if ("CheckedIn".equals(appt.getStatus())) {
-                consecutiveCheckedIn.add(appt);
-            } else {
-                // Stop as soon as we find a non-checked-in appointment
-                break;
-            }
-        }
-
-        // If we have any consecutive checked-in appointments that can be moved
-        if (!consecutiveCheckedIn.isEmpty()) {
+        // If we have any checked-in appointments that can be moved
+        if (!checkedInAppointments.isEmpty()) {
             // Ask user if they want to shift all applicable appointments
             Alert confirmAllShifts = new Alert(Alert.AlertType.CONFIRMATION);
             confirmAllShifts.setTitle("Avancer les Rendez-vous");
-            confirmAllShifts.setHeaderText("Il y a " + consecutiveCheckedIn.size() +
-                    " patient(s) consécutifs déjà enregistré(s) qui peuvent être avancés");
-            confirmAllShifts.setContentText("Souhaitez-vous avancer ces rendez-vous pour combler le créneau libéré ?");
+            confirmAllShifts.setHeaderText("Il y a " + checkedInAppointments.size() +
+                    " patient(s) déjà enregistré(s) qui peuvent être avancés");
+            confirmAllShifts.setContentText("Souhaitez-vous avancer ces rendez-vous pour combler les créneaux libérés ?");
 
             Optional<ButtonType> allResult = confirmAllShifts.showAndWait();
             if (allResult.isPresent() && allResult.get() == ButtonType.OK) {
-                // Process each appointment in order
-                LocalDateTime availableTime = cancelledTime;
+                // Create a list of time slots available (starting with the cancelled appointment time)
+                List<LocalDateTime> availableSlots = new ArrayList<>();
+                availableSlots.add(cancelledTime);
+
+                // Process each checked-in appointment in time order
                 List<Appointment> successfullyShifted = new ArrayList<>();
 
-                for (Appointment appointmentToShift : consecutiveCheckedIn) {
-                    // Store the original time before changing it
+                for (Appointment appointmentToShift : checkedInAppointments) {
+                    // Store the original time - this will become an available slot after shifting
                     LocalDateTime originalTime = appointmentToShift.getAppointmentDateTime();
                     String patientName = appointmentToShift.getPatientName();
 
-                    // Change the appointment time
-                    boolean success = appointmentManager.changeAppointmentTime(
-                            appointmentToShift.getRendezVousID(),
-                            availableTime,
-                            "Avancé pour remplacer un rendez-vous annulé/manqué");
+                    if (!availableSlots.isEmpty()) {
+                        // Get the earliest available slot
+                        LocalDateTime nextAvailableSlot = availableSlots.get(0);
+                        availableSlots.remove(0);  // Remove this slot as we're about to use it
 
-                    if (success) {
-                        // Add to list of successfully shifted appointments
-                        successfullyShifted.add(appointmentToShift);
+                        // Change the appointment time
+                        boolean success = appointmentManager.changeAppointmentTime(
+                                appointmentToShift.getRendezVousID(),
+                                nextAvailableSlot,
+                                "Avancé pour remplacer un rendez-vous annulé/manqué");
 
-                        // Update the available time for the next appointment to shift
-                        availableTime = originalTime;
-                    } else {
-                        showAlert(Alert.AlertType.ERROR, "Erreur",
-                                "Impossible d'avancer le rendez-vous de " + patientName);
-                        break; // Stop processing if an error occurs
+                        if (success) {
+                            // Add to list of successfully shifted appointments
+                            successfullyShifted.add(appointmentToShift);
+
+                            // The original time slot is now available for later appointments
+                            availableSlots.add(originalTime);
+
+                            // Keep the slots sorted by time so we always use the earliest available
+                            availableSlots.sort(Comparator.naturalOrder());
+                        } else {
+                            showAlert(Alert.AlertType.ERROR, "Erreur",
+                                    "Impossible d'avancer le rendez-vous de " + patientName);
+                        }
                     }
                 }
 
@@ -963,9 +1009,12 @@ public class CalendarViewController implements Initializable {
         // Filter and sort upcoming appointments
         List<Appointment> upcoming = new ArrayList<>();
         for (Appointment appointment : appointments) {
-            if (appointment.getAppointmentDateTime().isAfter(now) &&
-                    ("Scheduled".equals(appointment.getStatus()) ||
-                            "CheckedIn".equals(appointment.getStatus()))) {
+            // Exclude missed and cancelled appointments from upcoming list,
+            // only show scheduled and checked-in appointments
+            boolean isActiveAppointment = "Scheduled".equals(appointment.getStatus()) ||
+                    "CheckedIn".equals(appointment.getStatus());
+
+            if (appointment.getAppointmentDateTime().isAfter(now) && isActiveAppointment) {
                 upcoming.add(appointment);
             }
         }
