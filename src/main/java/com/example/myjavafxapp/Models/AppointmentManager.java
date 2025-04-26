@@ -161,8 +161,9 @@ public class AppointmentManager {
     /**
      * Check if a patient has overlapping appointments
      * Returns true if there is an overlap, false otherwise
+     * Modified to check for overlaps with specific doctor
      */
-    private boolean hasPatientOverlappingAppointment(String patientID, LocalDateTime dateTime, Integer excludeAppointmentId) {
+    private boolean hasPatientOverlappingAppointment(String patientID, String medicinID, LocalDateTime dateTime, Integer excludeAppointmentId) {
         Connection conn = DatabaseSingleton.getInstance().getConnection();
         boolean hasOverlap = false;
 
@@ -170,6 +171,7 @@ public class AppointmentManager {
             // Build query to check for overlapping appointments within a 15-minute window
             String query = "SELECT COUNT(*) FROM rendezvous " +
                     "WHERE PatientID = ? " +
+                    "AND MedecinID = ? " + // Check for conflicts with the same doctor
                     "AND ABS(TIMESTAMPDIFF(MINUTE, AppointmentDateTime, ?)) < 15 " + // 15-minute window
                     "AND Status NOT IN ('Completed', 'Missed', 'Patient_Cancelled', 'Clinic_Cancelled')";
 
@@ -180,10 +182,11 @@ public class AppointmentManager {
 
             PreparedStatement pstmt = conn.prepareStatement(query);
             pstmt.setString(1, patientID);
-            pstmt.setTimestamp(2, Timestamp.valueOf(dateTime));
+            pstmt.setString(2, medicinID);
+            pstmt.setTimestamp(3, Timestamp.valueOf(dateTime));
 
             if (excludeAppointmentId != null) {
-                pstmt.setInt(3, excludeAppointmentId);
+                pstmt.setInt(4, excludeAppointmentId);
             }
 
             ResultSet rs = pstmt.executeQuery();
@@ -212,10 +215,11 @@ public class AppointmentManager {
                 return false;
             }
 
-            // Check if patient already has an appointment at the same time
-            if (hasPatientOverlappingAppointment(appointment.getPatientID(), appointment.getAppointmentDateTime(), null)) {
-                System.err.println("Patient already has an appointment at this time");
-                throw new SQLException("Patient already has an appointment at this time");
+            // Check if patient already has an appointment at the same time with the same doctor
+            if (hasPatientOverlappingAppointment(appointment.getPatientID(), appointment.getMedicinID(),
+                    appointment.getAppointmentDateTime(), null)) {
+                System.err.println("Patient already has an appointment with this doctor at this time");
+                throw new SQLException("Patient already has an appointment with this doctor at this time");
             }
 
             // Ensure other fields have default values if null
@@ -280,11 +284,11 @@ public class AppointmentManager {
             // Get current appointment to check for status change
             Appointment currentAppointment = getAppointmentById(appointment.getRendezVousID());
 
-            // Check if patient already has an appointment at the same time (excluding this one)
-            if (hasPatientOverlappingAppointment(appointment.getPatientID(), appointment.getAppointmentDateTime(),
-                    appointment.getRendezVousID())) {
-                System.err.println("Patient already has an appointment at this time");
-                throw new SQLException("Patient already has an appointment at this time");
+            // Check if patient already has an appointment at the same time with the same doctor (excluding this one)
+            if (hasPatientOverlappingAppointment(appointment.getPatientID(), appointment.getMedicinID(),
+                    appointment.getAppointmentDateTime(), appointment.getRendezVousID())) {
+                System.err.println("Patient already has an appointment with this doctor at this time");
+                throw new SQLException("Patient already has an appointment with this doctor at this time");
             }
 
             String updateQuery = "UPDATE rendezvous SET " +
@@ -434,11 +438,12 @@ public class AppointmentManager {
                 return -1;
             }
 
-            // Check if patient already has an appointment at the new time
-            if (hasPatientOverlappingAppointment(oldAppointment.getPatientID(), newDateTime, oldAppointmentId)) {
-                System.err.println("Patient already has an appointment at the new time");
+            // Check if patient already has an appointment at the new time with the same doctor
+            if (hasPatientOverlappingAppointment(oldAppointment.getPatientID(), oldAppointment.getMedicinID(),
+                    newDateTime, oldAppointmentId)) {
+                System.err.println("Patient already has an appointment with this doctor at the new time");
                 conn.rollback();
-                throw new SQLException("Patient already has an appointment at the new time");
+                throw new SQLException("Patient already has an appointment with this doctor at the new time");
             }
 
             // Create a new appointment record
