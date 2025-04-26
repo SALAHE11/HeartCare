@@ -11,7 +11,9 @@
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.VBox?>
+<?import javafx.scene.layout.HBox?>
 <?import javafx.geometry.Insets?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
 
 <BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="520.0" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.myjavafxapp.Controllers.Login_inscrire_OublierMDP.loginController" stylesheets="@LoginStyles.css">
 
@@ -55,7 +57,17 @@
 
                <!-- Password Section -->
                <Label text="Password" styleClass="form-label" alignment="CENTER_LEFT" maxWidth="Infinity" />
-               <PasswordField fx:id="passwordField" promptText="Votre mot de passe ici" styleClass="form-field" />
+
+               <!-- Password Field with Eye Icon -->
+               <HBox spacing="5.0" alignment="CENTER_LEFT">
+                  <PasswordField fx:id="passwordField" promptText="Votre mot de passe ici" styleClass="form-field" HBox.hgrow="ALWAYS" />
+                  <TextField fx:id="passwordVisibleField" promptText="Votre mot de passe ici" styleClass="form-field" visible="false" managed="false" HBox.hgrow="ALWAYS" />
+                  <FontIcon fx:id="eyeIcon" iconLiteral="fas-eye-slash" iconSize="20" onMouseClicked="#togglePasswordVisibility" styleClass="clickable-icon">
+                     <cursor>
+                        <Cursor fx:constant="HAND" />
+                     </cursor>
+                  </FontIcon>
+               </HBox>
 
                <!-- Login Button -->
                <Button fx:id="loginButton" mnemonicParsing="false" onAction="#loginOnAction" styleClass="primary-button" text="Se connecter" maxWidth="Infinity">

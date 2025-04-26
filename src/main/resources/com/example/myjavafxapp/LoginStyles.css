@@ -161,3 +161,42 @@
         -fx-padding: 6px 10px;
     }
 }
+
+/* Add this to your existing LoginStyles.css file */
+
+.clickable-icon {
+    -fx-cursor: hand;
+    -fx-fill: #666;
+}
+
+.clickable-icon:hover {
+    -fx-fill: #444;
+}
+
+/* You may also want to adjust the padding of the HBox containing the password field */
+HBox {
+    -fx-alignment: center-left;
+}
+
+/* Add this to your existing LoginStyles.css file */
+
+/* Stack pane for password fields with icon */
+.password-stack {
+    -fx-alignment: center-right;
+}
+
+/* Icon inside field style */
+.field-icon {
+    -fx-cursor: hand;
+    -fx-fill: #666;
+    -fx-z-index: 2;
+}
+
+.field-icon:hover {
+    -fx-fill: #444;
+}
+
+/* Form field with icon needs right padding to prevent text from going under the icon */
+.form-field-with-icon {
+    -fx-padding: 5 30 5 5;
+}

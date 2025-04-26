@@ -9,6 +9,9 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
+import javafx.scene.control.TextField;
+import javafx.scene.input.MouseEvent;
+import org.kordamp.ikonli.javafx.FontIcon;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -17,21 +20,22 @@ public class resetPasswordController {
 
     @FXML
     private PasswordField passwordField;
-
+    @FXML
+    private TextField passwordVisibleField;
+    @FXML
+    private FontIcon eyeIcon;
     @FXML
     private PasswordField ConfirmField;
-
     @FXML
     private Label welcomeMessage;
-
     @FXML
     private Label passwordError;
-
     @FXML
     private Label confirmPasswordError;
 
     private String username;
     private String hashedPassword;
+    private boolean passwordVisible = false;
 
     // Method to set the username and update the welcome message
     public void setUsername(String username) {
@@ -50,14 +54,18 @@ public class resetPasswordController {
 
     @FXML
     private void initialize() {
-        // Add listeners to the text fields for real-time validation
-        passwordField.textProperty().addListener(new ChangeListener<String>() {
-            @Override
-            public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
-                validatePassword(newValue);
-            }
+        // Bind the passwordField and passwordVisibleField to stay in sync
+        passwordField.textProperty().addListener((observable, oldValue, newValue) -> {
+            passwordVisibleField.setText(newValue);
+            validatePassword(newValue);
         });
 
+        passwordVisibleField.textProperty().addListener((observable, oldValue, newValue) -> {
+            passwordField.setText(newValue);
+            validatePassword(newValue);
+        });
+
+        // Original confirm password listener
         ConfirmField.textProperty().addListener(new ChangeListener<String>() {
             @Override
             public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
@@ -66,6 +74,26 @@ public class resetPasswordController {
         });
     }
 
+    @FXML
+    public void togglePasswordVisibility(MouseEvent event) {
+        passwordVisible = !passwordVisible;
+
+        if (passwordVisible) {
+            // Show password
+            passwordField.setVisible(false);
+            passwordField.setManaged(false);
+            passwordVisibleField.setVisible(true);
+            passwordVisibleField.setManaged(true);
+            eyeIcon.setIconLiteral("fas-eye");
+        } else {
+            // Hide password
+            passwordField.setVisible(true);
+            passwordField.setManaged(true);
+            passwordVisibleField.setVisible(false);
+            passwordVisibleField.setManaged(false);
+            eyeIcon.setIconLiteral("fas-eye-slash");
+        }
+    }
 
     // Method that get continuously by its listener
     private boolean validatePassword(String password) {
@@ -84,10 +112,9 @@ public class resetPasswordController {
         }
     }
 
-
     // Method that get continuously by its listener
     private boolean validateConfirmPassword(String confirmPassword) {
-        String password = passwordField.getText();
+        String password = passwordVisible ? passwordVisibleField.getText() : passwordField.getText();
         if (confirmPassword == null || confirmPassword.isEmpty()) {
             confirmPasswordError.setText("Le password de confirmation ne peut pas être vide!");
             confirmPasswordError.setStyle("-fx-text-fill: red;");
@@ -127,15 +154,16 @@ public class resetPasswordController {
         return true;
     }
 
-
     @FXML
     //Method that gets triggered when user clicks register
     private void handleRegistration(ActionEvent event) {
-        if (!validatePassword(passwordField.getText()) || !validateConfirmPassword(ConfirmField.getText())) {
+        String password = passwordVisible ? passwordVisibleField.getText() : passwordField.getText();
+
+        if (!validatePassword(password) || !validateConfirmPassword(ConfirmField.getText())) {
             welcomeMessage.setText("Certains champs ne sont pas valides!");
             welcomeMessage.setStyle("-fx-text-fill: red;");
         } else {
-            hashedPassword = Hashing.hashPassword(passwordField.getText());
+            hashedPassword = Hashing.hashPassword(password);
             String sql = "UPDATE USERS SET PASSWORD=? WHERE USERNAME = ?";
             Connection conn = DatabaseSingleton.getInstance().getConnection();
             try {
@@ -154,5 +182,4 @@ public class resetPasswordController {
             }
         }
     }
-
 }

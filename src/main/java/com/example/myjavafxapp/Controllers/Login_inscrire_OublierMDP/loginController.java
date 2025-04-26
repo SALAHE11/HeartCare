@@ -9,6 +9,8 @@ import javafx.event.ActionEvent;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
+import javafx.scene.input.MouseEvent;
+import org.kordamp.ikonli.javafx.FontIcon;
 
 import java.io.IOException;
 import java.sql.Connection;
@@ -23,10 +25,51 @@ public class loginController {
     private TextField userNameField;
     @FXML
     private PasswordField passwordField;
+    @FXML
+    private TextField passwordVisibleField;
+    @FXML
+    private FontIcon eyeIcon;
+
+    private boolean passwordVisible = false;
+
+    @FXML
+    private void initialize() {
+        // Bind the passwordField and passwordVisibleField to stay in sync
+        passwordField.textProperty().addListener((observable, oldValue, newValue) -> {
+            passwordVisibleField.setText(newValue);
+        });
+
+        passwordVisibleField.textProperty().addListener((observable, oldValue, newValue) -> {
+            passwordField.setText(newValue);
+        });
+    }
+
+    @FXML
+    public void togglePasswordVisibility(MouseEvent event) {
+        passwordVisible = !passwordVisible;
+
+        if (passwordVisible) {
+            // Show password
+            passwordField.setVisible(false);
+            passwordField.setManaged(false);
+            passwordVisibleField.setVisible(true);
+            passwordVisibleField.setManaged(true);
+            eyeIcon.setIconLiteral("fas-eye");
+        } else {
+            // Hide password
+            passwordField.setVisible(true);
+            passwordField.setManaged(true);
+            passwordVisibleField.setVisible(false);
+            passwordVisibleField.setManaged(false);
+            eyeIcon.setIconLiteral("fas-eye-slash");
+        }
+    }
 
     public void loginOnAction(ActionEvent event) {
-        if (!userNameField.getText().isBlank() && !passwordField.getText().isBlank()) {
-            if (validateLogin()) {
+        String password = passwordVisible ? passwordVisibleField.getText() : passwordField.getText();
+
+        if (!userNameField.getText().isBlank() && !password.isBlank()) {
+            if (validateLogin(password)) {
                 try {
                     // Store username in session
                     UserSession session = UserSession.getInstance();
@@ -48,7 +91,7 @@ public class loginController {
         }
     }
 
-    private boolean validateLogin() {
+    private boolean validateLogin(String password) {
         Connection conn = DatabaseSingleton.getInstance().getConnection();
         try {
             String sql = "SELECT password FROM users WHERE username = ?";
@@ -58,7 +101,7 @@ public class loginController {
 
             if (rs.next()) {
                 String hashedPassword = rs.getString("password");
-                return Hashing.verifyPassword(passwordField.getText(), hashedPassword);
+                return Hashing.verifyPassword(password, hashedPassword);
             }
         } catch (Exception e) {
             e.printStackTrace();
