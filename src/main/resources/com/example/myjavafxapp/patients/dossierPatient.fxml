@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
+
+<BorderPane minHeight="-Infinity" minWidth="-Infinity" prefHeight="700.0" prefWidth="1024.0" stylesheets="@../styles/GestionDossierCss.css" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.myjavafxapp.Controllers.DossierPatientController">
+    <left>
+        <VBox alignment="TOP_CENTER" prefHeight="600.0" prefWidth="40.0" styleClass="sidebar">
+            <children>
+                <Button fx:id="backButton" mnemonicParsing="false" onAction="#returnAction" styleClass="nav-button">
+                    <graphic>
+                        <FontIcon iconColor="WHITE" iconLiteral="fas-arrow-left" iconSize="16" />
+                    </graphic>
+                    <VBox.margin>
+                        <Insets top="15.0" />
+                    </VBox.margin>
+                </Button>
+            </children>
+        </VBox>
+    </left>
+    <center>
+        <ScrollPane fitToWidth="true" BorderPane.alignment="CENTER">
+            <content>
+                <VBox alignment="TOP_CENTER" spacing="20.0" styleClass="form-container">
+                    <children>
+                        <HBox alignment="CENTER_LEFT" spacing="10.0">
+                            <children>
+                                <Label styleClass="form-title" text="Dossier médical du patient">
+                                    <font>
+                                        <Font name="System Bold" size="18.0" />
+                                    </font>
+                                </Label>
+                                <Label fx:id="patientInfoLabel" text="CIN: XXXXXXX - Nom: XXXXX XXXXX">
+                                    <font>
+                                        <Font name="System Bold" size="14.0" />
+                                    </font>
+                                </Label>
+                            </children>
+                        </HBox>
+
+                        <GridPane fx:id="medicalInfoGrid" hgap="15.0" vgap="15.0">
+                            <columnConstraints>
+                                <ColumnConstraints hgrow="SOMETIMES" maxWidth="200.0" minWidth="150.0" prefWidth="150.0" />
+                                <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+                            </columnConstraints>
+                            <rowConstraints>
+                                <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                <RowConstraints minHeight="10.0" prefHeight="80.0" vgrow="SOMETIMES" />
+                                <RowConstraints minHeight="10.0" prefHeight="80.0" vgrow="SOMETIMES" />
+                                <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                            </rowConstraints>
+                            <children>
+                                <Label styleClass="form-label" text="Groupe sanguin :" />
+                                <Label styleClass="form-label" text="Allergies :" GridPane.rowIndex="1" />
+                                <Label styleClass="form-label" text="Médicaments actuels :" GridPane.rowIndex="2" />
+                                <Label styleClass="form-label" text="Pression artérielle :" GridPane.rowIndex="3" />
+
+                                <ComboBox fx:id="bloodTypeComboBox" maxWidth="1.7976931348623157E308" prefWidth="150.0" styleClass="form-field" GridPane.columnIndex="1" />
+                                <TextArea fx:id="allergiesField" prefHeight="80.0" styleClass="form-field" wrapText="true" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                                <TextArea fx:id="currentMedicationsField" prefHeight="80.0" styleClass="form-field" wrapText="true" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                                <TextField fx:id="bloodPressureField" styleClass="form-field" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+                            </children>
+                        </GridPane>
+
+                        <GridPane fx:id="additionalInfoGrid" hgap="15.0" vgap="15.0">
+                            <columnConstraints>
+                                <ColumnConstraints hgrow="SOMETIMES" maxWidth="200.0" minWidth="150.0" prefWidth="150.0" />
+                                <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+                            </columnConstraints>
+                            <rowConstraints>
+                                <RowConstraints minHeight="10.0" prefHeight="80.0" vgrow="SOMETIMES" />
+                                <RowConstraints minHeight="10.0" prefHeight="80.0" vgrow="SOMETIMES" />
+                                <RowConstraints minHeight="10.0" prefHeight="80.0" vgrow="SOMETIMES" />
+                            </rowConstraints>
+                            <children>
+                                <Label styleClass="form-label" text="Maladies chroniques :" />
+                                <Label styleClass="form-label" text="Antécédents chirurgicaux :" GridPane.rowIndex="1" />
+                                <Label styleClass="form-label" text="Antécédents familiaux :" GridPane.rowIndex="2" />
+
+                                <TextArea fx:id="chronicConditionsField" prefHeight="80.0" styleClass="form-field" wrapText="true" GridPane.columnIndex="1" />
+                                <TextArea fx:id="previousSurgeriesField" prefHeight="80.0" styleClass="form-field" wrapText="true" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                                <TextArea fx:id="familyMedicalHistoryField" prefHeight="80.0" styleClass="form-field" wrapText="true" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                            </children>
+                        </GridPane>
+
+                        <GridPane fx:id="datesAndInsuranceGrid" hgap="15.0" vgap="15.0">
+                            <columnConstraints>
+                                <ColumnConstraints hgrow="SOMETIMES" maxWidth="200.0" minWidth="150.0" prefWidth="150.0" />
+                                <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+                            </columnConstraints>
+                            <rowConstraints>
+                                <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                            </rowConstraints>
+                            <children>
+                                <Label styleClass="form-label" text="Date de création :" />
+                                <Label styleClass="form-label" text="Dernière mise à jour :" GridPane.rowIndex="1" />
+                                <Label styleClass="form-label" text="Assurance :" GridPane.rowIndex="2" />
+                                <Label styleClass="form-label" text="Numéro de police :" GridPane.rowIndex="3" />
+
+                                <TextField fx:id="dateCreatedField" editable="false" styleClass="form-field" GridPane.columnIndex="1" />
+                                <TextField fx:id="lastUpdatedField" editable="false" styleClass="form-field" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                                <TextField fx:id="insuranceProviderField" styleClass="form-field" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                                <TextField fx:id="insurancePolicyNumberField" styleClass="form-field" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+                            </children>
+                        </GridPane>
+
+                        <HBox alignment="CENTER" spacing="20.0">
+                            <children>
+                                <Button fx:id="saveButton" mnemonicParsing="false" onAction="#saveDossier" styleClass="save-button" text="Enregistrer">
+                                    <graphic>
+                                        <FontIcon iconColor="WHITE" iconLiteral="fas-save" iconSize="14" />
+                                    </graphic>
+                                </Button>
+                                <Button fx:id="cancelButton" mnemonicParsing="false" onAction="#cancelAction" styleClass="cancel-button" text="Annuler">
+                                    <graphic>
+                                        <FontIcon iconColor="WHITE" iconLiteral="fas-times" iconSize="14" />
+                                    </graphic>
+                                </Button>
+                            </children>
+                            <VBox.margin>
+                                <Insets top="20.0" />
+                            </VBox.margin>
+                        </HBox>
+                    </children>
+                    <padding>
+                        <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
+                    </padding>
+                </VBox>
+            </content>
+        </ScrollPane>
+    </center>
+</BorderPane>
