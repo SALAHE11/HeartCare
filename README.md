@@ -198,17 +198,6 @@ CREATE TABLE paiment (
    ## Récupération de mot de passe (Étape 2)
    Après vérification des informations, l'utilisateur (ici "Jane Smith") peut saisir un nouveau mot de passe et le confirmer. L'interface est sécurisée et intuitive pour ce processus critique.
    ![Interface de connexion](./screenshots/mdpo2.png)
-
-   ## Liste des Utilisateurs
-   L'interface Gestion des utilisateurs affiche un tableau complet des utilisateurs enregistrés, incluant leurs CIN, noms, rôles (admin, personnel ou médecin), et coordonnées. Une barre de recherche permet 
-   un filtrage rapide. Le système applique des restrictions strictes sur le nombre d'utilisateurs par rôle : 1 administrateur max, 4 membres du personnel max, et 4 médecins max, assurant ainsi une gestion 
-   sécurisée des accès. La colonne "Action" permet la modification ou suppression des comptes.
-   ![Interface de connexion](./screenshots/users1.png)
-
-   ## Ajout d'un Utilisateur
-   Le formulaire Ajouter Un Utilisateur permet aux administrateurs de créer de nouveaux comptes en saisissant les informations essentielles (CIN, nom, rôle, date de naissance, etc.). Le système vérifie 
-   automatiquement les quotas par rôle avant validation. Cette interface garantit que seuls les utilisateurs autorisés sont ajoutés, en respectant les limites définies pour chaque type de rôle.
-   ![Interface de connexion](./screenshots/users2.png)
 ## 👥 Contributors
 
 *Salaheddine Moujahid & Rihab Rochdi*
