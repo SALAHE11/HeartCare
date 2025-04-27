@@ -179,10 +179,25 @@ CREATE TABLE paiment (
 - Role-based access control
 
 ## 📊 Screenshots
+## Connexion au système
+   L'écran d'accueil de HeartCare propose une interface de connexion sécurisée. Les utilisateurs peuvent saisir leurs identifiants, se connecter, s'inscrire ou récupérer un mot de passe oublié. Le design sobre met en valeur le nom du système "HeartCare" et sa qualité.
+   ![Interface de connexion](./screenshots/login.png)
 
-*will be added soon*
+   ## Inscription des utilisateurs (CIN)
+   Cette interface permet aux nouveaux utilisateurs de commencer leur inscription en saisissant leur numéro de CIN (Carte d'Identité Nationale). Les boutons "Soumettre" et "Annuler" permettent respectivement de valider ou d'abandonner le processus.
+   ![Interface de connexion](./screenshots/inscrire2.png)
 
+   ## Inscription des utilisateurs (Complète)
+   Après validation du CIN, l'utilisateur accède à cette interface pour compléter son inscription. Il doit créer un nom d'utilisateur, un mot de passe et le confirmer. Un message de bienvenue personnalisé s'affiche (ici pour "mehdi darnakh").
+   ![Interface de connexion](./screenshots/inscrire3.png)
 
+   ## Récupération de mot de passe (Étape 1)
+   Pour les utilisateurs ayant oublié leur mot de passe, cette interface permet de commencer le processus de récupération en saisissant le nom d'utilisateur et la date de naissance associée au compte.
+   ![Interface de connexion](./screenshots/mdpo1.png)
+
+   ## Récupération de mot de passe (Étape 2)
+   Après vérification des informations, l'utilisateur (ici "Jane Smith") peut saisir un nouveau mot de passe et le confirmer. L'interface est sécurisée et intuitive pour ce processus critique.
+   ![Interface de connexion](./screenshots/mdpo2.png)
 ## 👥 Contributors
 
 *Salaheddine Moujahid & Rihab Rochdi*
