@@ -158,6 +158,26 @@ CREATE TABLE paiment (
   FOREIGN KEY (PatientID) REFERENCES patient(ID), 
   FOREIGN KEY (RendezVousID) REFERENCES rendezvous(RendezVousID) 
 );
+
+-- CREATE TABLE paiment_history (
+    HistoryID int AUTO_INCREMENT PRIMARY KEY,
+    PaimentID int NOT NULL,
+    RendezVousID int NOT NULL,
+    PatientID varchar(8) NOT NULL,
+    OldAmount decimal(10,2),
+    NewAmount decimal(10,2),
+    OldPaymentMethod enum('Cash',' Credit Card','Insurance'),
+    NewPaymentMethod enum('Cash',' Credit Card','Insurance'),
+    ChangedAt timestamp DEFAULT CURRENT_TIMESTAMP,
+    ChangedBy varchar(50) NOT NULL,
+    ChangeReason text NOT NULL,
+    FOREIGN KEY (PaimentID) REFERENCES paiment(PaimentID) ON DELETE CASCADE,
+    FOREIGN KEY (RendezVousID) REFERENCES rendezvous(RendezVousID),
+    FOREIGN KEY (PatientID) REFERENCES patient(ID),
+    INDEX (PaimentID),
+    INDEX (RendezVousID),
+    INDEX (PatientID)
+);
 ```
 
 ### Running the Application

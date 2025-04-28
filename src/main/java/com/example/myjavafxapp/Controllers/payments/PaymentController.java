@@ -3,6 +3,7 @@ package com.example.myjavafxapp.Controllers.payments;
 import com.example.myjavafxapp.Models.appointment.Appointment;
 import com.example.myjavafxapp.Models.payment.Payment;
 import com.example.myjavafxapp.Models.payment.PaymentManager;
+import com.example.myjavafxapp.Models.user.UserSession;
 import com.example.myjavafxapp.Models.util.DatabaseSingleton;
 import com.example.myjavafxapp.Models.util.SwitchScene;
 import javafx.geometry.Insets;
@@ -332,9 +333,11 @@ public class PaymentController implements Initializable {
         });
 
         // Set up the actions column with edit and print buttons
+
         paymentActionsColumn.setCellFactory(col -> new TableCell<Payment, Void>() {
             private final Button editButton = new Button();
             private final Button printButton = new Button();
+            // Remove delete button declaration and initialization
 
             {
                 // Configure edit button
@@ -360,6 +363,8 @@ public class PaymentController implements Initializable {
                     Payment payment = getTableView().getItems().get(getIndex());
                     printInvoice(payment);
                 });
+
+                // Remove delete button configuration code
             }
 
             @Override
@@ -381,6 +386,7 @@ public class PaymentController implements Initializable {
                     // Only allow editing payments from today
                     if (isPaymentFromToday) {
                         buttons.getChildren().add(editButton);
+                        // Remove adding delete button
                     }
 
                     // Always allow printing
@@ -614,6 +620,7 @@ public class PaymentController implements Initializable {
             String dateStr = date.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
 
             // Query to get payments for the selected date
+            // FIXED: Use PaymentDate instead of PaimentDate in the SQL query
             String query = "SELECT p.*, " +
                     "pat.FNAME AS patientFirstName, pat.LNAME AS patientLastName " +
                     "FROM paiment p " +
@@ -629,12 +636,13 @@ public class PaymentController implements Initializable {
             while (rs.next()) {
                 Payment payment = new Payment();
 
-                // Use the correct column name: PaimentID instead of PaymentID
+                // Use the correct column name: PaimentID for the field
                 payment.setPaymentID(rs.getInt("PaimentID"));
                 payment.setPatientID(rs.getString("PatientID"));
                 payment.setRendezVousID(rs.getInt("RendezVousID"));
                 payment.setAmount(rs.getDouble("Amount"));
                 payment.setPaymentMethod(rs.getString("PaymentMethod"));
+                // Use the correct column name: PaymentDate for the database column
                 payment.setPaymentDate(rs.getTimestamp("PaymentDate"));
 
                 // Set patient name
@@ -785,6 +793,29 @@ public class PaymentController implements Initializable {
     }
 
     /**
+     * Maps a display value (French) to a database payment method value
+     */
+    private String mapDisplayToDB(String displayValue) {
+        if (displayValue == null) {
+            return "Cash"; // Default to Cash
+        }
+
+        // Clean up the value by trimming whitespace
+        String cleanValue = displayValue.trim();
+
+        if (cleanValue.equals("Espèces")) {
+            return "Cash";
+        } else if (cleanValue.equals("Carte de Crédit")) {
+            return " Credit Card"; // Note the space before "Credit Card"
+        } else if (cleanValue.equals("Assurance")) {
+            return "Insurance";
+        }
+
+        // Default to Cash if no match
+        return "Cash";
+    }
+
+    /**
      * Show payment dialog for registering a new payment
      */
     private void showPaymentDialog(Appointment appointment) {
@@ -832,8 +863,9 @@ public class PaymentController implements Initializable {
                     payment.setRendezVousID(appointment.getRendezVousID());
                     payment.setAmount(amount);
 
-                    // Store the display method - it will be translated in PaymentManager
-                    payment.setPaymentMethod(displayMethod);
+                    // Map display method to DB value
+                    String dbMethod = mapDisplayToDB(displayMethod);
+                    payment.setPaymentMethod(dbMethod);
                     payment.setPaymentDate(Timestamp.valueOf(LocalDateTime.now()));
 
                     return payment;
@@ -926,7 +958,13 @@ public class PaymentController implements Initializable {
         String displayValue = mapDBValueToDisplay(payment.getPaymentMethod());
         methodComboBox.setValue(displayValue);
 
-        formLayout.getChildren().addAll(amountLabel, amountField, methodLabel, methodComboBox);
+        // Add mandatory reason field for updates
+        Label reasonLabel = new Label("Raison de la modification (obligatoire):");
+        TextArea reasonField = new TextArea();
+        reasonField.setPromptText("Expliquez pourquoi vous modifiez ce paiement");
+        reasonField.setPrefRowCount(3);
+
+        formLayout.getChildren().addAll(amountLabel, amountField, methodLabel, methodComboBox, reasonLabel, reasonField);
 
         dialog.getDialogPane().setContent(formLayout);
 
@@ -936,12 +974,35 @@ public class PaymentController implements Initializable {
         // Convert the result to a payment when the save button is clicked
         dialog.setResultConverter(dialogButton -> {
             if (dialogButton == saveButtonType) {
+                // Validate reason field for updates
+                if (reasonField.getText() == null || reasonField.getText().trim().isEmpty()) {
+                    showAlert(Alert.AlertType.ERROR, "Erreur de validation",
+                            "La raison de la modification est obligatoire.");
+                    return null;
+                }
+
                 try {
                     double amount = Double.parseDouble(amountField.getText());
                     String displayMethod = methodComboBox.getValue();
 
+                    // Create a copy of the original payment for history tracking
+                    Payment originalPayment = new Payment();
+                    originalPayment.setPaymentID(payment.getPaymentID());
+                    originalPayment.setPatientID(payment.getPatientID());
+                    originalPayment.setRendezVousID(payment.getRendezVousID());
+                    originalPayment.setAmount(payment.getAmount());
+                    originalPayment.setPaymentMethod(payment.getPaymentMethod());
+                    originalPayment.setPaymentDate(payment.getPaymentDate());
+
+                    // Update the payment with new values
                     payment.setAmount(amount);
-                    payment.setPaymentMethod(displayMethod);
+                    // Map display method to DB value
+                    String dbMethod = mapDisplayToDB(displayMethod);
+                    payment.setPaymentMethod(dbMethod);
+
+                    // Store reason and original values
+                    payment.setChangeReason(reasonField.getText().trim());
+                    payment.setOriginalPayment(originalPayment);
 
                     return payment;
                 } catch (NumberFormatException e) {
@@ -956,12 +1017,108 @@ public class PaymentController implements Initializable {
         Optional<Payment> result = dialog.showAndWait();
 
         result.ifPresent(updatedPayment -> {
-            boolean success = paymentManager.updatePayment(updatedPayment);
+            // Get the reason and username
+            String reason = updatedPayment.getChangeReason();
+            String username = UserSession.getInstance().getUsername();
+
+            // Use updatePaymentWithHistory to track changes
+            boolean success = paymentManager.updatePaymentWithHistory(
+                    updatedPayment.getOriginalPayment(),
+                    updatedPayment,
+                    reason,
+                    username
+            );
+
             if (success) {
                 showAlert(Alert.AlertType.INFORMATION, "Succès", "Paiement mis à jour avec succès.");
                 loadPaymentHistory(); // Refresh payment history
             } else {
                 showAlert(Alert.AlertType.ERROR, "Erreur", "Échec de la mise à jour du paiement.");
+            }
+        });
+    }
+
+    /**
+     * Confirm and delete a payment with a mandatory reason
+     */
+    private void confirmDeletePayment(Payment payment) {
+        // Check if payment is from today
+        boolean isPaymentFromToday = false;
+        if (payment.getPaymentDate() != null) {
+            LocalDate paymentDate = payment.getPaymentDate().toLocalDateTime().toLocalDate();
+            isPaymentFromToday = paymentDate.equals(LocalDate.now());
+        }
+
+        // Only allow deleting payments from today
+        if (!isPaymentFromToday) {
+            showAlert(Alert.AlertType.WARNING, "Suppression impossible",
+                    "Seuls les paiements du jour peuvent être supprimés.");
+            return;
+        }
+
+        // Create dialog for delete confirmation with mandatory reason
+        Dialog<String> dialog = new Dialog<>();
+        dialog.setTitle("Supprimer le paiement");
+        dialog.setHeaderText("Êtes-vous sûr de vouloir supprimer ce paiement ?");
+
+        // Set button types
+        ButtonType deleteButtonType = new ButtonType("Supprimer", ButtonBar.ButtonData.OK_DONE);
+        dialog.getDialogPane().getButtonTypes().addAll(deleteButtonType, ButtonType.CANCEL);
+
+        // Create the reason field
+        VBox content = new VBox(10);
+        Label reasonLabel = new Label("Raison de la suppression (obligatoire):");
+        TextArea reasonField = new TextArea();
+        reasonField.setPromptText("Expliquez pourquoi vous supprimez ce paiement");
+        reasonField.setPrefRowCount(3);
+
+        content.getChildren().addAll(reasonLabel, reasonField);
+        dialog.getDialogPane().setContent(content);
+
+        // Request focus on the reason field
+        Platform.runLater(() -> reasonField.requestFocus());
+
+        // Convert the result
+        dialog.setResultConverter(dialogButton -> {
+            if (dialogButton == deleteButtonType) {
+                String reason = reasonField.getText();
+
+                if (reason == null || reason.trim().isEmpty()) {
+                    showAlert(Alert.AlertType.ERROR, "Erreur de validation",
+                            "La raison de la suppression est obligatoire.");
+                    return null;
+                }
+
+                return reason.trim();
+            }
+            return null;
+        });
+
+        Optional<String> result = dialog.showAndWait();
+
+        result.ifPresent(reason -> {
+            // Get username from session
+            String username = UserSession.getInstance().getUsername();
+
+            boolean success = paymentManager.deletePaymentWithHistory(
+                    payment.getPaymentID(),
+                    payment.getPatientID(),
+                    payment.getRendezVousID(),
+                    payment.getAmount(),
+                    payment.getPaymentMethod(),
+                    reason,
+                    username
+            );
+
+            if (success) {
+                showAlert(Alert.AlertType.INFORMATION, "Succès", "Paiement supprimé avec succès.");
+                loadPaymentHistory(); // Refresh payment history
+
+                // Check if we need to reload appointments
+                // Deleted payment means appointment is now unpaid again
+                loadTodayUnpaidCompletedAppointments();
+            } else {
+                showAlert(Alert.AlertType.ERROR, "Erreur", "Échec de la suppression du paiement.");
             }
         });
     }

@@ -107,7 +107,7 @@ public class PaymentManager {
                     "FROM paiment p " +
                     "JOIN rendezvous r ON p.RendezVousID = r.RendezVousID " +
                     "JOIN patient pt ON p.PatientID = pt.ID " +
-                    "ORDER BY p.PaymentDate DESC";
+                    "ORDER BY p.PaimentDate DESC";
 
             Statement stmt = conn.createStatement();
             ResultSet rs = stmt.executeQuery(query);
@@ -379,6 +379,74 @@ public class PaymentManager {
     }
 
     /**
+     * Create a new payment with history tracking
+     */
+    public boolean createPaymentWithHistory(Payment payment, String reason, String username) {
+        Connection conn = DatabaseSingleton.getInstance().getConnection();
+        boolean success = false;
+
+        try {
+            // Start transaction
+            conn.setAutoCommit(false);
+
+            // Create the payment first
+            if (createPayment(payment)) {
+                // Now create the history record
+                String historyQuery = "INSERT INTO paiment_history (PaimentID, RendezVousID, PatientID, " +
+                        "OldAmount, NewAmount, OldPaymentMethod, NewPaymentMethod, " +
+                        "ChangedAt, ChangedBy, ChangeReason) " +
+                        "VALUES (?, ?, ?, NULL, ?, NULL, ?, NOW(), ?, ?)";
+
+                PreparedStatement historyStmt = conn.prepareStatement(historyQuery);
+                historyStmt.setInt(1, payment.getPaymentID());
+                historyStmt.setInt(2, payment.getRendezVousID());
+                historyStmt.setString(3, payment.getPatientID());
+                historyStmt.setDouble(4, payment.getAmount());
+
+                // Validate payment method before inserting
+                String validatedMethod = translateToDatabase(payment.getPaymentMethod());
+                if (!isValidPaymentMethod(validatedMethod)) {
+                    validatedMethod = enforceValidPaymentMethod(validatedMethod);
+                }
+                historyStmt.setString(5, validatedMethod);
+
+                historyStmt.setString(6, username);
+                historyStmt.setString(7, reason);
+
+                int historyResult = historyStmt.executeUpdate();
+
+                if (historyResult > 0) {
+                    conn.commit();
+                    success = true;
+                } else {
+                    conn.rollback();
+                    System.err.println("Failed to create payment history record");
+                }
+            } else {
+                conn.rollback();
+                System.err.println("Failed to create payment");
+            }
+
+        } catch (SQLException e) {
+            try {
+                conn.rollback();
+            } catch (SQLException ex) {
+                System.err.println("Error in rollback: " + ex.getMessage());
+            }
+            System.err.println("Error in createPaymentWithHistory: " + e.getMessage());
+            e.printStackTrace();
+        } finally {
+            try {
+                conn.setAutoCommit(true);
+            } catch (SQLException e) {
+                System.err.println("Error resetting autocommit: " + e.getMessage());
+            }
+        }
+
+        return success;
+    }
+
+    /**
      * Update an existing payment
      */
     public boolean updatePayment(Payment payment) {
@@ -416,6 +484,157 @@ public class PaymentManager {
     }
 
     /**
+     * Update a payment with history tracking
+     */
+    public boolean updatePaymentWithHistory(Payment originalPayment, Payment updatedPayment,
+                                            String reason, String username) {
+        Connection conn = DatabaseSingleton.getInstance().getConnection();
+        boolean success = false;
+
+        try {
+            // Start transaction
+            conn.setAutoCommit(false);
+
+            // Update the payment
+            if (updatePayment(updatedPayment)) {
+                // Now create the history record
+                String historyQuery = "INSERT INTO paiment_history (PaimentID, RendezVousID, PatientID, " +
+                        "OldAmount, NewAmount, OldPaymentMethod, NewPaymentMethod, " +
+                        "ChangedAt, ChangedBy, ChangeReason) " +
+                        "VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), ?, ?)";
+
+                PreparedStatement historyStmt = conn.prepareStatement(historyQuery);
+                historyStmt.setInt(1, updatedPayment.getPaymentID());
+                historyStmt.setInt(2, updatedPayment.getRendezVousID());
+                historyStmt.setString(3, updatedPayment.getPatientID());
+                historyStmt.setDouble(4, originalPayment.getAmount());
+                historyStmt.setDouble(5, updatedPayment.getAmount());
+
+                // Validate payment methods before inserting
+                String oldValidatedMethod = translateToDatabase(originalPayment.getPaymentMethod());
+                if (!isValidPaymentMethod(oldValidatedMethod)) {
+                    oldValidatedMethod = enforceValidPaymentMethod(oldValidatedMethod);
+                }
+
+                String newValidatedMethod = translateToDatabase(updatedPayment.getPaymentMethod());
+                if (!isValidPaymentMethod(newValidatedMethod)) {
+                    newValidatedMethod = enforceValidPaymentMethod(newValidatedMethod);
+                }
+
+                historyStmt.setString(6, oldValidatedMethod);
+                historyStmt.setString(7, newValidatedMethod);
+                historyStmt.setString(8, username);
+                historyStmt.setString(9, reason);
+
+                int historyResult = historyStmt.executeUpdate();
+
+                if (historyResult > 0) {
+                    conn.commit();
+                    success = true;
+                } else {
+                    conn.rollback();
+                    System.err.println("Failed to create payment update history record");
+                }
+            } else {
+                conn.rollback();
+                System.err.println("Failed to update payment");
+            }
+
+        } catch (SQLException e) {
+            try {
+                conn.rollback();
+            } catch (SQLException ex) {
+                System.err.println("Error in rollback: " + ex.getMessage());
+            }
+            System.err.println("Error in updatePaymentWithHistory: " + e.getMessage());
+            e.printStackTrace();
+        } finally {
+            try {
+                conn.setAutoCommit(true);
+            } catch (SQLException e) {
+                System.err.println("Error resetting autocommit: " + e.getMessage());
+            }
+        }
+
+        return success;
+    }
+
+    /**
+     * Delete a payment with history tracking
+     */
+    public boolean deletePaymentWithHistory(int paymentID, String patientID, int rendezVousID,
+                                            double amount, String paymentMethod, String reason, String username) {
+        Connection conn = DatabaseSingleton.getInstance().getConnection();
+        boolean success = false;
+
+        try {
+            // Start transaction
+            conn.setAutoCommit(false);
+
+            // First create the history record
+            String historyQuery = "INSERT INTO paiment_history (PaimentID, RendezVousID, PatientID, " +
+                    "OldAmount, NewAmount, OldPaymentMethod, NewPaymentMethod, " +
+                    "ChangedAt, ChangedBy, ChangeReason) " +
+                    "VALUES (?, ?, ?, ?, NULL, ?, NULL, NOW(), ?, ?)";
+
+            PreparedStatement historyStmt = conn.prepareStatement(historyQuery);
+            historyStmt.setInt(1, paymentID);
+            historyStmt.setInt(2, rendezVousID);
+            historyStmt.setString(3, patientID);
+            historyStmt.setDouble(4, amount);
+
+            // Validate payment method before inserting
+            String validatedMethod = translateToDatabase(paymentMethod);
+            if (!isValidPaymentMethod(validatedMethod)) {
+                validatedMethod = enforceValidPaymentMethod(validatedMethod);
+            }
+            historyStmt.setString(5, validatedMethod);
+
+            historyStmt.setString(6, username);
+            historyStmt.setString(7, reason);
+
+            int historyResult = historyStmt.executeUpdate();
+
+            if (historyResult > 0) {
+                // Now delete the payment
+                String deleteQuery = "DELETE FROM paiment WHERE PaimentID = ?";
+                PreparedStatement deleteStmt = conn.prepareStatement(deleteQuery);
+                deleteStmt.setInt(1, paymentID);
+
+                int deleteResult = deleteStmt.executeUpdate();
+
+                if (deleteResult > 0) {
+                    conn.commit();
+                    success = true;
+                } else {
+                    conn.rollback();
+                    System.err.println("Failed to delete payment");
+                }
+            } else {
+                conn.rollback();
+                System.err.println("Failed to create payment deletion history record");
+            }
+
+        } catch (SQLException e) {
+            try {
+                conn.rollback();
+            } catch (SQLException ex) {
+                System.err.println("Error in rollback: " + ex.getMessage());
+            }
+            System.err.println("Error in deletePaymentWithHistory: " + e.getMessage());
+            e.printStackTrace();
+        } finally {
+            try {
+                conn.setAutoCommit(true);
+            } catch (SQLException e) {
+                System.err.println("Error resetting autocommit: " + e.getMessage());
+            }
+        }
+
+        return success;
+    }
+
+    /**
      * Helper method to create a Payment object from ResultSet
      */
     private Payment createPaymentFromResultSet(ResultSet rs) throws SQLException {
@@ -427,7 +646,9 @@ public class PaymentManager {
             payment.setRendezVousID(rs.getInt("RendezVousID"));
             payment.setAmount(rs.getDouble("Amount"));
             payment.setPaymentMethod(rs.getString("PaymentMethod"));
-            payment.setPaymentDate(rs.getTimestamp("PaymentDate"));
+
+            // Use the correct column name: PaimentDate instead of PaymentDate
+            payment.setPaymentDate(rs.getTimestamp("PaimentDate"));
 
             // Get additional information if available
             try {
