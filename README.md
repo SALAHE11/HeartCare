@@ -224,7 +224,36 @@ L'interface Gestion des utilisateurs affiche un tableau complet des utilisateurs
 ![Interface de connexion](./screenshots/users1.png)
 
 ## Ajout d'un Utilisateur
-Le formulaire Ajouter Un Utilisateur permet a l'administrateur de créer de nouveaux comptes en saisissant les informations essentielles (CIN, nom, rôle, date de naissance, etc.). Le système vérifie automatiquement les quotas par rôle avant validation. Cette interface garantit que seuls les utilisateurs autorisés sont ajoutés, en respectant les limites définies pour chaque type de rôle.![Interface de connexion](./screenshots/users2.png)
+Le formulaire Ajouter Un Utilisateur permet a l'administrateur de créer de nouveaux comptes en saisissant les informations essentielles (CIN, nom, rôle, date de naissance, etc.). Le système vérifie automatiquement les quotas par rôle avant validation. Cette interface garantit que seuls les utilisateurs autorisés sont ajoutés, en respectant les limites définies pour chaque type de rôle.
+![Interface de connexion](./screenshots/users2.png)
+
+## Gestion des dossiers patients
+Cette interface centrale permet aux médecins et aux administrateurs de rechercher, d’ajouter et de modifier les dossiers patients. À gauche, une liste déroulante affiche tous les patients enregistrés ; au centre, on retrouve les informations générales (ID, nom, date de naissance, sexe, adresse, téléphone, email) et, en dessous, l’historique détaillé des rendez-vous (date, heure, médecin, motif, statut et accès rapide au détail). Deux boutons « Modifier Patient » et « Dossier Médical » autorisent la mise à jour des données, tandis qu’un bouton « Nouveau Rendez-vous » offre un raccourci pour planifier une prochaine consultation. Les médecins et l’administrateur bénéficient d’un accès complet à ces données, contrairement au personnel, qui n’a, lui, qu’un accès restreint aux seules informations d’assurance.
+![Interface de connexion](./screenshots/payment1.png)
+
+## Dossier médicale complète (médecins & admin)
+Cette vue « Dossier médical du patient » affiche l’ensemble de l’historique médical : groupe sanguin, allergies, traitements actuels, tension artérielle, maladies chroniques, antécédents chirurgicaux et familiaux, ainsi que les dates de création et de dernière mise à jour. Un formulaire éditable permet aux médecins et aux administrateurs de saisir ou de corriger ces informations, puis d’enregistrer ou d’annuler les modifications via les boutons en bas de page. Seuls ces utilisateurs disposent de la visibilité et de la modification de tous les antécédents médicaux.
+![Interface de connexion](./screenshots/payment2.png)
+
+## Vue simplifiée (personnel)
+Dans cette version épurée du dossier, seule la partie administrative est visible : on y lit la date de création, la date de dernière mise à jour, l’assurance et le numéro de police. Le titre rappelle l’identité du patient (CIN et nom), mais le personnel n’a accès qu’aux informations d’assurance, sans pouvoir consulter ni modifier le reste du dossier médical.
+![Interface de connexion](./screenshots/payment3.png)
+
+## Les statistiques
+### 1. Tendances des Rendez-vous
+Dans cet onglet, l’administrateur dispose d’un aperçu global de l’activité des rendez-vous sur la période sélectionnée via le panneau de filtrage (choix de l’intervalle prédéfini ou dates « Du/Au »). On y trouve quatre indicateurs clés en haut : le nombre total de rendez-vous, les rendez-vous terminés et annulés (avec pourcentages), ainsi que le taux d’absence. Un graphique circulaire détaille la répartition des statuts – enregistré, programmé, terminé, manqué, annulé, reprogrammé – et un histogramme affiche le nombre de rendez-vous par semaine. Enfin, deux tableaux classent les jours et les créneaux horaires les plus chargés, permettant d’identifier pics et creux d’activité.
+![Interface de connexion](./screenshots/statistics1.png)
+
+### 2. Démographie des Patients
+Cet onglet fournit à l’administrateur une vision complète de la composition de la patientèle durant la période choisie. On y retrouve le total des patients, la distinction entre nouveaux et récurrents, ainsi qu’un camembert pour la répartition hommes/femmes. Un histogramme adjacent présente la distribution par tranches d’âge (0-10, 11-20, etc.), révélant les segments les plus représentés. Enfin, un tableau énumère le nombre de patients par médecin, avec pourcentages, afin de mesurer l’engagement de chaque praticien.
+![Interface de connexion](./screenshots/statistics2.png)
+
+### 3. Performance Financière
+Ici, l’administrateur peut évaluer les revenus générés : revenu total, revenu moyen par rendez-vous et par patient, tous chiffrés en dirhams. L’histogramme central illustre la tendance hebdomadaire des recettes, permettant d’identifier les semaines les plus profitables. Le tableau situé en bas ventile le chiffre d’affaires par médecin, indiquant à la fois le nombre de rendez-vous facturés, le revenu total et la part relative de chaque praticien dans le revenu global.
+![Interface de connexion](./screenshots/statistics3.png)
+
+### Note :
+Ces trois interfaces de statistiques et le panneau de filtrage sont strictement réservés aux administrateurs ; seuls ils ont la possibilité d’accéder à ces rapports et de modifier la plage de données via la section de filtre en haut de l’écran.
 ## 👥 Contributors
 
 *Salaheddine Moujahid & Rihab Rochdi*
