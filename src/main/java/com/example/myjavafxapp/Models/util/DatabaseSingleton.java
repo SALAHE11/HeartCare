@@ -1,3 +1,5 @@
+// Update to DatabaseSingleton.java to add refreshConnection method
+
 package com.example.myjavafxapp.Models.util;
 
 import java.sql.Connection;
@@ -11,7 +13,7 @@ public class DatabaseSingleton {
 
     private static final String URL = "jdbc:mysql://localhost:3307/heartcare";
     private static final String USER = "root";
-    private static final String PASSWORD = "Zoro*2222";  // Change the password here Rihab
+    private static final String PASSWORD = "Zoro*2222";
 
     private DatabaseSingleton() {
         try {
@@ -22,7 +24,7 @@ public class DatabaseSingleton {
         }
     }
 
-    public static DatabaseSingleton getInstance() {
+    public static synchronized DatabaseSingleton getInstance() {
         if (instance == null) {
             instance = new DatabaseSingleton();
         }
@@ -32,5 +34,24 @@ public class DatabaseSingleton {
     public Connection getConnection() {
         return connection;
     }
-}
 
+    /**
+     * Closes and re-establishes the database connection.
+     * This is useful when restoring from a backup.
+     */
+    public static synchronized void refreshConnection() {
+        if (instance != null) {
+            try {
+                if (instance.connection != null && !instance.connection.isClosed()) {
+                    instance.connection.close();
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+
+            // Create a new instance with a fresh connection
+            instance = null;
+            getInstance();
+        }
+    }
+}
