@@ -14,7 +14,11 @@ import javafx.collections.transformation.FilteredList;
 import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
+import javafx.scene.Node;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.stage.DirectoryChooser;
@@ -719,11 +723,50 @@ public class BackupController implements Initializable {
                 }
             }
 
-            // Navigate to the calendar view using the provided event
-            SwitchScene.switchScene(event, "/com/example/myjavafxapp/Views/AppointmentCalendarView.fxml");
+            // Use a direct approach to load the scene
+            try {
+                // Find the correct path by checking multiple possible locations
+                URL fxmlUrl = null;
+                String[] possiblePaths = {
+                        "/com/example/myjavafxapp/appointments/CalendarView.fxml",
+                        "/appointments/CalendarView.fxml",
+                        "/CalendarView.fxml"
+                };
 
-        } catch (IOException e) {
+                for (String path : possiblePaths) {
+                    fxmlUrl = getClass().getResource(path);
+                    if (fxmlUrl != null) {
+                        break;
+                    }
+                }
+
+                if (fxmlUrl == null) {
+                    // As a last resort, try the class loader
+                    fxmlUrl = getClass().getClassLoader().getResource("com/example/myjavafxapp/appoitments/CalendarView.fxml");
+                }
+
+                if (fxmlUrl == null) {
+                    throw new IOException("Could not find AppointmentCalendarView.fxml");
+                }
+
+                // Load the FXML directly
+                FXMLLoader loader = new FXMLLoader(fxmlUrl);
+                Parent root = loader.load();
+
+                // Get the current stage
+                Stage stage = (Stage)((Node)event.getSource()).getScene().getWindow();
+
+                // Create a new scene and set it on the stage
+                Scene scene = new Scene(root);
+                stage.setScene(scene);
+                stage.show();
+            } catch (IOException e) {
+                showErrorAlert("Erreur", "Impossible de charger la vue du calendrier: " + e.getMessage());
+                e.printStackTrace();
+            }
+        } catch (Exception e) {
             showErrorAlert("Erreur", "Impossible de revenir au calendrier: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 }
