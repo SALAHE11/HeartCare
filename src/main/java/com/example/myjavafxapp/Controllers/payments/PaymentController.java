@@ -51,6 +51,8 @@ public class PaymentController implements Initializable {
     @FXML private Button returnToCalendarButton;
     @FXML private DatePicker paymentDatePicker;
     @FXML private Button filterPaymentDateButton;
+    @FXML private TextField paymentCINField;
+    @FXML private Button searchPaymentCINButton;
 
     // Appointment table
     @FXML private TableView<Appointment> appointmentTable;
@@ -670,6 +672,23 @@ public class PaymentController implements Initializable {
     }
 
     /**
+     * Load payments for a specific patient by CIN
+     */
+    private void loadPaymentsByPatientCIN(String patientCIN) {
+        List<Payment> filteredPayments = paymentManager.getPaymentsByPatientCIN(patientCIN);
+
+        if (filteredPayments.isEmpty()) {
+            showAlert(Alert.AlertType.INFORMATION, "Aucun Résultat",
+                    "Aucun paiement trouvé pour ce patient.");
+        }
+
+        paymentsData.setAll(filteredPayments);
+
+        // Reset date picker to not confuse the user about active filters
+        paymentDatePicker.setValue(null);
+    }
+
+    /**
      * Handle date filter button click for payments
      */
     @FXML
@@ -683,6 +702,23 @@ public class PaymentController implements Initializable {
             // Set back to today if no date selected
             paymentDatePicker.setValue(LocalDate.now());
         }
+    }
+
+    /**
+     * Handle search button click for payment history by patient CIN
+     */
+    @FXML
+    private void handlePaymentCINSearch(ActionEvent event) {
+        String patientCIN = paymentCINField.getText().trim();
+
+        if (patientCIN.isEmpty()) {
+            showAlert(Alert.AlertType.WARNING, "Attention",
+                    "Veuillez entrer un CIN de patient pour la recherche.");
+            return;
+        }
+
+        // Call the method to load payments by patient CIN
+        loadPaymentsByPatientCIN(patientCIN);
     }
 
     /**

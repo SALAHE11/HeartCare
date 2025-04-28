@@ -125,6 +125,39 @@ public class PaymentManager {
     }
 
     /**
+     * Get payments by patient CIN
+     */
+    public List<Payment> getPaymentsByPatientCIN(String patientCIN) {
+        List<Payment> payments = new ArrayList<>();
+        Connection conn = DatabaseSingleton.getInstance().getConnection();
+
+        try {
+            String query = "SELECT p.*, r.AppointmentDateTime, " +
+                    "CONCAT(pt.FNAME, ' ', pt.LNAME) as PatientName " +
+                    "FROM paiment p " +
+                    "JOIN rendezvous r ON p.RendezVousID = r.RendezVousID " +
+                    "JOIN patient pt ON p.PatientID = pt.ID " +
+                    "WHERE p.PatientID = ? " +
+                    "ORDER BY p.PaymentDate DESC";
+
+            PreparedStatement pstmt = conn.prepareStatement(query);
+            pstmt.setString(1, patientCIN);
+
+            ResultSet rs = pstmt.executeQuery();
+
+            while (rs.next()) {
+                Payment payment = createPaymentFromResultSet(rs);
+                payments.add(payment);
+            }
+        } catch (SQLException e) {
+            System.err.println("Error getting payments by patient CIN: " + e.getMessage());
+            e.printStackTrace();
+        }
+
+        return payments;
+    }
+
+    /**
      * Search for completed appointments by patient CIN for the current day
      */
     public List<Appointment> searchCompletedAppointmentsByPatientCIN(String patientCIN) {
@@ -648,7 +681,7 @@ public class PaymentManager {
             payment.setPaymentMethod(rs.getString("PaymentMethod"));
 
             // Use the correct column name: PaimentDate instead of PaymentDate
-            payment.setPaymentDate(rs.getTimestamp("PaimentDate"));
+            payment.setPaymentDate(rs.getTimestamp("PaymentDate"));
 
             // Get additional information if available
             try {

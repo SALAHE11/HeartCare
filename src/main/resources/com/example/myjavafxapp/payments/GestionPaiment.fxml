@@ -125,7 +125,7 @@
                                 <!-- Payments Table -->
                                 <VBox spacing="5.0" styleClass="details-container">
                                     <children>
-                                        <!-- Modified header to include date filter -->
+                                        <!-- Modified header to include date filter and CIN search -->
                                         <HBox alignment="CENTER_LEFT" spacing="10.0">
                                             <children>
                                                 <Label styleClass="panel-header" text="Historique des Paiements">
@@ -139,6 +139,14 @@
                                                 <Button fx:id="filterPaymentDateButton" mnemonicParsing="false" onAction="#handlePaymentDateFilter" styleClass="action-button" text="Filtrer">
                                                     <graphic>
                                                         <FontIcon iconColor="WHITE" iconLiteral="fas-filter" iconSize="14" />
+                                                    </graphic>
+                                                </Button>
+                                                <Separator orientation="VERTICAL" />
+                                                <Label text="CIN Patient:" />
+                                                <TextField fx:id="paymentCINField" promptText="Rechercher par CIN" prefWidth="150.0" />
+                                                <Button fx:id="searchPaymentCINButton" mnemonicParsing="false" onAction="#handlePaymentCINSearch" styleClass="action-button" text="Rechercher">
+                                                    <graphic>
+                                                        <FontIcon iconColor="WHITE" iconLiteral="fas-search" iconSize="14" />
                                                     </graphic>
                                                 </Button>
                                             </children>
