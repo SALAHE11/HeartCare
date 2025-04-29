@@ -159,7 +159,8 @@ CREATE TABLE paiment (
   FOREIGN KEY (RendezVousID) REFERENCES rendezvous(RendezVousID) 
 );
 
--- CREATE TABLE paiment_history (
+-- Payment history table
+CREATE TABLE paiment_history (
     HistoryID int AUTO_INCREMENT PRIMARY KEY,
     PaimentID int NOT NULL,
     RendezVousID int NOT NULL,
@@ -177,7 +178,18 @@ CREATE TABLE paiment (
     INDEX (PaimentID),
     INDEX (RendezVousID),
     INDEX (PatientID)
+);   
+   
+-- Users logs table
+CREATE TABLE user_activity_log (
+    log_id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id VARCHAR(50),
+    username VARCHAR(100),
+    role VARCHAR(50),
+    action_type VARCHAR(20),
+    timestamp DATETIME
 );
+
 ```
 
 ### Running the Application
