@@ -4,6 +4,7 @@ import com.example.myjavafxapp.Models.util.DatabaseSingleton;
 import com.example.myjavafxapp.Models.util.Hashing;
 import com.example.myjavafxapp.Models.util.SwitchScene;
 import com.example.myjavafxapp.Models.user.UserSession;
+import com.example.myjavafxapp.Models.user.UserActivityLogManager;
 import javafx.fxml.FXML;
 import javafx.event.ActionEvent;
 import javafx.scene.control.Label;
@@ -71,12 +72,18 @@ public class loginController {
         if (!userNameField.getText().isBlank() && !password.isBlank()) {
             if (validateLogin(password)) {
                 try {
+                    // Get user info for logging
+                    String username = userNameField.getText();
+                    String userId = getUserId(username);
+                    String role = getUserRole(username);
+
                     // Store username in session
                     UserSession session = UserSession.getInstance();
-                    session.setUsername(userNameField.getText());
+                    session.setUsername(username);
+                    session.setRole(role);
 
-                    // Fetch and store user role
-                    fetchUserRole();
+                    // Log the login activity
+                    UserActivityLogManager.getInstance().logLogin(userId, username, role);
 
                     SwitchScene.switchScene(event, "/com/example/myjavafxapp/appointments/CalendarView.fxml");
                 } catch (IOException e) {
@@ -109,21 +116,39 @@ public class loginController {
         return false;
     }
 
-    private void fetchUserRole() {
+    private String getUserId(String username) {
         Connection conn = DatabaseSingleton.getInstance().getConnection();
         try {
-            String sql = "SELECT role FROM users WHERE username = ?";
+            String sql = "SELECT ID FROM users WHERE username = ?";
             PreparedStatement pstm = conn.prepareStatement(sql);
-            pstm.setString(1, userNameField.getText());
+            pstm.setString(1, username);
             ResultSet rs = pstm.executeQuery();
 
             if (rs.next()) {
-                String role = rs.getString("role");
-                UserSession.getInstance().setRole(role);
+                return rs.getString("ID");
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
+        return "";
+    }
+
+    private String getUserRole(String username) {
+        Connection conn = DatabaseSingleton.getInstance().getConnection();
+        try {
+            String sql = "SELECT role FROM users WHERE username = ?";
+            PreparedStatement pstm = conn.prepareStatement(sql);
+            pstm.setString(1, username);
+            ResultSet rs = pstm.executeQuery();
+
+            if (rs.next()) {
+                String role = rs.getString("role");
+                return role;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return "";
     }
 
     public void registerAction(ActionEvent event) {
