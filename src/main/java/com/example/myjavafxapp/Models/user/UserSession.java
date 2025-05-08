@@ -4,6 +4,7 @@ public class UserSession {
     private static UserSession instance;
     private String username;
     private String role;
+    private String userId; // Added for tracking CIN
 
     private UserSession() {}
 
@@ -28,5 +29,13 @@ public class UserSession {
 
     public void setRole(String role) {
         this.role = role;
+    }
+
+    public String getUserId() {
+        return userId;
+    }
+
+    public void setUserId(String userId) {
+        this.userId = userId;
     }
 }

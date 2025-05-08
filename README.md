@@ -159,7 +159,8 @@ CREATE TABLE paiment (
   FOREIGN KEY (RendezVousID) REFERENCES rendezvous(RendezVousID) 
 );
 
--- CREATE TABLE paiment_history (
+-- Payment history table
+CREATE TABLE paiment_history (
     HistoryID int AUTO_INCREMENT PRIMARY KEY,
     PaimentID int NOT NULL,
     RendezVousID int NOT NULL,
@@ -177,7 +178,18 @@ CREATE TABLE paiment (
     INDEX (PaimentID),
     INDEX (RendezVousID),
     INDEX (PatientID)
+);   
+   
+-- Users logs table
+CREATE TABLE user_activity_log (
+    log_id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id VARCHAR(50),
+    username VARCHAR(100),
+    role VARCHAR(50),
+    action_type VARCHAR(20),
+    timestamp DATETIME
 );
+
 ```
 
 ### Running the Application
@@ -199,75 +211,76 @@ CREATE TABLE paiment (
 - Role-based access control
 
 ## 📊 Screenshots
-## Connexion au système
-   L'écran d'accueil de HeartCare propose une interface de connexion sécurisée. Les utilisateurs peuvent saisir leurs identifiants, se connecter, s'inscrire ou récupérer un mot de passe oublié. Le design sobre met en valeur le nom du système "HeartCare" et sa qualité.
+## Login to the system
+The HeartCare home screen offers a secure login interface. Users can enter their credentials, log in, register, or recover a forgotten password. The simple design highlights the system's name and quality, "HeartCare."
+ 
+  ![Interface de connexion](./screenshots/login.png)
 
-   ![Interface de connexion](./screenshots/login.png)
+   ## User Registration (CIN)
+This interface allows new users to begin their registration by entering their CIN (National Identity Card) number. The "Submit" and "Cancel" buttons allow you to validate or abandon the process, respectively.
+ 
+  ![Interface de connexion](./screenshots/inscrire2.png)
 
-   ## Inscription des utilisateurs (CIN)
-   Cette interface permet aux nouveaux utilisateurs de commencer leur inscription en saisissant leur numéro de CIN (Carte d'Identité Nationale). Les boutons "Soumettre" et "Annuler" permettent respectivement de valider ou d'abandonner le processus.
-
-   ![Interface de connexion](./screenshots/inscrire2.png)
-
-   ## Inscription des utilisateurs (Complète)
-   Après validation du CIN, l'utilisateur accède à cette interface pour compléter son inscription. Il doit créer un nom d'utilisateur, un mot de passe et le confirmer. Un message de bienvenue personnalisé s'affiche (ici pour "mehdi darnakh").
+   ## User Registration (Full)
+After validating the CIN, the user accesses this interface to complete their registration. They must create a username and password and confirm it. A personalized welcome message is displayed (here for "mehdi darnakh").
 
    ![Interface de connexion](./screenshots/inscrire3.png)
 
-   ## Récupération de mot de passe (Étape 1)
-   Pour les utilisateurs ayant oublié leur mot de passe, cette interface permet de commencer le processus de récupération en saisissant le nom d'utilisateur et la date de naissance associée au compte.
-   
+   ## Password Recovery (Step 1)
+For users who have forgotten their password, this interface allows them to begin the recovery process by entering the username and date of birth associated with the account.   
+
 ![Interface de connexion](./screenshots/mdpo1.png)
 
-   ## Récupération de mot de passe (Étape 2)
-   Après vérification des informations, l'utilisateur (ici "Jane Smith") peut saisir un nouveau mot de passe et le confirmer. L'interface est sécurisée et intuitive pour ce processus critique.
-   
+   ## Password Recovery (Step 2)
+After verifying the information, the user (here "Jane Smith") can enter a new password and confirm it. The interface is secure and intuitive for this critical process.   
+
 ![Interface de connexion](./screenshots/mdpo2.png)
 
-## Liste des Utilisateurs
-L'interface Gestion des utilisateurs affiche un tableau complet des utilisateurs enregistrés, incluant leurs CIN, noms, rôles (admin, personnel ou médecin), et coordonnées. Une barre de recherche permet un filtrage rapide. Le système applique des restrictions strictes sur le nombre d'utilisateurs par rôle : 1 administrateur max, 4 membres du personnel max, et 4 médecins max, assurant ainsi une gestion sécurisée des accès. La colonne "Action" permet la modification ou suppression des comptes.
+## Users list
+
+The User Management interface displays a complete table of registered users, including their ID numbers, names, roles (admin, staff, or physician), and contact information. A search bar allows for quick filtering. The system enforces strict restrictions on the number of users per role: 1 administrator max, 4 staff members max, and 4 physicians max, ensuring secure access management. The "Action" column allows for account modification or deletion.
 
 ![Interface de connexion](./screenshots/users1.png)
 
-## Ajout d'un Utilisateur
-Le formulaire Ajouter Un Utilisateur permet a l'administrateur de créer de nouveaux comptes en saisissant les informations essentielles (CIN, nom, rôle, date de naissance, etc.). Le système vérifie automatiquement les quotas par rôle avant validation. Cette interface garantit que seuls les utilisateurs autorisés sont ajoutés, en respectant les limites définies pour chaque type de rôle.
+## Add user
+The Add User form allows the administrator to create new accounts by entering essential information (ID, name, role, date of birth, etc.). The system automatically checks the quotas per role before validation. This interface ensures that only authorized users are added, respecting the limits defined for each type of role.
 
 ![Interface de connexion](./screenshots/users2.png)
 
-## Gestion des dossiers patients
-Cette interface centrale permet aux médecins et aux administrateurs de rechercher, d’ajouter et de modifier les dossiers patients. À gauche, une liste déroulante affiche tous les patients enregistrés ; au centre, on retrouve les informations générales (ID, nom, date de naissance, sexe, adresse, téléphone, email) et, en dessous, l’historique détaillé des rendez-vous (date, heure, médecin, motif, statut et accès rapide au détail). Deux boutons « Modifier Patient » et « Dossier Médical » autorisent la mise à jour des données, tandis qu’un bouton « Nouveau Rendez-vous » offre un raccourci pour planifier une prochaine consultation. Les médecins et l’administrateur bénéficient d’un accès complet à ces données, contrairement au personnel, qui n’a, lui, qu’un accès restreint aux seules informations d’assurance.
+## Patient records management
+This central interface allows physicians and administrators to search, add, and edit patient records. On the left, a drop-down list displays all registered patients; in the center, we find general information (ID, name, date of birth, gender, address, phone, email) and, below, the detailed appointment history (date, time, physician, reason, status and quick access to details). Two buttons "Modify Patient" and "Medical Record" allow data updates, while a "New Appointment" button offers a shortcut to schedule a future consultation. Physicians and the administrator have full access to this data, unlike staff, who only have limited access to insurance information.
 
 ![Interface de connexion](./screenshots/dossier1.png)
 
-## Dossier médicale complète (médecins & admin)
-Cette vue « Dossier médical du patient » affiche l’ensemble de l’historique médical : groupe sanguin, allergies, traitements actuels, tension artérielle, maladies chroniques, antécédents chirurgicaux et familiaux, ainsi que les dates de création et de dernière mise à jour. Un formulaire éditable permet aux médecins et aux administrateurs de saisir ou de corriger ces informations, puis d’enregistrer ou d’annuler les modifications via les boutons en bas de page. Seuls ces utilisateurs disposent de la visibilité et de la modification de tous les antécédents médicaux.
+## Complete medical file (doctors & admin)
 
+This "Patient Medical Record" view displays the patient's entire medical history: blood type, allergies, current treatments, blood pressure, chronic illnesses, surgical and family history, as well as the creation and last update dates. An editable form allows physicians and administrators to enter or correct this information, then save or discard changes via the buttons at the bottom of the page. Only these users have visibility and modification of all medical history.
 ![Interface de connexion](./screenshots/dossier2.png)
 
-## Vue simplifiée (personnel)
-Dans cette version épurée du dossier, seule la partie administrative est visible : on y lit la date de création, la date de dernière mise à jour, l’assurance et le numéro de police. Le titre rappelle l’identité du patient (CIN et nom), mais le personnel n’a accès qu’aux informations d’assurance, sans pouvoir consulter ni modifier le reste du dossier médical.
+## Simplified view (personal)
+
+In this stripped-down version of the file, only the administrative part is visible: it shows the creation date, the date of the last update, the insurance, and the policy number. The title indicates the patient's identity (national identity card and name), but staff only have access to the insurance information, without being able to view or modify the rest of the medical file.
 
 ![Interface de connexion](./screenshots/dossier3.png)
 
-## Les statistiques
-### 1. Tendances des Rendez-vous
-Dans cet onglet, l’administrateur dispose d’un aperçu global de l’activité des rendez-vous sur la période sélectionnée via le panneau de filtrage (choix de l’intervalle prédéfini ou dates « Du/Au »). On y trouve quatre indicateurs clés en haut : le nombre total de rendez-vous, les rendez-vous terminés et annulés (avec pourcentages), ainsi que le taux d’absence. Un graphique circulaire détaille la répartition des statuts – enregistré, programmé, terminé, manqué, annulé, reprogrammé – et un histogramme affiche le nombre de rendez-vous par semaine. Enfin, deux tableaux classent les jours et les créneaux horaires les plus chargés, permettant d’identifier pics et creux d’activité.
+## Statistics
+### 1. Rendez-vous Trends
+In this tab, the administrator has an overview of appointment activity over the period selected via the filter panel (choice of the predefined interval or “From/To” dates). There are four key indicators at the top: the total number of appointments, completed and canceled appointments (with percentages), as well as the no-show rate. A pie chart details the distribution of statuses – saved, scheduled, completed, missed, canceled, rescheduled – and a histogram displays the number of appointments per week. Finally, two tables classify the busiest days and time slots, allowing you to identify peaks and troughs in activity.
 
 ![Interface de connexion](./screenshots/statistics1.png)
 
-### 2. Démographie des Patients
-Cet onglet fournit à l’administrateur une vision complète de la composition de la patientèle durant la période choisie. On y retrouve le total des patients, la distinction entre nouveaux et récurrents, ainsi qu’un camembert pour la répartition hommes/femmes. Un histogramme adjacent présente la distribution par tranches d’âge (0-10, 11-20, etc.), révélant les segments les plus représentés. Enfin, un tableau énumère le nombre de patients par médecin, avec pourcentages, afin de mesurer l’engagement de chaque praticien.
+### 2. Patient Demographics
+This tab provides the administrator with a comprehensive view of the patient mix during the selected period. It includes the total number of patients, the distinction between new and returning patients, and a pie chart for the male/female distribution. An adjacent histogram displays the distribution by age group (0-10, 11-20, etc.), revealing the most represented segments. Finally, a table lists the number of patients per physician, with percentages, to measure the commitment of each practitioner.
 
 ![Interface de connexion](./screenshots/statistics2.png)
 
-### 3. Performance Financière
-Ici, l’administrateur peut évaluer les revenus générés : revenu total, revenu moyen par rendez-vous et par patient, tous chiffrés en dirhams. L’histogramme central illustre la tendance hebdomadaire des recettes, permettant d’identifier les semaines les plus profitables. Le tableau situé en bas ventile le chiffre d’affaires par médecin, indiquant à la fois le nombre de rendez-vous facturés, le revenu total et la part relative de chaque praticien dans le revenu global.
+### 3. Financial Performance
+Here, the administrator can evaluate the revenue generated: total revenue, average revenue per appointment, and average revenue per patient, all in dirhams. The central histogram illustrates the weekly revenue trend, allowing the most profitable weeks to be identified. The table below breaks down revenue by doctor, indicating the number of appointments billed, total revenue, and each practitioner's relative share of the overall revenue.
 
 ![Interface de connexion](./screenshots/statistics3.png)
 
 ### Note :
-Ces trois interfaces de statistiques et le panneau de filtrage sont strictement réservés aux administrateurs ; seuls ils ont la possibilité d’accéder à ces rapports et de modifier la plage de données via la section de filtre en haut de l’écran.
-
+These three statistics interfaces and the filter panel are strictly reserved for administrators; only they can access these reports and modify the data range via the filter section at the top of the screen.
 ## Payment
 ### 1. Main Payment Management Interface
 The main payment management interface offers a dual-table layout for complete payment workflow management. The upper table displays today's completed appointments awaiting payment, allowing staff to search by patient CIN to quickly locate specific records. The lower table provides a comprehensive payment history with filtering capabilities by date and patient CIN, displaying payment details including amounts, methods, and patient information. Action buttons in both sections enable efficient payment processing, editing, and invoice generation, with a clear visual indication of payment status.

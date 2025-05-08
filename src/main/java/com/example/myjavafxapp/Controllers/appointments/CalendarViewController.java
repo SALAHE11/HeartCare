@@ -4,6 +4,8 @@ import com.example.myjavafxapp.Models.appointment.Appointment;
 import com.example.myjavafxapp.Models.appointment.AppointmentManager;
 import com.example.myjavafxapp.Models.user.User;
 import com.example.myjavafxapp.Models.user.UserSession;
+import com.example.myjavafxapp.Models.user.UserActivityLogManager;
+import com.example.myjavafxapp.Models.util.DatabaseSingleton;
 import com.example.myjavafxapp.Models.util.SwitchScene;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
@@ -24,6 +26,9 @@ import org.kordamp.ikonli.javafx.FontIcon;
 
 import java.io.IOException;
 import java.net.URL;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -1226,13 +1231,48 @@ public class CalendarViewController implements Initializable {
     @FXML
     public void onLogOut(ActionEvent event) {
         try {
+            // Get user info for logging
+            UserSession session = UserSession.getInstance();
+            String username = session.getUsername();
+            String role = session.getRole();
+            String userId = session.getUserId();
+
+            // If userId is not in session, get it from the database
+            if (userId == null || userId.isEmpty()) {
+                userId = getUserIdFromUsername(username);
+            }
+
+            // Log the logout event
+            UserActivityLogManager.getInstance().logLogout(userId, username, role);
+
             // Clear user session
-            UserSession.getInstance().setUsername(null);
-            UserSession.getInstance().setRole(null);
+            session.setUsername(null);
+            session.setRole(null);
+            session.setUserId(null);
 
             SwitchScene.switchScene(event, "/com/example/myjavafxapp/auth/loginForm.fxml");
         } catch (IOException e) {
             showAlert(Alert.AlertType.ERROR, "Erreur", "Échec de la déconnexion : " + e.getMessage());
         }
+    }
+
+    /**
+     * Helper method to get user ID from username
+     */
+    private String getUserIdFromUsername(String username) {
+        Connection conn = DatabaseSingleton.getInstance().getConnection();
+        try {
+            String sql = "SELECT ID FROM users WHERE username = ?";
+            PreparedStatement pstm = conn.prepareStatement(sql);
+            pstm.setString(1, username);
+            ResultSet rs = pstm.executeQuery();
+
+            if (rs.next()) {
+                return rs.getString("ID");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return "";
     }
 }
