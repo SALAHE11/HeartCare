@@ -782,6 +782,52 @@ public class BackupManager {
     }
 
     /**
+     * Execute a backup on application startup if configured
+     * @return true if backup was executed, false otherwise
+     */
+    public boolean executeStartupBackup() {
+        // Check if startup backup is enabled in settings
+        if (backupSchedule != null && backupSchedule.isBackupOnStartup()) {
+            try {
+                Task<BackupHistory> backupTask = startBackupTask(
+                        BACKUP_TYPE_AUTOMATIC,
+                        backupSchedule.getBackupFormat()
+                );
+
+                // No need to block the application startup with this
+                return true;
+            } catch (Exception e) {
+                e.printStackTrace();
+                return false;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Execute a backup on application exit if configured
+     * This method should be called synchronously during application shutdown
+     * @return true if backup was executed, false otherwise
+     */
+    public boolean executeExitBackup() {
+        // Check if exit backup is enabled in settings
+        if (backupSchedule != null && backupSchedule.isBackupOnExit()) {
+            try {
+                // Run synchronously since application is shutting down
+                performBackup(
+                        BACKUP_TYPE_AUTOMATIC,
+                        backupSchedule.getBackupFormat()
+                );
+                return true;
+            } catch (Exception e) {
+                e.printStackTrace();
+                return false;
+            }
+        }
+        return false;
+    }
+
+    /**
      * Shutdown the backup scheduler
      */
     public void shutdown() {
