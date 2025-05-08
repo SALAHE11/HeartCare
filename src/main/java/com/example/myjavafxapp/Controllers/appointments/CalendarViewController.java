@@ -1210,6 +1210,7 @@ public class CalendarViewController implements Initializable {
             SwitchScene.switchScene(event, "/com/example/myjavafxapp/backup/backup.fxml");
         } catch (IOException e) {
             showAlert(Alert.AlertType.ERROR, "Erreur", "Impossible de naviguer vers la Sauvegarde : " + e.getMessage());
+            e.printStackTrace();
         }
     }
 

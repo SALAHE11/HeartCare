@@ -4,255 +4,333 @@
 <?import java.lang.String?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<?import javafx.scene.text.*?>
 <?import javafx.geometry.Insets?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
 <?import com.example.myjavafxapp.Components.*?>
 
-<BorderPane xmlns="http://javafx.com/javafx/17"
-            xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="com.example.myjavafxapp.Controllers.backup.BackupController"
-            prefWidth="1000" prefHeight="700">
-
+<BorderPane styleClass="main-container" stylesheets="@../styles/GestionDossierCss.css" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.myjavafxapp.Controllers.backup.BackupController">
     <top>
-        <VBox spacing="10">
+        <VBox spacing="10.0" BorderPane.alignment="CENTER">
+            <children>
+                <!-- Header with Return button -->
+                <HBox alignment="CENTER_LEFT" styleClass="navbar">
+                    <children>
+                        <Label styleClass="page-title" text="Sauvegarde du Système">
+                            <HBox.margin>
+                                <Insets left="15.0" />
+                            </HBox.margin>
+                        </Label>
+                        <HBox alignment="CENTER_RIGHT" HBox.hgrow="ALWAYS">
+                            <children>
+                                <Button fx:id="returnToCalendarButton" mnemonicParsing="false" onAction="#returnToCalendar" styleClass="nav-button" text="Retour au Calendrier">
+                                    <graphic>
+                                        <FontIcon iconColor="#4079ff" iconLiteral="fas-arrow-left" iconSize="14" />
+                                    </graphic>
+                                    <HBox.margin>
+                                        <Insets right="15.0" />
+                                    </HBox.margin>
+                                </Button>
+                            </children>
+                        </HBox>
+                    </children>
+                    <padding>
+                        <Insets bottom="8.0" left="10.0" right="10.0" top="8.0" />
+                    </padding>
+                </HBox>
+            </children>
             <padding>
-                <Insets top="20" right="20" bottom="10" left="20"/>
+                <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
             </padding>
-
-            <Label text="Sauvegarde du Système" style="-fx-font-size: 24px; -fx-font-weight: bold;"/>
-            <Separator/>
         </VBox>
     </top>
 
     <center>
         <TabPane>
-            <Tab text="Historique des sauvegardes" closable="false">
-                <VBox spacing="10">
-                    <padding>
-                        <Insets top="10" right="20" bottom="10" left="20"/>
-                    </padding>
+            <tabs>
+                <!-- Historique des sauvegardes tab -->
+                <Tab text="Historique des sauvegardes" closable="false">
+                    <content>
+                        <VBox spacing="15.0">
+                            <padding>
+                                <Insets top="15.0" right="20.0" bottom="15.0" left="20.0"/>
+                            </padding>
 
-                    <HBox spacing="10" alignment="CENTER_LEFT">
-                        <Button fx:id="refreshButton" text="Actualiser" onAction="#refreshHistory"/>
-                        <Region HBox.hgrow="ALWAYS"/>
-                        <Label text="Filtrer: "/>
-                        <ComboBox fx:id="statusFilterComboBox" onAction="#filterHistory">
-                            <items>
-                                <FXCollections fx:factory="observableArrayList">
-                                    <String fx:value="Tous"/>
-                                    <String fx:value="Success"/>
-                                    <String fx:value="Failed"/>
-                                    <String fx:value="In Progress"/>
-                                </FXCollections>
-                            </items>
-                        </ComboBox>
-                    </HBox>
+                            <HBox spacing="10.0" alignment="CENTER_LEFT">
+                                <Button fx:id="refreshButton" text="Actualiser" onAction="#refreshHistory" styleClass="action-button">
+                                    <graphic>
+                                        <FontIcon iconColor="WHITE" iconLiteral="fas-sync" iconSize="14" />
+                                    </graphic>
+                                </Button>
+                                <Region HBox.hgrow="ALWAYS"/>
+                                <Label text="Filtrer: " styleClass="form-label" />
+                                <ComboBox fx:id="statusFilterComboBox" onAction="#filterHistory" styleClass="form-field">
+                                    <items>
+                                        <FXCollections fx:factory="observableArrayList">
+                                            <String fx:value="Tous"/>
+                                            <String fx:value="Success"/>
+                                            <String fx:value="Failed"/>
+                                            <String fx:value="In Progress"/>
+                                        </FXCollections>
+                                    </items>
+                                </ComboBox>
+                            </HBox>
 
-                    <TableView fx:id="historyTableView" VBox.vgrow="ALWAYS">
-                        <columns>
-                            <TableColumn fx:id="idColumn" text="ID" prefWidth="60"/>
-                            <TableColumn fx:id="dateTimeColumn" text="Date et Heure" prefWidth="150"/>
-                            <TableColumn fx:id="typeColumn" text="Type" prefWidth="100"/>
-                            <TableColumn fx:id="formatColumn" text="Format" prefWidth="80"/>
-                            <TableColumn fx:id="sizeColumn" text="Taille" prefWidth="100"/>
-                            <TableColumn fx:id="statusColumn" text="Statut" prefWidth="100"/>
-                            <TableColumn fx:id="userColumn" text="Créé par" prefWidth="120"/>
-                            <TableColumn fx:id="pathColumn" text="Chemin" prefWidth="250"/>
-                        </columns>
-                    </TableView>
+                            <TableView fx:id="historyTableView" VBox.vgrow="ALWAYS" styleClass="table-view">
+                                <columns>
+                                    <TableColumn fx:id="idColumn" text="ID" prefWidth="60"/>
+                                    <TableColumn fx:id="dateTimeColumn" text="Date et Heure" prefWidth="150"/>
+                                    <TableColumn fx:id="typeColumn" text="Type" prefWidth="100"/>
+                                    <TableColumn fx:id="formatColumn" text="Format" prefWidth="80"/>
+                                    <TableColumn fx:id="sizeColumn" text="Taille" prefWidth="100"/>
+                                    <TableColumn fx:id="statusColumn" text="Statut" prefWidth="100"/>
+                                    <TableColumn fx:id="userColumn" text="Créé par" prefWidth="120"/>
+                                    <TableColumn fx:id="pathColumn" text="Chemin" prefWidth="250"/>
+                                </columns>
+                            </TableView>
 
-                    <HBox spacing="10" alignment="CENTER_RIGHT">
-                        <Button text="Restaurer la sauvegarde" fx:id="restoreButton"
-                                onAction="#restoreBackup" disable="true"/>
-                        <Button text="Ouvrir le dossier" fx:id="openFolderButton"
-                                onAction="#openBackupFolder"/>
-                        <Button text="Supprimer" fx:id="deleteButton"
-                                onAction="#deleteBackup" disable="true"/>
-                        <Button text="Détails" fx:id="detailsButton"
-                                onAction="#showBackupDetails" disable="true"/>
-                    </HBox>
-                </VBox>
-            </Tab>
+                            <HBox spacing="10.0" alignment="CENTER_RIGHT">
+                                <Button text="Restaurer la sauvegarde" fx:id="restoreButton" onAction="#restoreBackup" disable="true" styleClass="action-button">
+                                    <graphic>
+                                        <FontIcon iconColor="WHITE" iconLiteral="fas-undo" iconSize="14" />
+                                    </graphic>
+                                </Button>
+                                <Button text="Ouvrir le dossier" fx:id="openFolderButton" onAction="#openBackupFolder" styleClass="secondary-button">
+                                    <graphic>
+                                        <FontIcon iconColor="WHITE" iconLiteral="fas-folder-open" iconSize="14" />
+                                    </graphic>
+                                </Button>
+                                <Button text="Supprimer" fx:id="deleteButton" onAction="#deleteBackup" disable="true" styleClass="cancel-button">
+                                    <graphic>
+                                        <FontIcon iconColor="WHITE" iconLiteral="fas-trash" iconSize="14" />
+                                    </graphic>
+                                </Button>
+                                <Button text="Détails" fx:id="detailsButton" onAction="#showBackupDetails" disable="true" styleClass="primary-button">
+                                    <graphic>
+                                        <FontIcon iconColor="WHITE" iconLiteral="fas-info-circle" iconSize="14" />
+                                    </graphic>
+                                </Button>
+                            </HBox>
+                        </VBox>
+                    </content>
+                </Tab>
 
-            <Tab text="Paramètres de sauvegarde" closable="false">
-                <VBox spacing="20">
-                    <padding>
-                        <Insets top="20" right="20" bottom="20" left="20"/>
-                    </padding>
+                <!-- Paramètres de sauvegarde tab -->
+                <Tab text="Paramètres de sauvegarde" closable="false">
+                    <content>
+                        <VBox styleClass="form-container" spacing="20.0">
+                            <padding>
+                                <Insets top="20.0" right="20.0" bottom="20.0" left="20.0"/>
+                            </padding>
 
-                    <GridPane hgap="15" vgap="15">
-                        <columnConstraints>
-                            <ColumnConstraints hgrow="NEVER" minWidth="200"/>
-                            <ColumnConstraints hgrow="ALWAYS"/>
-                        </columnConstraints>
+                            <Label text="Configuration des sauvegardes automatiques" styleClass="form-title" />
 
-                        <!-- Row 0: Enable automatic backup -->
-                        <Label text="Activer la sauvegarde automatique:"
-                               GridPane.rowIndex="0" GridPane.columnIndex="0"/>
-                        <CheckBox fx:id="enableScheduleCheckBox"
-                                  GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+                            <GridPane hgap="15.0" vgap="15.0">
+                                <columnConstraints>
+                                    <ColumnConstraints hgrow="NEVER" minWidth="200.0" />
+                                    <ColumnConstraints hgrow="ALWAYS" />
+                                </columnConstraints>
 
-                        <!-- Row 1: Backup time -->
-                        <Label text="Heure de sauvegarde:"
-                               GridPane.rowIndex="1" GridPane.columnIndex="0"/>
-                        <TimePicker fx:id="backupTimePicker"
-                                    GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+                                <!-- Row 0: Enable automatic backup -->
+                                <Label text="Activer la sauvegarde automatique:" styleClass="form-label"
+                                       GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+                                <CheckBox fx:id="enableScheduleCheckBox"
+                                          GridPane.rowIndex="0" GridPane.columnIndex="1"/>
 
-                        <!-- Row 2: Backup format -->
-                        <Label text="Format de sauvegarde:"
-                               GridPane.rowIndex="2" GridPane.columnIndex="0"/>
-                        <ComboBox fx:id="backupFormatComboBox"
-                                  GridPane.rowIndex="2" GridPane.columnIndex="1">
-                            <items>
-                                <FXCollections fx:factory="observableArrayList">
-                                    <String fx:value="SQL"/>
-                                    <String fx:value="CSV"/>
-                                </FXCollections>
-                            </items>
-                        </ComboBox>
+                                <!-- Row 1: Backup time - Using the original TimePicker -->
+                                <Label text="Heure de sauvegarde:" styleClass="form-label"
+                                       GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+                                <TimePicker fx:id="backupTimePicker"
+                                            GridPane.rowIndex="1" GridPane.columnIndex="1"/>
 
-                        <!-- Row 3: Backup location -->
-                        <Label text="Dossier de sauvegarde:"
-                               GridPane.rowIndex="3" GridPane.columnIndex="0"/>
-                        <HBox spacing="10" GridPane.rowIndex="3" GridPane.columnIndex="1">
-                            <TextField fx:id="backupLocationTextField" HBox.hgrow="ALWAYS"/>
-                            <Button text="Parcourir..." onAction="#browseBackupLocation"/>
-                        </HBox>
+                                <!-- Row 2: Backup format -->
+                                <Label text="Format de sauvegarde:" styleClass="form-label"
+                                       GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+                                <ComboBox fx:id="backupFormatComboBox" styleClass="form-field"
+                                          GridPane.rowIndex="2" GridPane.columnIndex="1">
+                                    <items>
+                                        <FXCollections fx:factory="observableArrayList">
+                                            <String fx:value="SQL"/>
+                                            <String fx:value="CSV"/>
+                                        </FXCollections>
+                                    </items>
+                                </ComboBox>
 
-                        <!-- Row 4: Backup on exit -->
-                        <Label text="Sauvegarde à la fermeture:"
-                               GridPane.rowIndex="4" GridPane.columnIndex="0"/>
-                        <CheckBox fx:id="backupOnExitCheckBox"
-                                  GridPane.rowIndex="4" GridPane.columnIndex="1"/>
+                                <!-- Row 3: Backup location -->
+                                <Label text="Dossier de sauvegarde:" styleClass="form-label"
+                                       GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+                                <HBox spacing="10.0" GridPane.rowIndex="3" GridPane.columnIndex="1">
+                                    <TextField fx:id="backupLocationTextField" HBox.hgrow="ALWAYS" styleClass="form-field"/>
+                                    <Button text="Parcourir..." onAction="#browseBackupLocation" styleClass="action-button">
+                                        <graphic>
+                                            <FontIcon iconColor="WHITE" iconLiteral="fas-folder" iconSize="14" />
+                                        </graphic>
+                                    </Button>
+                                </HBox>
 
-                        <!-- Row 5: Backup on startup -->
-                        <Label text="Sauvegarde au démarrage:"
-                               GridPane.rowIndex="5" GridPane.columnIndex="0"/>
-                        <CheckBox fx:id="backupOnStartupCheckBox"
-                                  GridPane.rowIndex="5" GridPane.columnIndex="1"/>
+                                <!-- Row 4: Backup on exit -->
+                                <Label text="Sauvegarde à la fermeture:" styleClass="form-label"
+                                       GridPane.rowIndex="4" GridPane.columnIndex="0"/>
+                                <CheckBox fx:id="backupOnExitCheckBox"
+                                          GridPane.rowIndex="4" GridPane.columnIndex="1"/>
 
-                        <!-- Row 6: Retention policy -->
-                        <Label text="Conservation des sauvegardes (jours):"
-                               GridPane.rowIndex="6" GridPane.columnIndex="0"/>
-                        <Spinner fx:id="retentionDaysSpinner" min="1" max="365" initialValue="30"
-                                 GridPane.rowIndex="6" GridPane.columnIndex="1"/>
-                    </GridPane>
+                                <!-- Row 5: Backup on startup -->
+                                <Label text="Sauvegarde au démarrage:" styleClass="form-label"
+                                       GridPane.rowIndex="5" GridPane.columnIndex="0"/>
+                                <CheckBox fx:id="backupOnStartupCheckBox"
+                                          GridPane.rowIndex="5" GridPane.columnIndex="1"/>
 
-                    <Separator/>
+                                <!-- Row 6: Retention policy -->
+                                <Label text="Conservation des sauvegardes (jours):" styleClass="form-label"
+                                       GridPane.rowIndex="6" GridPane.columnIndex="0"/>
+                                <Spinner fx:id="retentionDaysSpinner" min="1" max="365" initialValue="30" styleClass="form-field"
+                                         GridPane.rowIndex="6" GridPane.columnIndex="1"/>
+                            </GridPane>
 
-                    <HBox spacing="10" alignment="CENTER_RIGHT">
-                        <Button text="Annuler" onAction="#resetScheduleSettings"/>
-                        <Button text="Sauvegarder les paramètres" onAction="#saveScheduleSettings"/>
-                    </HBox>
-                </VBox>
-            </Tab>
+                            <HBox spacing="10.0" alignment="CENTER_RIGHT">
+                                <Button text="Annuler" onAction="#resetScheduleSettings" styleClass="cancel-button">
+                                    <graphic>
+                                        <FontIcon iconColor="WHITE" iconLiteral="fas-times" iconSize="14" />
+                                    </graphic>
+                                </Button>
+                                <Button text="Sauvegarder les paramètres" onAction="#saveScheduleSettings" styleClass="save-button">
+                                    <graphic>
+                                        <FontIcon iconColor="WHITE" iconLiteral="fas-save" iconSize="14" />
+                                    </graphic>
+                                </Button>
+                            </HBox>
+                        </VBox>
+                    </content>
+                </Tab>
 
-            <Tab text="Sauvegarde manuelle" closable="false">
-                <VBox spacing="20" alignment="CENTER">
-                    <padding>
-                        <Insets top="40" right="40" bottom="40" left="40"/>
-                    </padding>
+                <!-- Sauvegarde manuelle tab -->
+                <Tab text="Sauvegarde manuelle" closable="false">
+                    <content>
+                        <VBox styleClass="form-container" alignment="CENTER" spacing="20.0">
+                            <padding>
+                                <Insets top="30.0" right="40.0" bottom="30.0" left="40.0"/>
+                            </padding>
 
-                    <Label text="Créer une sauvegarde manuelle du système"
-                           style="-fx-font-size: 18px; -fx-font-weight: bold;"/>
+                            <Label text="Créer une sauvegarde manuelle du système" styleClass="form-title" />
 
-                    <VBox spacing="15" maxWidth="500" alignment="CENTER_LEFT">
-                        <HBox spacing="10" alignment="CENTER_LEFT">
-                            <Label text="Format:" minWidth="100"/>
-                            <ComboBox fx:id="manualBackupFormatComboBox">
-                                <items>
-                                    <FXCollections fx:factory="observableArrayList">
-                                        <String fx:value="SQL"/>
-                                        <String fx:value="CSV"/>
-                                    </FXCollections>
-                                </items>
-                            </ComboBox>
-                        </HBox>
+                            <VBox spacing="15.0" maxWidth="600.0" alignment="CENTER_LEFT">
+                                <HBox spacing="10.0" alignment="CENTER_LEFT">
+                                    <Label text="Format:" styleClass="form-label" minWidth="120.0"/>
+                                    <ComboBox fx:id="manualBackupFormatComboBox" styleClass="form-field" HBox.hgrow="ALWAYS">
+                                        <items>
+                                            <FXCollections fx:factory="observableArrayList">
+                                                <String fx:value="SQL"/>
+                                                <String fx:value="CSV"/>
+                                            </FXCollections>
+                                        </items>
+                                    </ComboBox>
+                                </HBox>
 
-                        <HBox spacing="10" alignment="CENTER_LEFT">
-                            <Label text="Dossier:" minWidth="100"/>
-                            <TextField fx:id="manualBackupLocationTextField" HBox.hgrow="ALWAYS"/>
-                            <Button text="Parcourir..." onAction="#browseManualBackupLocation"/>
-                        </HBox>
+                                <HBox spacing="10.0" alignment="CENTER_LEFT">
+                                    <Label text="Dossier:" styleClass="form-label" minWidth="120.0"/>
+                                    <TextField fx:id="manualBackupLocationTextField" styleClass="form-field" HBox.hgrow="ALWAYS"/>
+                                    <Button text="Parcourir..." onAction="#browseManualBackupLocation" styleClass="action-button">
+                                        <graphic>
+                                            <FontIcon iconColor="WHITE" iconLiteral="fas-folder" iconSize="14" />
+                                        </graphic>
+                                    </Button>
+                                </HBox>
 
-                        <HBox spacing="10" alignment="CENTER_LEFT">
-                            <Label text="Description:" minWidth="100"/>
-                            <TextField fx:id="manualBackupDescriptionTextField" HBox.hgrow="ALWAYS"/>
-                        </HBox>
-                    </VBox>
+                                <HBox spacing="10.0" alignment="CENTER_LEFT">
+                                    <Label text="Description:" styleClass="form-label" minWidth="120.0"/>
+                                    <TextField fx:id="manualBackupDescriptionTextField" styleClass="form-field" HBox.hgrow="ALWAYS"/>
+                                </HBox>
+                            </VBox>
 
-                    <Region VBox.vgrow="ALWAYS"/>
+                            <Region VBox.vgrow="ALWAYS" minHeight="40.0" />
 
-                    <HBox spacing="20" alignment="CENTER">
-                        <ProgressIndicator fx:id="backupProgressIndicator" visible="false"/>
-                        <Button text="Créer une sauvegarde maintenant"
-                                fx:id="createBackupButton"
-                                onAction="#createManualBackup"
-                                style="-fx-font-size: 14px; -fx-padding: 10 20 10 20;"/>
-                    </HBox>
-                </VBox>
-            </Tab>
+                            <HBox spacing="20.0" alignment="CENTER">
+                                <ProgressIndicator fx:id="backupProgressIndicator" visible="false" />
+                                <Button text="Créer une sauvegarde maintenant" fx:id="createBackupButton"
+                                        onAction="#createManualBackup" styleClass="primary-button">
+                                    <graphic>
+                                        <FontIcon iconColor="WHITE" iconLiteral="fas-download" iconSize="16" />
+                                    </graphic>
+                                </Button>
+                            </HBox>
+                        </VBox>
+                    </content>
+                </Tab>
 
-            <Tab text="Restauration" closable="false">
-                <VBox spacing="20" alignment="CENTER">
-                    <padding>
-                        <Insets top="40" right="40" bottom="40" left="40"/>
-                    </padding>
+                <!-- Restauration tab -->
+                <Tab text="Restauration" closable="false">
+                    <content>
+                        <VBox styleClass="form-container" spacing="20.0" alignment="CENTER">
+                            <padding>
+                                <Insets top="30.0" right="40.0" bottom="30.0" left="40.0"/>
+                            </padding>
 
-                    <Label text="Restaurer à partir d'une sauvegarde"
-                           style="-fx-font-size: 18px; -fx-font-weight: bold;"/>
+                            <Label text="Restaurer à partir d'une sauvegarde" styleClass="form-title" />
 
-                    <VBox spacing="15" maxWidth="500" alignment="CENTER_LEFT">
-                        <HBox spacing="10" alignment="CENTER_LEFT">
-                            <Label text="Fichier:" minWidth="100"/>
-                            <TextField fx:id="restoreFileTextField" HBox.hgrow="ALWAYS"/>
-                            <Button text="Parcourir..." onAction="#browseRestoreFile"/>
-                        </HBox>
+                            <VBox spacing="15.0" maxWidth="600.0" alignment="CENTER_LEFT">
+                                <HBox spacing="10.0" alignment="CENTER_LEFT">
+                                    <Label text="Fichier:" styleClass="form-label" minWidth="120.0"/>
+                                    <TextField fx:id="restoreFileTextField" styleClass="form-field" HBox.hgrow="ALWAYS"/>
+                                    <Button text="Parcourir..." onAction="#browseRestoreFile" styleClass="action-button">
+                                        <graphic>
+                                            <FontIcon iconColor="WHITE" iconLiteral="fas-folder-open" iconSize="14" />
+                                        </graphic>
+                                    </Button>
+                                </HBox>
 
-                        <HBox spacing="10" alignment="CENTER_LEFT">
-                            <Label text="Type:" minWidth="100"/>
-                            <ComboBox fx:id="restoreTypeComboBox">
-                                <items>
-                                    <FXCollections fx:factory="observableArrayList">
-                                        <String fx:value="SQL"/>
-                                        <String fx:value="CSV"/>
-                                    </FXCollections>
-                                </items>
-                            </ComboBox>
-                        </HBox>
-                    </VBox>
+                                <HBox spacing="10.0" alignment="CENTER_LEFT">
+                                    <Label text="Type:" styleClass="form-label" minWidth="120.0"/>
+                                    <ComboBox fx:id="restoreTypeComboBox" styleClass="form-field" HBox.hgrow="ALWAYS">
+                                        <items>
+                                            <FXCollections fx:factory="observableArrayList">
+                                                <String fx:value="SQL"/>
+                                                <String fx:value="CSV"/>
+                                            </FXCollections>
+                                        </items>
+                                    </ComboBox>
+                                </HBox>
+                            </VBox>
 
-                    <Label text="ATTENTION: La restauration écrasera toutes les données existantes. Assurez-vous d'avoir une sauvegarde récente avant de continuer."
-                           textFill="red" wrapText="true" maxWidth="500"/>
+                            <VBox styleClass="details-container" alignment="CENTER" spacing="10.0" maxWidth="600.0">
+                                <Label text="ATTENTION: La restauration écrasera toutes les données existantes. Assurez-vous d'avoir une sauvegarde récente avant de continuer."
+                                       styleClass="field-label" wrapText="true" textFill="RED" />
+                            </VBox>
 
-                    <CheckBox fx:id="confirmRestoreCheckBox"
-                              text="Je comprends les risques et je veux procéder à la restauration"/>
+                            <CheckBox fx:id="confirmRestoreCheckBox"
+                                      text="Je comprends les risques et je veux procéder à la restauration"/>
 
-                    <Region VBox.vgrow="ALWAYS"/>
+                            <Region VBox.vgrow="ALWAYS" minHeight="40.0" />
 
-                    <HBox spacing="20" alignment="CENTER">
-                        <ProgressIndicator fx:id="restoreProgressIndicator" visible="false"/>
-                        <Button text="Restaurer le système"
-                                fx:id="restoreSystemButton"
-                                onAction="#restoreSystem"
-                                disable="true"
-                                style="-fx-font-size: 14px; -fx-padding: 10 20 10 20;"/>
-                    </HBox>
-                </VBox>
-            </Tab>
+                            <HBox spacing="20.0" alignment="CENTER">
+                                <ProgressIndicator fx:id="restoreProgressIndicator" visible="false" />
+                                <Button text="Restaurer le système"
+                                        fx:id="restoreSystemButton"
+                                        onAction="#restoreSystem"
+                                        disable="true"
+                                        styleClass="primary-button">
+                                    <graphic>
+                                        <FontIcon iconColor="WHITE" iconLiteral="fas-undo" iconSize="16" />
+                                    </graphic>
+                                </Button>
+                            </HBox>
+                        </VBox>
+                    </content>
+                </Tab>
+            </tabs>
         </TabPane>
     </center>
 
     <bottom>
-        <HBox spacing="10" alignment="CENTER_LEFT" style="-fx-background-color: #f4f4f4;">
+        <HBox spacing="10.0" alignment="CENTER_LEFT" styleClass="navbar">
             <padding>
-                <Insets top="5" right="20" bottom="5" left="20"/>
+                <Insets top="5.0" right="20.0" bottom="5.0" left="20.0"/>
             </padding>
 
             <Label fx:id="statusLabel" HBox.hgrow="ALWAYS"/>
-            <Region HBox.hgrow="ALWAYS"/>
-            <Button text="Retour au Calendrier" onAction="#returnToCalendar" style="-fx-base: #4285f4; -fx-text-fill: white;"/>
-            <Button text="Fermer" onAction="#close"/>
+            <Button text="Fermer" onAction="#close" styleClass="cancel-button">
+                <graphic>
+                    <FontIcon iconColor="WHITE" iconLiteral="fas-times" iconSize="14" />
+                </graphic>
+            </Button>
         </HBox>
     </bottom>
 </BorderPane>
