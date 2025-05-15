@@ -10,8 +10,8 @@ import javax.mail.internet.*;
 
 public class EmailUtil {
 
-    private static final String FROM_EMAIL = "xxxxxx@gmail.com"; // Replace with your email
-    private static final String FROM_PASSWORD = "xxxxxx"; // Replace with your email password
+    private static final String FROM_EMAIL = "salaheddinemoujahid1@gmail.com"; // Replace with your email
+    private static final String FROM_PASSWORD = "vfjg jnil wvhg grsd"; // Replace with your email password
     private static final String SMTP_HOST = "smtp.gmail.com"; // Use appropriate SMTP server
     private static final String SMTP_PORT = "587"; // Use appropriate port
 
