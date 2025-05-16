@@ -101,7 +101,7 @@ public class BackupManager {
                                 "VALUES (0, '23:00:00', 'SQL', ?, 0, 0, 30)";
 
                 PreparedStatement pstmt = conn.prepareStatement(insertDefault);
-                pstmt.setString(1, System.getProperty("user.home") + "/heartcare/backups");
+                pstmt.setString(1, System.getProperty("user.home") + File.separator + "heartcare" + File.separator + "backups");
                 pstmt.executeUpdate();
             }
 
@@ -303,7 +303,8 @@ public class BackupManager {
         String backupFileName = "heartcare_backup_" + timestamp;
         String extension = BACKUP_FORMAT_SQL.equals(backupFormat) ? ".sql" : ".zip";
 
-        String backupPath = backupSchedule.getBackupLocation();
+        // Get the backup directory path - ensure proper path separators
+        String backupPath = ensureCorrectPathSeparators(backupSchedule.getBackupLocation());
         File backupDir = new File(backupPath);
 
         // Create directory if it doesn't exist
@@ -311,6 +312,7 @@ public class BackupManager {
             backupDir.mkdirs();
         }
 
+        // Create the backup file path with proper separators
         File backupFile = new File(backupDir, backupFileName + extension);
 
         // Create a backup history record
@@ -336,10 +338,10 @@ public class BackupManager {
                 performSqlBackup(backupFile);
             } else {
                 // CSV backup
-                performCsvBackup(backupDir, backupFileName);
+                File csvDir = new File(backupDir, backupFileName);
+                performCsvBackup(csvDir);
 
                 // Create a zip file from the CSV directory
-                File csvDir = new File(backupDir, backupFileName);
                 zipDirectory(csvDir, backupFile);
 
                 // Remove the temporary CSV directory
@@ -367,7 +369,35 @@ public class BackupManager {
     }
 
     /**
-     * Perform a SQL backup using mysqldump
+     * Ensures that a path has correct directory separators for the current OS
+     */
+    private String ensureCorrectPathSeparators(String path) {
+        if (path == null || path.isEmpty()) {
+            return path;
+        }
+
+        // Replace all forward slashes with the system separator
+        path = path.replace('/', File.separatorChar);
+
+        // Replace all backslashes with the system separator (on non-Windows systems)
+        if (File.separatorChar != '\\') {
+            path = path.replace('\\', File.separatorChar);
+        }
+
+        // Ensure there are separators between path elements
+        path = path.replaceAll("([A-Za-z]):([A-Za-z])", "$1:" + File.separator + "$2");
+
+        // Fix double separators
+        String doubleSeparator = File.separator + File.separator;
+        while (path.contains(doubleSeparator)) {
+            path = path.replace(doubleSeparator, File.separator);
+        }
+
+        return path;
+    }
+
+    /**
+     * Perform a SQL backup using direct JDBC
      */
     private void performSqlBackup(File backupFile) throws IOException {
         Connection conn = null;
@@ -477,8 +507,11 @@ public class BackupManager {
                                 String dateStr = value.toString();
                                 row.append("'").append(dateStr).append("'");
                             } else {
-                                // String and other types - escape single quotes
-                                row.append("'").append(value.toString().replace("'", "''")).append("'");
+                                // String and other types - escape single quotes and backslashes
+                                String strValue = value.toString()
+                                        .replace("\\", "\\\\")  // Escape backslashes first
+                                        .replace("'", "\\'");   // Then escape single quotes
+                                row.append("'").append(strValue).append("'");
                             }
                         }
 
@@ -519,9 +552,8 @@ public class BackupManager {
     /**
      * Perform a CSV backup
      */
-    private void performCsvBackup(File parentDir, String dirName) throws SQLException, IOException {
-        // Create a directory for this backup
-        File backupDir = new File(parentDir, dirName);
+    private void performCsvBackup(File backupDir) throws SQLException, IOException {
+        // Create the directory if it doesn't exist
         backupDir.mkdirs();
 
         Connection conn = DatabaseSingleton.getInstance().getConnection();
@@ -555,7 +587,8 @@ public class BackupManager {
 
                         // Escape commas and quotes in CSV
                         if (value != null) {
-                            value = value.replace("\"", "\"\"");
+                            // Escape backslashes first, then double quotes
+                            value = value.replace("\\", "\\\\").replace("\"", "\"\"");
 
                             if (value.contains(",") || value.contains("\"") || value.contains("\n")) {
                                 value = "\"" + value + "\"";

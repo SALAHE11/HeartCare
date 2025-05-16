@@ -2,6 +2,7 @@ package com.example.myjavafxapp.Controllers.backup;
 
 import com.example.myjavafxapp.Models.backup.BackupHistory;
 import com.example.myjavafxapp.Models.backup.BackupManager;
+import com.example.myjavafxapp.Models.backup.BackupRestoreManager;
 import com.example.myjavafxapp.Models.backup.BackupSchedule;
 import com.example.myjavafxapp.Models.user.UserSession;
 import com.example.myjavafxapp.Models.util.SwitchScene;
@@ -82,6 +83,7 @@ public class BackupController implements Initializable {
 
     // Data and managers
     private BackupManager backupManager;
+    private BackupRestoreManager restoreManager;
     private BackupSchedule backupSchedule;
     private ObservableList<BackupHistory> backupHistory;
     private FilteredList<BackupHistory> filteredBackupHistory;
@@ -89,6 +91,7 @@ public class BackupController implements Initializable {
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         backupManager = BackupManager.getInstance();
+        restoreManager = BackupRestoreManager.getInstance();
         backupSchedule = backupManager.getBackupSchedule();
 
         // Initialize the filter
@@ -541,7 +544,17 @@ public class BackupController implements Initializable {
             Task<Boolean> restoreTask = new Task<>() {
                 @Override
                 protected Boolean call() throws Exception {
-                    return performRestore(file, restoreType);
+                    // Use BackupRestoreManager which already has the implementation
+                    try {
+                        if ("SQL".equals(restoreType)) {
+                            return restoreManager.restoreFromSql(file.getAbsolutePath());
+                        } else {
+                            return restoreManager.restoreFromCsv(file.getAbsolutePath());
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        throw e;
+                    }
                 }
             };
 
@@ -580,62 +593,6 @@ public class BackupController implements Initializable {
             });
 
             new Thread(restoreTask).start();
-        }
-    }
-
-    /**
-     * Perform the actual restore operation
-     */
-    private boolean performRestore(File restoreFile, String restoreType) {
-        try {
-            ProcessBuilder pb = null;
-
-            if ("SQL".equals(restoreType)) {
-                // For SQL files, use mysql command line
-                String url = "jdbc:mysql://localhost:3307/heartcare";
-                String username = "root";
-                String password = "Zoro*2222";
-
-                // Extract database parameters from URL
-                String[] parts = url.split("/");
-                String database = parts[parts.length - 1];
-                String host = url.split("://")[1].split(":")[0];
-                String port = url.split(":")[2].split("/")[0];
-
-                pb = new ProcessBuilder(
-                        "mysql",
-                        "--host=" + host,
-                        "--port=" + port,
-                        "--user=" + username,
-                        "--password=" + password,
-                        database
-                );
-
-                // Redirect input from the SQL file
-                pb.redirectInput(restoreFile);
-
-            } else {
-                // For CSV files, we need a custom approach
-                // Unzip the file first if it's a ZIP
-                if (restoreFile.getName().toLowerCase().endsWith(".zip")) {
-                    // TODO: Implement CSV restoration
-                    // This would involve:
-                    // 1. Unzipping the file
-                    // 2. Reading each CSV file
-                    // 3. Truncating the corresponding table
-                    // 4. Inserting the data from the CSV
-                    throw new UnsupportedOperationException("La restauration CSV n'est pas encore implémentée");
-                }
-            }
-
-            Process process = pb.start();
-            int exitCode = process.waitFor();
-
-            return exitCode == 0;
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
         }
     }
 
