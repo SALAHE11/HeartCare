@@ -300,7 +300,7 @@ For users who have forgotten their password, this interface begins the recovery 
 ![Interface de connexion](./screenshots/mdpo1.png)
 
 #### Récupération de mot de passe (Étape 2)
-After verifying the information, the user (here "azedine") will receive an email containing a random 6-digit verification code which he can enter to reset a new password and confirm it. The interface is secure and intuitive for this critical process.
+After verifying the information, the user (here "salahe_11") will receive an email containing a random 6-digit verification code which he can enter to reset a new password and confirm it. The interface is secure and intuitive for this critical process.
 
 ![Interface de connexion](./screenshots/mdpo2.png)
 
