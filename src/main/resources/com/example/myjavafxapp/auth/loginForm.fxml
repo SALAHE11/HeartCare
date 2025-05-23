@@ -52,11 +52,11 @@
                <Label fx:id="loginError" alignment="CENTER" maxWidth="Infinity" textAlignment="CENTER" styleClass="error-message" />
 
                <!-- Username Section -->
-               <Label text="Username" styleClass="form-label" alignment="CENTER_LEFT" maxWidth="Infinity" />
+               <Label text="Nom d'utilisateur :" styleClass="form-label" alignment="CENTER_LEFT" maxWidth="Infinity" />
                <TextField fx:id="userNameField" promptText="Votre nom username ici" styleClass="form-field" />
 
                <!-- Password Section -->
-               <Label text="Password" styleClass="form-label" alignment="CENTER_LEFT" maxWidth="Infinity" />
+               <Label text="Mot de passe :" styleClass="form-label" alignment="CENTER_LEFT" maxWidth="Infinity" />
 
                <!-- Password Field with Eye Icon -->
                <HBox spacing="5.0" alignment="CENTER_LEFT">
